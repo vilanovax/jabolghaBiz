@@ -20,18 +20,16 @@ import {
   businessTemplates,
 } from '@/data/mock';
 
-// محاسبه درآمد واقعی یک شرکت با احتساب بوست‌ها
+// ==================== Helper Functions ====================
+
+// محاسبه درآمد واقعی — ضریب کارمندان با سقف 2.5x + بوست مطلق محصولات
 export function calcEffectiveRevenue(biz: Business): number {
-  let revenue = biz.baseRevenue;
-  // بوست از محصولات آنلاک‌شده
-  for (const p of biz.products) {
-    if (p.unlocked) revenue += p.revenueBoost;
-  }
-  // بوست از کارمندان
-  for (const e of biz.employees) {
-    revenue += biz.baseRevenue * e.revenueBoost;
-  }
-  return Math.round(revenue);
+  const staffBoostSum = biz.employees.reduce((sum, e) => sum + e.revenueBoost, 0);
+  const staffMultiplier = Math.min(1 + staffBoostSum, 2.5); // حداکثر ۱۵۰٪ بوست
+  const productBoost = biz.products
+    .filter((p) => p.unlocked)
+    .reduce((sum, p) => sum + p.revenueBoost, 0);
+  return Math.round(biz.baseRevenue * staffMultiplier) + productBoost;
 }
 
 // محاسبه هزینه‌های کل (حقوق + هزینه پایه)
@@ -43,6 +41,12 @@ export function calcTotalExpenses(biz: Business): number {
 // آیا شرکت حسابدار دارد؟
 export function hasAccountant(biz: Business): boolean {
   return biz.employees.some((e) => e.autoCollect);
+}
+
+// ارزش امپراتوری = موجودی + مجموع (درآمد پایه × سطح × ۱۰)
+export function calcEmpireValue(player: PlayerProfile, businesses: Business[]): number {
+  const businessesValue = businesses.reduce((sum, b) => sum + b.baseRevenue * b.level * 10, 0);
+  return player.balance + businessesValue;
 }
 
 interface GameState {
@@ -66,8 +70,8 @@ interface GameState {
   upgradeBusiness: (businessId: string) => void;
 
   // Business — سیستم درآمد تایمری
-  tickBusinesses: () => void;            // بروزرسانی سیکل‌ها (هر ثانیه صدا زده میشه)
-  collectRevenue: (businessId: string) => void; // جمع‌آوری دستی درآمد
+  tickBusinesses: () => void;
+  collectRevenue: (businessId: string) => void;
 
   // Business — استخدام و محصول
   hireEmployee: (businessId: string, template: EmployeeTemplate) => void;
@@ -76,6 +80,7 @@ interface GameState {
   // Market
   buyListing: (listingId: string, quantity: number) => void;
   buyFridayItem: (itemId: string) => void;
+  updateMarketPrices: () => void;
 
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -125,6 +130,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       maxPendingCycles: template.maxPendingCycles,
       expenses: template.baseExpenses,
       upgradeCost: Math.round(template.startCost * 1.5),
+      maxEmployees: template.maxEmployees,
+      maxProducts: template.maxProducts,
+      maxLevel: template.maxLevel,
       employees: [],
       products: template.availableProducts.map((p) => ({ ...p })),
       initialEquipment: template.initialEquipment,
@@ -140,6 +148,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { player, businesses } = get();
     const biz = businesses.find((b) => b.id === businessId);
     if (!biz || player.balance < biz.upgradeCost) return;
+    if (biz.level >= biz.maxLevel) return; // حداکثر سطح
 
     set((state) => ({
       businesses: state.businesses.map((b) =>
@@ -149,6 +158,9 @@ export const useGameStore = create<GameState>((set, get) => ({
               level: b.level + 1,
               baseRevenue: Math.round(b.baseRevenue * 1.25),
               upgradeCost: Math.round(b.upgradeCost * 1.6),
+              // افزایش ظرفیت با ارتقا
+              maxEmployees: b.maxEmployees + (b.level % 3 === 0 ? 1 : 0),
+              maxProducts: b.maxProducts + (b.level % 5 === 0 ? 1 : 0),
             }
           : b
       ),
@@ -230,6 +242,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         if (b.id !== businessId) return b;
         // جلوگیری از استخدام تکراری
         if (b.employees.some((e) => e.templateId === template.id)) return b;
+        // بررسی ظرفیت
+        if (b.employees.length >= b.maxEmployees) return b;
         return {
           ...b,
           employees: [
@@ -259,6 +273,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!biz) return;
     const prod = biz.products.find((p) => p.id === productId);
     if (!prod || prod.unlocked || player.balance < prod.unlockCost) return;
+    // بررسی ظرفیت محصولات
+    const unlockedCount = biz.products.filter((p) => p.unlocked).length;
+    if (unlockedCount >= biz.maxProducts) return;
 
     set((state) => ({
       businesses: state.businesses.map((b) =>
@@ -305,6 +322,39 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set((state) => ({
       player: { ...state.player, balance: state.player.balance - item.price, stats: newStats },
+    }));
+  },
+
+  // ==================== موتور اقتصاد — بروزرسانی قیمت‌های بازار ====================
+
+  updateMarketPrices: () => {
+    set((state) => ({
+      products: state.products.map((prod) => {
+        // تغییر تصادفی ±5-15%
+        const changePercent = (Math.random() * 0.10 + 0.05) * (Math.random() > 0.5 ? 1 : -1);
+        const newPrice = Math.max(
+          Math.round(prod.basePrice * 0.5),
+          Math.min(
+            Math.round(prod.basePrice * 2.0),
+            Math.round(prod.currentPrice * (1 + changePercent))
+          )
+        );
+
+        // تغییر عرضه و تقاضا
+        const supplyChange = Math.round((Math.random() - 0.5) * 50);
+        const demandChange = Math.round((Math.random() - 0.5) * 50);
+
+        // بروزرسانی تاریخچه قیمت (۷ عنصر آخر)
+        const newHistory = [...prod.priceHistory.slice(-6), newPrice];
+
+        return {
+          ...prod,
+          currentPrice: newPrice,
+          supply: Math.max(10, prod.supply + supplyChange),
+          demand: Math.max(10, prod.demand + demandChange),
+          priceHistory: newHistory,
+        };
+      }),
     }));
   },
 

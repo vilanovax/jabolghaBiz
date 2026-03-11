@@ -23,7 +23,7 @@ export default function MoneyDisplay({ amount, size = 'md', showSign = false }: 
     <span
       className={`${sizeClasses[size]} ${
         showSign ? (isPositive ? 'text-emerald-400' : 'text-red-400') : 'text-amber-400'
-      } font-mono`}
+      } font-fa font-bold`}
     >
       {showSign && (isPositive ? '+' : '-')}{formatted} {currency}
     </span>

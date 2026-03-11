@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses } from '@/store/gameStore';
 import BusinessCard from '@/components/business/BusinessCard';
 import NewBusinessModal from '@/components/business/NewBusinessModal';
-import MoneyDisplay from '@/components/ui/MoneyDisplay';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Plus, TrendingUp, DollarSign, Users } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export default function BusinessPage() {
   const businesses = useGameStore((s) => s.businesses);
@@ -19,7 +18,8 @@ export default function BusinessPage() {
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
 
   return (
-    <div className="space-y-5 py-4 pb-24">
+    <div className="space-y-4 py-4 pb-24">
+      {/* هدر */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black">کسب‌وکارهای من</h1>
         <Button onClick={() => setShowNewBiz(true)} size="sm">
@@ -29,48 +29,58 @@ export default function BusinessPage() {
         </Button>
       </div>
 
-      {/* خلاصه */}
-      <div className="grid grid-cols-2 gap-2">
-        <Card className="flex items-center gap-2 p-3">
-          <TrendingUp size={16} className="text-emerald-400" />
-          <div>
-            <p className="text-[10px] text-zinc-500">درآمد/سیکل</p>
-            <MoneyDisplay amount={totalRevenue} size="sm" />
+      {/* خلاصه — نوار افقی فشرده با ایموجی */}
+      {businesses.length > 0 && (
+        <div className="flex items-center justify-between bg-zinc-800/50 rounded-xl px-3 py-2.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">📈</span>
+            <span className="text-[11px] text-zinc-400">سود:</span>
+            <span className={`text-[11px] font-fa font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('fa-IR')}
+            </span>
           </div>
-        </Card>
-        <Card className="flex items-center gap-2 p-3">
-          <DollarSign size={16} className="text-amber-400" />
-          <div>
-            <p className="text-[10px] text-zinc-500">سود/سیکل</p>
-            <MoneyDisplay amount={totalProfit} size="sm" showSign />
+          <div className="w-px h-4 bg-zinc-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">💸</span>
+            <span className="text-[11px] text-zinc-400">هزینه:</span>
+            <span className="text-[11px] text-red-400 font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
           </div>
-        </Card>
-      </div>
-
-      <div className="flex items-center gap-4 text-xs text-zinc-400">
-        <span className="flex items-center gap-1">
-          <Users size={14} /> {totalEmployees} نیرو
-        </span>
-        <span>هزینه/سیکل: {totalExpenses.toLocaleString('fa-IR')}</span>
-      </div>
+          <div className="w-px h-4 bg-zinc-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">👥</span>
+            <span className="text-[11px] text-zinc-300 font-bold font-fa">{totalEmployees.toLocaleString('fa-IR')}</span>
+            <span className="text-[11px] text-zinc-400">نفر</span>
+          </div>
+        </div>
+      )}
 
       {/* لیست کسب‌وکارها */}
       <div className="space-y-3">
         {businesses.length === 0 ? (
-          <Card className="text-center py-10">
-            <p className="text-3xl mb-2">🏗️</p>
-            <p className="text-sm text-zinc-400">هنوز کسب‌وکاری ندارید</p>
-            <p className="text-xs text-zinc-600 mt-1">اولین کسب‌وکارتان را بسازید و شروع به کسب درآمد کنید!</p>
-            <div className="mt-4">
-              <Button onClick={() => setShowNewBiz(true)}>
-                <span className="flex items-center gap-1">
-                  <Plus size={16} /> ساخت کسب‌وکار
+          <Card className="text-center py-12">
+            <p className="text-4xl mb-3">🚀</p>
+            <p className="text-sm text-zinc-300 font-bold">هنوز کسب‌وکاری ندارید</p>
+            <p className="text-xs text-zinc-600 mt-1">اولین کسب‌وکارتان را راه‌اندازی کنید و شروع به کسب درآمد کنید!</p>
+            <div className="mt-5">
+              <Button onClick={() => setShowNewBiz(true)} size="lg">
+                <span className="flex items-center gap-2">
+                  🚀 راه‌اندازی کسب‌وکار
                 </span>
               </Button>
             </div>
           </Card>
         ) : (
-          businesses.map((biz) => <BusinessCard key={biz.id} business={biz} />)
+          <>
+            {businesses.map((biz) => <BusinessCard key={biz.id} business={biz} />)}
+
+            {/* دکمه ساخت کسب‌وکار جدید */}
+            <button
+              onClick={() => setShowNewBiz(true)}
+              className="w-full border-2 border-dashed border-zinc-700 hover:border-indigo-500 rounded-2xl py-4 text-zinc-500 hover:text-indigo-400 transition-colors flex items-center justify-center gap-2 text-sm font-semibold"
+            >
+              🚀 راه‌اندازی کسب‌وکار جدید
+            </button>
+          </>
         )}
       </div>
 

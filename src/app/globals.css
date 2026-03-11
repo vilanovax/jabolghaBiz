@@ -21,6 +21,13 @@ body {
   overscroll-behavior: none;
 }
 
+/* عدد فارسی زیبا با وزیرمتن */
+.font-fa {
+  font-family: 'Vazirmatn', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
 /* Mobile game feel */
 * {
   -webkit-user-select: none;

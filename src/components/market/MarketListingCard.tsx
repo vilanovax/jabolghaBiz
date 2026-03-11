@@ -26,7 +26,7 @@ export default function MarketListingCard({ listing }: MarketListingCardProps) {
           <p className="text-xs text-zinc-500">توسط {listing.sellerName}</p>
         </div>
         <div className="text-left">
-          <p className="text-amber-400 font-mono text-sm font-bold">{listing.pricePerUnit.toLocaleString('fa-IR')}</p>
+          <p className="text-amber-400 font-fa text-sm font-bold">{listing.pricePerUnit.toLocaleString('fa-IR')}</p>
           <p className="text-[10px] text-zinc-500">هر واحد</p>
         </div>
       </div>

@@ -36,7 +36,7 @@ export default function ProductPriceCard({ product }: ProductPriceCardProps) {
           </div>
         </div>
         <div className="text-left">
-          <p className="text-amber-400 font-mono font-bold">{product.currentPrice.toLocaleString('fa-IR')}</p>
+          <p className="text-amber-400 font-fa font-bold">{product.currentPrice.toLocaleString('fa-IR')}</p>
           <p className={`text-[10px] font-medium ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
             {isUp ? '+' : ''}{pricePct}%
           </p>

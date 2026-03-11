@@ -97,6 +97,11 @@ export interface Business {
   employees: HiredEmployee[];
   products: BusinessProduct[];
 
+  // ظرفیت‌ها
+  maxEmployees: number;
+  maxProducts: number;
+  maxLevel: number;
+
   // تجهیزات اولیه
   initialEquipment: string;
 }
@@ -111,6 +116,9 @@ export interface BusinessTemplate {
   cycleDuration: number;       // ثانیه
   baseExpenses: number;
   maxPendingCycles: number;
+  maxEmployees: number;
+  maxProducts: number;
+  maxLevel: number;
   initialEquipment: string;
   availableEmployees: EmployeeTemplate[];
   availableProducts: BusinessProduct[];

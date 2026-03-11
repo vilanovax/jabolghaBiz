@@ -1,6 +1,6 @@
 'use client';
 
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
 import Badge from '@/components/ui/Badge';
@@ -41,7 +41,7 @@ export default function HomePage() {
   const totalExpenses = businesses.reduce((sum, b) => sum + calcTotalExpenses(b), 0);
   const totalProfit = totalRevenue - totalExpenses;
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
-  const empireValue = player.balance + businesses.reduce((sum, b) => sum + b.upgradeCost * b.level, 0);
+  const empireValue = calcEmpireValue(player, businesses);
 
   const topProducts = [...products]
     .sort((a, b) => (b.currentPrice - b.basePrice) / b.basePrice - (a.currentPrice - a.basePrice) / a.basePrice)
@@ -184,7 +184,7 @@ export default function HomePage() {
                   <div>
                     <p className="text-xs font-bold">{prod.name}</p>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-amber-400 font-mono text-xs font-bold">
+                      <span className="text-amber-400 font-fa text-xs font-bold">
                         {prod.currentPrice.toLocaleString('fa-IR')}
                       </span>
                       <span className={`text-[10px] font-medium ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>

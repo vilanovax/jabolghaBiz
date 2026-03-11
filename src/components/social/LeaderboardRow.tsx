@@ -47,7 +47,7 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
           سطح {entry.level} · {entry.businessCount} کسب‌وکار
         </p>
       </div>
-      <span className="text-amber-400 font-mono text-sm font-bold">
+      <span className="text-amber-400 font-fa text-sm font-bold">
         {new Intl.NumberFormat('fa-IR').format(entry.wealth)} تومان
       </span>
     </div>

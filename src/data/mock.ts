@@ -18,7 +18,7 @@ export const mockPlayer: PlayerProfile = {
   username: 'تاجرباشی',
   level: 5,
   reputation: 72,
-  balance: 15_000_000,
+  balance: 150_000,
   stats: {
     happiness: 75,
     hunger: 60,
@@ -34,27 +34,27 @@ export const mockPlayer: PlayerProfile = {
 const appStartupEmployees: EmployeeTemplate[] = [
   {
     id: 'emp-t-1', name: 'برنامه‌نویس ارشد', role: 'base', roleName: 'برنامه‌نویس', icon: '👨‍💻',
-    salary: 200_000, revenueBoost: 0.3, autoCollect: false, hireCost: 2_000_000,
+    salary: 2_000, revenueBoost: 0.3, autoCollect: false, hireCost: 20_000,
     description: 'افزایش ۳۰٪ درآمد تولید',
   },
   {
     id: 'emp-t-2', name: 'مدیر پروژه', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 350_000, revenueBoost: 0.5, autoCollect: false, hireCost: 5_000_000,
+    salary: 3_500, revenueBoost: 0.5, autoCollect: false, hireCost: 50_000,
     description: 'افزایش ۵۰٪ درآمد کل شرکت',
   },
   {
     id: 'emp-t-3', name: 'حسابدار شرکت', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
-    salary: 250_000, revenueBoost: 0, autoCollect: true, hireCost: 3_000_000,
+    salary: 2_500, revenueBoost: 0, autoCollect: true, hireCost: 30_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
   },
   {
     id: 'emp-t-4', name: 'بازاریاب دیجیتال', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
-    salary: 180_000, revenueBoost: 0.2, autoCollect: false, hireCost: 1_500_000,
+    salary: 1_800, revenueBoost: 0.2, autoCollect: false, hireCost: 15_000,
     description: 'افزایش ۲۰٪ درآمد محصولات',
   },
   {
     id: 'emp-t-5', name: 'کارشناس فروش', role: 'sales', roleName: 'فروش', icon: '🤝',
-    salary: 150_000, revenueBoost: 0.15, autoCollect: false, hireCost: 1_000_000,
+    salary: 1_500, revenueBoost: 0.15, autoCollect: false, hireCost: 10_000,
     description: 'افزایش ۱۵٪ سرعت فروش',
   },
 ];
@@ -62,17 +62,17 @@ const appStartupEmployees: EmployeeTemplate[] = [
 const farmingEmployees: EmployeeTemplate[] = [
   {
     id: 'emp-t-f1', name: 'کشاورز ماهر', role: 'base', roleName: 'کشاورز', icon: '🧑‍🌾',
-    salary: 120_000, revenueBoost: 0.25, autoCollect: false, hireCost: 1_000_000,
+    salary: 1_200, revenueBoost: 0.25, autoCollect: false, hireCost: 10_000,
     description: 'افزایش ۲۵٪ برداشت محصول',
   },
   {
     id: 'emp-t-f2', name: 'مدیر مزرعه', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 280_000, revenueBoost: 0.4, autoCollect: false, hireCost: 4_000_000,
+    salary: 2_800, revenueBoost: 0.4, autoCollect: false, hireCost: 40_000,
     description: 'افزایش ۴۰٪ درآمد مزرعه',
   },
   {
     id: 'emp-t-f3', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
-    salary: 200_000, revenueBoost: 0, autoCollect: true, hireCost: 2_500_000,
+    salary: 2_000, revenueBoost: 0, autoCollect: true, hireCost: 25_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
   },
 ];
@@ -80,22 +80,22 @@ const farmingEmployees: EmployeeTemplate[] = [
 const restaurantEmployees: EmployeeTemplate[] = [
   {
     id: 'emp-t-r1', name: 'سرآشپز', role: 'base', roleName: 'آشپز', icon: '👨‍🍳',
-    salary: 200_000, revenueBoost: 0.35, autoCollect: false, hireCost: 2_500_000,
+    salary: 2_000, revenueBoost: 0.35, autoCollect: false, hireCost: 25_000,
     description: 'افزایش ۳۵٪ کیفیت و درآمد',
   },
   {
     id: 'emp-t-r2', name: 'مدیر رستوران', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 300_000, revenueBoost: 0.45, autoCollect: false, hireCost: 4_500_000,
+    salary: 3_000, revenueBoost: 0.45, autoCollect: false, hireCost: 45_000,
     description: 'افزایش ۴۵٪ درآمد رستوران',
   },
   {
     id: 'emp-t-r3', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
-    salary: 220_000, revenueBoost: 0, autoCollect: true, hireCost: 3_000_000,
+    salary: 2_200, revenueBoost: 0, autoCollect: true, hireCost: 30_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
   },
   {
     id: 'emp-t-r4', name: 'گارسون حرفه‌ای', role: 'sales', roleName: 'گارسون', icon: '🍽️',
-    salary: 100_000, revenueBoost: 0.1, autoCollect: false, hireCost: 800_000,
+    salary: 1_000, revenueBoost: 0.1, autoCollect: false, hireCost: 8_000,
     description: 'افزایش ۱۰٪ رضایت مشتری',
   },
 ];
@@ -103,21 +103,21 @@ const restaurantEmployees: EmployeeTemplate[] = [
 // ==================== BUSINESS PRODUCT TEMPLATES ====================
 
 const appStartupProducts: BusinessProduct[] = [
-  { id: 'bp-a1', name: 'اپلیکیشن فروشگاهی', icon: '🛒', description: 'طراحی و توسعه اپ فروشگاه آنلاین', unlockCost: 3_000_000, revenueBoost: 300_000, unlocked: false },
-  { id: 'bp-a2', name: 'سامانه حسابداری', icon: '📊', description: 'نرم‌افزار مدیریت مالی', unlockCost: 5_000_000, revenueBoost: 500_000, unlocked: false },
-  { id: 'bp-a3', name: 'بازی موبایل', icon: '🎮', description: 'توسعه بازی موبایلی پرطرفدار', unlockCost: 8_000_000, revenueBoost: 800_000, unlocked: false },
+  { id: 'bp-a1', name: 'اپلیکیشن فروشگاهی', icon: '🛒', description: 'طراحی و توسعه اپ فروشگاه آنلاین', unlockCost: 30_000, revenueBoost: 3_000, unlocked: false },
+  { id: 'bp-a2', name: 'سامانه حسابداری', icon: '📊', description: 'نرم‌افزار مدیریت مالی', unlockCost: 50_000, revenueBoost: 5_000, unlocked: false },
+  { id: 'bp-a3', name: 'بازی موبایل', icon: '🎮', description: 'توسعه بازی موبایلی پرطرفدار', unlockCost: 80_000, revenueBoost: 8_000, unlocked: false },
 ];
 
 const farmingProducts: BusinessProduct[] = [
-  { id: 'bp-f1', name: 'گلخانه', icon: '🌿', description: 'کشت محصولات گلخانه‌ای', unlockCost: 2_000_000, revenueBoost: 200_000, unlocked: false },
-  { id: 'bp-f2', name: 'دامداری', icon: '🐄', description: 'پرورش دام و تولید لبنیات', unlockCost: 4_000_000, revenueBoost: 400_000, unlocked: false },
-  { id: 'bp-f3', name: 'زنبورداری', icon: '🍯', description: 'تولید عسل طبیعی', unlockCost: 1_500_000, revenueBoost: 150_000, unlocked: false },
+  { id: 'bp-f1', name: 'گلخانه', icon: '🌿', description: 'کشت محصولات گلخانه‌ای', unlockCost: 20_000, revenueBoost: 2_000, unlocked: false },
+  { id: 'bp-f2', name: 'دامداری', icon: '🐄', description: 'پرورش دام و تولید لبنیات', unlockCost: 40_000, revenueBoost: 4_000, unlocked: false },
+  { id: 'bp-f3', name: 'زنبورداری', icon: '🍯', description: 'تولید عسل طبیعی', unlockCost: 15_000, revenueBoost: 1_500, unlocked: false },
 ];
 
 const restaurantProducts: BusinessProduct[] = [
-  { id: 'bp-r1', name: 'منوی ویژه', icon: '⭐', description: 'غذاهای ویژه با حاشیه سود بالا', unlockCost: 2_500_000, revenueBoost: 250_000, unlocked: false },
-  { id: 'bp-r2', name: 'سرویس بیرون‌بر', icon: '🛵', description: 'ارسال غذا به درب منزل', unlockCost: 3_500_000, revenueBoost: 350_000, unlocked: false },
-  { id: 'bp-r3', name: 'کترینگ', icon: '🎉', description: 'سرویس‌دهی به مراسم و مهمانی‌ها', unlockCost: 5_000_000, revenueBoost: 500_000, unlocked: false },
+  { id: 'bp-r1', name: 'منوی ویژه', icon: '⭐', description: 'غذاهای ویژه با حاشیه سود بالا', unlockCost: 25_000, revenueBoost: 2_500, unlocked: false },
+  { id: 'bp-r2', name: 'سرویس بیرون‌بر', icon: '🛵', description: 'ارسال غذا به درب منزل', unlockCost: 35_000, revenueBoost: 3_500, unlocked: false },
+  { id: 'bp-r3', name: 'کترینگ', icon: '🎉', description: 'سرویس‌دهی به مراسم و مهمانی‌ها', unlockCost: 50_000, revenueBoost: 5_000, unlocked: false },
 ];
 
 // ==================== BUSINESS TEMPLATES ====================
@@ -126,43 +126,49 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'app_startup', defaultName: 'داده‌پردازان', icon: '📱',
     description: 'شرکت برنامه‌نویسی. با یک برنامه‌نویس ساده و تجهیزات سخت‌افزاری شروع کنید.',
-    startCost: 5_000_000, baseRevenue: 500_000, cycleDuration: 180, baseExpenses: 100_000,
-    maxPendingCycles: 3, initialEquipment: 'لپتاپ و میز کار',
+    startCost: 50_000, baseRevenue: 5_000, cycleDuration: 180, baseExpenses: 1_000,
+    maxPendingCycles: 50, maxEmployees: 3, maxProducts: 2, maxLevel: 20,
+    initialEquipment: 'لپتاپ و میز کار',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
   },
   {
     type: 'farming', defaultName: 'مزرعه سبز', icon: '🌾',
     description: 'کشت محصول و پرورش دام. پایه زنجیره تأمین.',
-    startCost: 3_000_000, baseRevenue: 300_000, cycleDuration: 120, baseExpenses: 80_000,
-    maxPendingCycles: 5, initialEquipment: 'زمین کشاورزی و ابزار دستی',
+    startCost: 30_000, baseRevenue: 3_000, cycleDuration: 120, baseExpenses: 800,
+    maxPendingCycles: 50, maxEmployees: 3, maxProducts: 2, maxLevel: 20,
+    initialEquipment: 'زمین کشاورزی و ابزار دستی',
     availableEmployees: farmingEmployees, availableProducts: farmingProducts,
   },
   {
     type: 'restaurant', defaultName: 'رستوران لذیذ', icon: '🍽️',
     description: 'تبدیل مواد اولیه به غذا. حاشیه سود بالا با مدیریت خوب.',
-    startCost: 8_000_000, baseRevenue: 800_000, cycleDuration: 150, baseExpenses: 200_000,
-    maxPendingCycles: 3, initialEquipment: 'آشپزخانه صنعتی و سالن غذاخوری',
+    startCost: 80_000, baseRevenue: 8_000, cycleDuration: 150, baseExpenses: 2_000,
+    maxPendingCycles: 50, maxEmployees: 3, maxProducts: 2, maxLevel: 20,
+    initialEquipment: 'آشپزخانه صنعتی و سالن غذاخوری',
     availableEmployees: restaurantEmployees, availableProducts: restaurantProducts,
   },
   {
     type: 'factory', defaultName: 'کارخانه تولیدی', icon: '🏭',
     description: 'فرآوری مواد خام به کالاهای نهایی با سود بیشتر.',
-    startCost: 12_000_000, baseRevenue: 1_000_000, cycleDuration: 240, baseExpenses: 300_000,
-    maxPendingCycles: 3, initialEquipment: 'خط تولید اولیه',
+    startCost: 120_000, baseRevenue: 10_000, cycleDuration: 240, baseExpenses: 3_000,
+    maxPendingCycles: 50, maxEmployees: 3, maxProducts: 2, maxLevel: 20,
+    initialEquipment: 'خط تولید اولیه',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
   },
   {
     type: 'supermarket', defaultName: 'هایپرمارکت', icon: '🏪',
     description: 'فروش مستقیم محصولات. حجم بالا، درآمد پایدار.',
-    startCost: 7_000_000, baseRevenue: 600_000, cycleDuration: 90, baseExpenses: 150_000,
-    maxPendingCycles: 5, initialEquipment: 'قفسه‌ها و صندوق فروش',
+    startCost: 70_000, baseRevenue: 6_000, cycleDuration: 90, baseExpenses: 1_500,
+    maxPendingCycles: 50, maxEmployees: 3, maxProducts: 2, maxLevel: 20,
+    initialEquipment: 'قفسه‌ها و صندوق فروش',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
   },
   {
     type: 'transport', defaultName: 'حمل‌ونقل سریع', icon: '🚛',
     description: 'جابجایی کالا بین کسب‌وکارها. ضروری برای زنجیره تأمین.',
-    startCost: 15_000_000, baseRevenue: 1_200_000, cycleDuration: 300, baseExpenses: 400_000,
-    maxPendingCycles: 3, initialEquipment: 'یک کامیون و راننده',
+    startCost: 150_000, baseRevenue: 12_000, cycleDuration: 300, baseExpenses: 4_000,
+    maxPendingCycles: 50, maxEmployees: 3, maxProducts: 2, maxLevel: 20,
+    initialEquipment: 'یک کامیون و راننده',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
   },
 ];
@@ -172,11 +178,12 @@ export const businessTemplates: BusinessTemplate[] = [
 export const mockBusinesses: Business[] = [
   {
     id: 'biz-1', ownerId: 'player-1', name: 'داده‌پردازان نوین', type: 'app_startup', level: 2, icon: '📱',
-    baseRevenue: 500_000, cycleDuration: 180, lastCycleAt: Date.now() - 100_000, pendingRevenue: 500_000,
-    maxPendingCycles: 3, expenses: 100_000, upgradeCost: 8_000_000,
+    baseRevenue: 5_000, cycleDuration: 180, lastCycleAt: Date.now() - 100_000, pendingRevenue: 5_000,
+    maxPendingCycles: 50, expenses: 1_000, upgradeCost: 75_000,
+    maxEmployees: 4, maxProducts: 2, maxLevel: 20,
     employees: [{
       id: 'he-1', templateId: 'emp-t-1', name: 'برنامه‌نویس ارشد', role: 'base', roleName: 'برنامه‌نویس',
-      icon: '👨‍💻', salary: 200_000, revenueBoost: 0.3, autoCollect: false, hiredAt: Date.now() - 86400000,
+      icon: '👨‍💻', salary: 2_000, revenueBoost: 0.3, autoCollect: false, hiredAt: Date.now() - 86400000,
     }],
     products: [
       { ...appStartupProducts[0], unlocked: true },
@@ -212,23 +219,23 @@ export const mockListings: MarketListing[] = [
 // ==================== LEADERBOARD ====================
 
 export const mockLeaderboard: LeaderboardEntry[] = [
-  { rank: 1, playerId: 'player-10', username: 'سلطان‌تجارت', avatar: '👑', wealth: 250_000_000, level: 18, businessCount: 8 },
-  { rank: 2, playerId: 'player-11', username: 'مگاکورپ', avatar: '🦈', wealth: 180_000_000, level: 15, businessCount: 6 },
-  { rank: 3, playerId: 'player-12', username: 'طلاجو', avatar: '💰', wealth: 120_000_000, level: 12, businessCount: 5 },
-  { rank: 4, playerId: 'player-2', username: 'شاه‌مزرعه', avatar: '🌾', wealth: 95_000_000, level: 10, businessCount: 4 },
-  { rank: 5, playerId: 'player-3', username: 'نانوایی‌باشی', avatar: '🍞', wealth: 78_000_000, level: 9, businessCount: 3 },
-  { rank: 6, playerId: 'player-1', username: 'تاجرباشی', avatar: '👤', wealth: 15_000_000, level: 5, businessCount: 1 },
-  { rank: 7, playerId: 'player-4', username: 'ملکه‌لبنیات', avatar: '🥛', wealth: 12_000_000, level: 4, businessCount: 2 },
-  { rank: 8, playerId: 'player-5', username: 'جادوگرفناوری', avatar: '📱', wealth: 8_500_000, level: 3, businessCount: 1 },
+  { rank: 1, playerId: 'player-10', username: 'سلطان‌تجارت', avatar: '👑', wealth: 2_500_000, level: 18, businessCount: 8 },
+  { rank: 2, playerId: 'player-11', username: 'مگاکورپ', avatar: '🦈', wealth: 1_800_000, level: 15, businessCount: 6 },
+  { rank: 3, playerId: 'player-12', username: 'طلاجو', avatar: '💰', wealth: 1_200_000, level: 12, businessCount: 5 },
+  { rank: 4, playerId: 'player-2', username: 'شاه‌مزرعه', avatar: '🌾', wealth: 950_000, level: 10, businessCount: 4 },
+  { rank: 5, playerId: 'player-3', username: 'نانوایی‌باشی', avatar: '🍞', wealth: 780_000, level: 9, businessCount: 3 },
+  { rank: 6, playerId: 'player-1', username: 'تاجرباشی', avatar: '👤', wealth: 150_000, level: 5, businessCount: 1 },
+  { rank: 7, playerId: 'player-4', username: 'ملکه‌لبنیات', avatar: '🥛', wealth: 120_000, level: 4, businessCount: 2 },
+  { rank: 8, playerId: 'player-5', username: 'جادوگرفناوری', avatar: '📱', wealth: 85_000, level: 3, businessCount: 1 },
 ];
 
 // ==================== FRIDAY MARKET ====================
 
 export const mockFridayMarket: FridayMarketItem[] = [
-  { id: 'fm-1', name: 'نوشیدنی انرژی‌زا', icon: '⚡', price: 50_000, effect: { energy: 20 }, available: true },
-  { id: 'fm-2', name: 'کتاب آموزشی', icon: '📚', price: 200_000, effect: { intelligence: 10 }, available: true },
-  { id: 'fm-3', name: 'بشقاب کباب', icon: '🍖', price: 30_000, effect: { hunger: -30, happiness: 10 }, available: true },
-  { id: 'fm-4', name: 'قهوه', icon: '☕', price: 15_000, effect: { energy: 10, happiness: 5 }, available: true },
-  { id: 'fm-5', name: 'کنسول بازی', icon: '🎮', price: 500_000, effect: { happiness: 25 }, available: false },
-  { id: 'fm-6', name: 'اشتراک باشگاه', icon: '💪', price: 100_000, effect: { energy: 15, happiness: 10 }, available: true },
+  { id: 'fm-1', name: 'نوشیدنی انرژی‌زا', icon: '⚡', price: 500, effect: { energy: 20 }, available: true },
+  { id: 'fm-2', name: 'کتاب آموزشی', icon: '📚', price: 2_000, effect: { intelligence: 10 }, available: true },
+  { id: 'fm-3', name: 'بشقاب کباب', icon: '🍖', price: 300, effect: { hunger: -30, happiness: 10 }, available: true },
+  { id: 'fm-4', name: 'قهوه', icon: '☕', price: 150, effect: { energy: 10, happiness: 5 }, available: true },
+  { id: 'fm-5', name: 'کنسول بازی', icon: '🎮', price: 5_000, effect: { happiness: 25 }, available: false },
+  { id: 'fm-6', name: 'اشتراک باشگاه', icon: '💪', price: 1_000, effect: { energy: 15, happiness: 10 }, available: true },
 ];
