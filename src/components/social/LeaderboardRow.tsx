@@ -19,6 +19,12 @@ const rankBg: Record<number, string> = {
   3: 'bg-amber-600/10 border-amber-600/30',
 };
 
+const rankLabels: Record<number, string> = {
+  1: 'اول',
+  2: 'دوم',
+  3: 'سوم',
+};
+
 export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
   const playerId = useGameStore((s) => s.player.id);
   const isMe = entry.playerId === playerId;
@@ -30,19 +36,19 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       `}
     >
       <span className={`text-lg font-black w-8 text-center ${rankColors[entry.rank] || 'text-zinc-500'}`}>
-        {entry.rank <= 3 ? ['', '1st', '2nd', '3rd'][entry.rank] : `#${entry.rank}`}
+        {rankLabels[entry.rank] || `#${entry.rank}`}
       </span>
       <span className="text-2xl">{entry.avatar}</span>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-bold truncate ${isMe ? 'text-indigo-300' : 'text-white'}`}>
-          {entry.username} {isMe && '(You)'}
+          {entry.username} {isMe && '(شما)'}
         </p>
         <p className="text-[10px] text-zinc-500">
-          Lv.{entry.level} · {entry.businessCount} businesses
+          سطح {entry.level} · {entry.businessCount} کسب‌وکار
         </p>
       </div>
       <span className="text-amber-400 font-mono text-sm font-bold">
-        ${new Intl.NumberFormat().format(entry.wealth)}
+        {new Intl.NumberFormat('fa-IR').format(entry.wealth)} تومان
       </span>
     </div>
   );

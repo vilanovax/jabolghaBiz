@@ -13,7 +13,7 @@ import {
 export const mockPlayer: PlayerProfile = {
   id: 'player-1',
   avatar: '👤',
-  username: 'BizMaster',
+  username: 'تاجرباشی',
   level: 5,
   reputation: 72,
   balance: 15_400,
@@ -24,7 +24,7 @@ export const mockPlayer: PlayerProfile = {
     intelligence: 65,
     experience: 45,
   },
-  createdAt: '2026-01-15',
+  createdAt: '1404-10-25',
 };
 
 // ==================== BUSINESS TEMPLATES ====================
@@ -32,9 +32,9 @@ export const mockPlayer: PlayerProfile = {
 export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'farming',
-    name: 'Farm',
+    name: 'مزرعه',
     icon: '🌾',
-    description: 'Grow crops and raise livestock. The foundation of the supply chain.',
+    description: 'کشت محصول و پرورش دام. پایه زنجیره تأمین.',
     startCost: 2_000,
     baseRevenue: 500,
     baseExpenses: 200,
@@ -42,9 +42,9 @@ export const businessTemplates: BusinessTemplate[] = [
   },
   {
     type: 'factory',
-    name: 'Factory',
+    name: 'کارخانه',
     icon: '🏭',
-    description: 'Process raw materials into finished goods for higher profit.',
+    description: 'فرآوری مواد خام به کالاهای نهایی با سود بیشتر.',
     startCost: 8_000,
     baseRevenue: 1_500,
     baseExpenses: 800,
@@ -52,9 +52,9 @@ export const businessTemplates: BusinessTemplate[] = [
   },
   {
     type: 'supermarket',
-    name: 'Supermarket',
+    name: 'سوپرمارکت',
     icon: '🏪',
-    description: 'Sell products directly to consumers. High volume, steady income.',
+    description: 'فروش مستقیم محصولات به مصرف‌کننده. حجم بالا، درآمد پایدار.',
     startCost: 5_000,
     baseRevenue: 1_200,
     baseExpenses: 600,
@@ -62,9 +62,9 @@ export const businessTemplates: BusinessTemplate[] = [
   },
   {
     type: 'restaurant',
-    name: 'Restaurant',
+    name: 'رستوران',
     icon: '🍽️',
-    description: 'Turn ingredients into meals. High margins with good management.',
+    description: 'تبدیل مواد اولیه به غذا. حاشیه سود بالا با مدیریت خوب.',
     startCost: 6_000,
     baseRevenue: 1_800,
     baseExpenses: 1_000,
@@ -72,9 +72,9 @@ export const businessTemplates: BusinessTemplate[] = [
   },
   {
     type: 'app_startup',
-    name: 'App Startup',
+    name: 'استارتاپ اپلیکیشن',
     icon: '📱',
-    description: 'Build digital products. Low cost, high potential returns.',
+    description: 'ساخت محصولات دیجیتال. هزینه کم، بازده بالقوه بالا.',
     startCost: 3_000,
     baseRevenue: 2_000,
     baseExpenses: 500,
@@ -82,9 +82,9 @@ export const businessTemplates: BusinessTemplate[] = [
   },
   {
     type: 'transport',
-    name: 'Transport Co.',
+    name: 'شرکت حمل‌ونقل',
     icon: '🚛',
-    description: 'Move goods between businesses. Essential for the supply chain.',
+    description: 'جابجایی کالا بین کسب‌وکارها. ضروری برای زنجیره تأمین.',
     startCost: 10_000,
     baseRevenue: 2_500,
     baseExpenses: 1_500,
@@ -98,12 +98,12 @@ export const mockBusinesses: Business[] = [
   {
     id: 'biz-1',
     ownerId: 'player-1',
-    name: "Mo's Farm",
+    name: 'مزرعه محمد',
     type: 'farming',
     level: 3,
     employees: [
-      { id: 'emp-1', name: 'Ali', role: 'Farmer', salary: 150, efficiency: 70 },
-      { id: 'emp-2', name: 'Sara', role: 'Farmer', salary: 150, efficiency: 85 },
+      { id: 'emp-1', name: 'علی', role: 'کشاورز', salary: 150, efficiency: 70 },
+      { id: 'emp-2', name: 'سارا', role: 'کشاورز', salary: 150, efficiency: 85 },
     ],
     productionCapacity: 180,
     expenses: 500,
@@ -115,13 +115,13 @@ export const mockBusinesses: Business[] = [
   {
     id: 'biz-2',
     ownerId: 'player-1',
-    name: 'QuickBite Restaurant',
+    name: 'رستوران فوری‌بایت',
     type: 'restaurant',
     level: 2,
     employees: [
-      { id: 'emp-3', name: 'Reza', role: 'Chef', salary: 300, efficiency: 90 },
-      { id: 'emp-4', name: 'Mina', role: 'Waiter', salary: 120, efficiency: 75 },
-      { id: 'emp-5', name: 'Dara', role: 'Waiter', salary: 120, efficiency: 65 },
+      { id: 'emp-3', name: 'رضا', role: 'آشپز', salary: 300, efficiency: 90 },
+      { id: 'emp-4', name: 'مینا', role: 'گارسون', salary: 120, efficiency: 75 },
+      { id: 'emp-5', name: 'دارا', role: 'گارسون', salary: 120, efficiency: 65 },
     ],
     productionCapacity: 120,
     expenses: 1_400,
@@ -137,7 +137,7 @@ export const mockBusinesses: Business[] = [
 export const mockProducts: Product[] = [
   {
     id: 'prod-1',
-    name: 'Wheat',
+    name: 'گندم',
     category: 'raw_material',
     icon: '🌾',
     basePrice: 10,
@@ -148,7 +148,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-2',
-    name: 'Flour',
+    name: 'آرد',
     category: 'processed',
     icon: '🫘',
     basePrice: 25,
@@ -159,7 +159,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-3',
-    name: 'Bread',
+    name: 'نان',
     category: 'finished_good',
     icon: '🍞',
     basePrice: 50,
@@ -170,7 +170,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-4',
-    name: 'Tomato',
+    name: 'گوجه',
     category: 'raw_material',
     icon: '🍅',
     basePrice: 8,
@@ -181,7 +181,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-5',
-    name: 'Milk',
+    name: 'شیر',
     category: 'raw_material',
     icon: '🥛',
     basePrice: 15,
@@ -192,7 +192,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-6',
-    name: 'Cheese',
+    name: 'پنیر',
     category: 'processed',
     icon: '🧀',
     basePrice: 40,
@@ -203,7 +203,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-7',
-    name: 'Pizza',
+    name: 'پیتزا',
     category: 'food',
     icon: '🍕',
     basePrice: 80,
@@ -214,7 +214,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod-8',
-    name: 'Smartphone App',
+    name: 'اپلیکیشن موبایل',
     category: 'tech',
     icon: '📱',
     basePrice: 200,
@@ -231,9 +231,9 @@ export const mockListings: MarketListing[] = [
   {
     id: 'list-1',
     sellerId: 'player-2',
-    sellerName: 'FarmKing',
+    sellerName: 'شاه‌مزرعه',
     productId: 'prod-1',
-    productName: 'Wheat',
+    productName: 'گندم',
     quantity: 50,
     pricePerUnit: 11,
     listedAt: '2026-03-10T14:00:00Z',
@@ -241,9 +241,9 @@ export const mockListings: MarketListing[] = [
   {
     id: 'list-2',
     sellerId: 'player-3',
-    sellerName: 'BakerBoss',
+    sellerName: 'نانوایی‌باشی',
     productId: 'prod-3',
-    productName: 'Bread',
+    productName: 'نان',
     quantity: 20,
     pricePerUnit: 52,
     listedAt: '2026-03-10T15:30:00Z',
@@ -251,9 +251,9 @@ export const mockListings: MarketListing[] = [
   {
     id: 'list-3',
     sellerId: 'player-4',
-    sellerName: 'DairyQueen',
+    sellerName: 'ملکه‌لبنیات',
     productId: 'prod-5',
-    productName: 'Milk',
+    productName: 'شیر',
     quantity: 100,
     pricePerUnit: 16,
     listedAt: '2026-03-10T12:00:00Z',
@@ -261,9 +261,9 @@ export const mockListings: MarketListing[] = [
   {
     id: 'list-4',
     sellerId: 'player-5',
-    sellerName: 'TechWiz',
+    sellerName: 'جادوگرفناوری',
     productId: 'prod-8',
-    productName: 'Smartphone App',
+    productName: 'اپلیکیشن موبایل',
     quantity: 5,
     pricePerUnit: 210,
     listedAt: '2026-03-10T16:00:00Z',
@@ -271,9 +271,9 @@ export const mockListings: MarketListing[] = [
   {
     id: 'list-5',
     sellerId: 'player-1',
-    sellerName: 'BizMaster',
+    sellerName: 'تاجرباشی',
     productId: 'prod-4',
-    productName: 'Tomato',
+    productName: 'گوجه',
     quantity: 80,
     pricePerUnit: 7,
     listedAt: '2026-03-10T10:00:00Z',
@@ -283,23 +283,23 @@ export const mockListings: MarketListing[] = [
 // ==================== LEADERBOARD ====================
 
 export const mockLeaderboard: LeaderboardEntry[] = [
-  { rank: 1, playerId: 'player-10', username: 'TycoonX', avatar: '👑', wealth: 250_000, level: 18, businessCount: 8 },
-  { rank: 2, playerId: 'player-11', username: 'MegaCorp', avatar: '🦈', wealth: 180_000, level: 15, businessCount: 6 },
-  { rank: 3, playerId: 'player-12', username: 'GoldRush', avatar: '💰', wealth: 120_000, level: 12, businessCount: 5 },
-  { rank: 4, playerId: 'player-2', username: 'FarmKing', avatar: '🌾', wealth: 95_000, level: 10, businessCount: 4 },
-  { rank: 5, playerId: 'player-3', username: 'BakerBoss', avatar: '🍞', wealth: 78_000, level: 9, businessCount: 3 },
-  { rank: 6, playerId: 'player-1', username: 'BizMaster', avatar: '👤', wealth: 15_400, level: 5, businessCount: 2 },
-  { rank: 7, playerId: 'player-4', username: 'DairyQueen', avatar: '🥛', wealth: 12_000, level: 4, businessCount: 2 },
-  { rank: 8, playerId: 'player-5', username: 'TechWiz', avatar: '📱', wealth: 8_500, level: 3, businessCount: 1 },
+  { rank: 1, playerId: 'player-10', username: 'سلطان‌تجارت', avatar: '👑', wealth: 250_000, level: 18, businessCount: 8 },
+  { rank: 2, playerId: 'player-11', username: 'مگاکورپ', avatar: '🦈', wealth: 180_000, level: 15, businessCount: 6 },
+  { rank: 3, playerId: 'player-12', username: 'طلاجو', avatar: '💰', wealth: 120_000, level: 12, businessCount: 5 },
+  { rank: 4, playerId: 'player-2', username: 'شاه‌مزرعه', avatar: '🌾', wealth: 95_000, level: 10, businessCount: 4 },
+  { rank: 5, playerId: 'player-3', username: 'نانوایی‌باشی', avatar: '🍞', wealth: 78_000, level: 9, businessCount: 3 },
+  { rank: 6, playerId: 'player-1', username: 'تاجرباشی', avatar: '👤', wealth: 15_400, level: 5, businessCount: 2 },
+  { rank: 7, playerId: 'player-4', username: 'ملکه‌لبنیات', avatar: '🥛', wealth: 12_000, level: 4, businessCount: 2 },
+  { rank: 8, playerId: 'player-5', username: 'جادوگرفناوری', avatar: '📱', wealth: 8_500, level: 3, businessCount: 1 },
 ];
 
 // ==================== FRIDAY MARKET ====================
 
 export const mockFridayMarket: FridayMarketItem[] = [
-  { id: 'fm-1', name: 'Energy Drink', icon: '⚡', price: 50, effect: { energy: 20 }, available: true },
-  { id: 'fm-2', name: 'Brain Book', icon: '📚', price: 200, effect: { intelligence: 10 }, available: true },
-  { id: 'fm-3', name: 'Kebab Plate', icon: '🍖', price: 30, effect: { hunger: -30, happiness: 10 }, available: true },
-  { id: 'fm-4', name: 'Coffee', icon: '☕', price: 15, effect: { energy: 10, happiness: 5 }, available: true },
-  { id: 'fm-5', name: 'Game Console', icon: '🎮', price: 500, effect: { happiness: 25 }, available: false },
-  { id: 'fm-6', name: 'Gym Pass', icon: '💪', price: 100, effect: { energy: 15, happiness: 10 }, available: true },
+  { id: 'fm-1', name: 'نوشیدنی انرژی‌زا', icon: '⚡', price: 50, effect: { energy: 20 }, available: true },
+  { id: 'fm-2', name: 'کتاب آموزشی', icon: '📚', price: 200, effect: { intelligence: 10 }, available: true },
+  { id: 'fm-3', name: 'بشقاب کباب', icon: '🍖', price: 30, effect: { hunger: -30, happiness: 10 }, available: true },
+  { id: 'fm-4', name: 'قهوه', icon: '☕', price: 15, effect: { energy: 10, happiness: 5 }, available: true },
+  { id: 'fm-5', name: 'کنسول بازی', icon: '🎮', price: 500, effect: { happiness: 25 }, available: false },
+  { id: 'fm-6', name: 'اشتراک باشگاه', icon: '💪', price: 100, effect: { energy: 15, happiness: 10 }, available: true },
 ];

@@ -5,11 +5,11 @@ import { usePathname } from 'next/navigation';
 import { Home, Briefcase, ShoppingCart, Trophy, User } from 'lucide-react';
 
 const navItems = [
-  { label: 'Home', href: '/', icon: Home },
-  { label: 'Business', href: '/business', icon: Briefcase },
-  { label: 'Market', href: '/market', icon: ShoppingCart },
-  { label: 'Ranks', href: '/leaderboard', icon: Trophy },
-  { label: 'Profile', href: '/profile', icon: User },
+  { label: 'خانه', href: '/', icon: Home },
+  { label: 'کسب‌وکار', href: '/business', icon: Briefcase },
+  { label: 'بازار', href: '/market', icon: ShoppingCart },
+  { label: 'رتبه‌بندی', href: '/leaderboard', icon: Trophy },
+  { label: 'پروفایل', href: '/profile', icon: User },
 ];
 
 export default function BottomNav() {

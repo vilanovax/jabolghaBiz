@@ -8,6 +8,14 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { Shield, Star, Calendar } from 'lucide-react';
 
+const effectLabels: Record<string, string> = {
+  happiness: 'شادی',
+  hunger: 'گرسنگی',
+  energy: 'انرژی',
+  intelligence: 'هوش',
+  experience: 'تجربه',
+};
+
 export default function ProfilePage() {
   const player = useGameStore((s) => s.player);
   const businesses = useGameStore((s) => s.businesses);
@@ -16,54 +24,54 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-5 py-4">
-      {/* Profile Header */}
+      {/* هدر پروفایل */}
       <Card className="text-center py-6">
         <div className="text-5xl mb-3">{player.avatar}</div>
         <h1 className="text-xl font-black">{player.username}</h1>
         <div className="flex items-center justify-center gap-2 mt-1">
-          <Badge text={`Level ${player.level}`} color="#6366f1" />
-          <Badge text={`Rep: ${player.reputation}`} color="#f59e0b" />
+          <Badge text={`سطح ${player.level}`} color="#6366f1" />
+          <Badge text={`اعتبار: ${player.reputation}`} color="#f59e0b" />
         </div>
         <div className="mt-3">
           <MoneyDisplay amount={player.balance} size="lg" />
         </div>
       </Card>
 
-      {/* Quick Info */}
+      {/* اطلاعات سریع */}
       <div className="grid grid-cols-3 gap-2">
         <Card className="text-center py-3">
           <Shield size={16} className="mx-auto text-indigo-400 mb-1" />
           <p className="text-sm font-bold">{player.level}</p>
-          <p className="text-[10px] text-zinc-500">Level</p>
+          <p className="text-[10px] text-zinc-500">سطح</p>
         </Card>
         <Card className="text-center py-3">
           <Star size={16} className="mx-auto text-amber-400 mb-1" />
           <p className="text-sm font-bold">{businesses.length}</p>
-          <p className="text-[10px] text-zinc-500">Businesses</p>
+          <p className="text-[10px] text-zinc-500">کسب‌وکار</p>
         </Card>
         <Card className="text-center py-3">
           <Calendar size={16} className="mx-auto text-emerald-400 mb-1" />
           <p className="text-sm font-bold">{player.createdAt.split('-')[0]}</p>
-          <p className="text-[10px] text-zinc-500">Joined</p>
+          <p className="text-[10px] text-zinc-500">عضویت</p>
         </Card>
       </div>
 
-      {/* Stats */}
+      {/* آمار */}
       <div>
-        <h2 className="font-bold text-sm mb-3">Personal Stats</h2>
+        <h2 className="font-bold text-sm mb-3">وضعیت شخصی</h2>
         <PlayerStatsPanel />
       </div>
 
-      {/* Friday Market */}
+      {/* بازار جمعه */}
       <div>
-        <h2 className="font-bold text-sm mb-1">Friday Market</h2>
-        <p className="text-xs text-zinc-500 mb-3">Special items to boost your stats</p>
+        <h2 className="font-bold text-sm mb-1">بازار جمعه</h2>
+        <p className="text-xs text-zinc-500 mb-3">آیتم‌های ویژه برای تقویت وضعیت شما</p>
         <div className="grid grid-cols-2 gap-2">
           {fridayMarket.map((item) => {
             const canAfford = player.balance >= item.price;
             const effects = Object.entries(item.effect)
-              .map(([k, v]) => `${k} ${(v as number) > 0 ? '+' : ''}${v}`)
-              .join(', ');
+              .map(([k, v]) => `${effectLabels[k] || k} ${(v as number) > 0 ? '+' : ''}${v}`)
+              .join('، ');
 
             return (
               <Card
@@ -73,7 +81,7 @@ export default function ProfilePage() {
                 <div className="text-center mb-2">
                   <span className="text-2xl">{item.icon}</span>
                   <p className="text-xs font-bold mt-1">{item.name}</p>
-                  <p className="text-amber-400 font-mono text-xs">${item.price}</p>
+                  <MoneyDisplay amount={item.price} size="sm" />
                   <p className="text-[10px] text-zinc-500 mt-0.5">{effects}</p>
                 </div>
                 <Button
@@ -83,7 +91,7 @@ export default function ProfilePage() {
                   size="sm"
                   variant="secondary"
                 >
-                  {!item.available ? 'Sold Out' : canAfford ? 'Buy' : 'No Funds'}
+                  {!item.available ? 'تمام شد' : canAfford ? 'خرید' : 'موجودی کافی نیست'}
                 </Button>
               </Card>
             );

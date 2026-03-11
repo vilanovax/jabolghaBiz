@@ -4,11 +4,11 @@ import { useGameStore } from '@/store/gameStore';
 import StatBar from '@/components/ui/StatBar';
 
 const statConfig = [
-  { key: 'happiness' as const, label: 'Happiness', icon: '😊', color: '#f472b6' },
-  { key: 'hunger' as const, label: 'Hunger', icon: '🍔', color: '#fb923c' },
-  { key: 'energy' as const, label: 'Energy', icon: '⚡', color: '#facc15' },
-  { key: 'intelligence' as const, label: 'Intelligence', icon: '🧠', color: '#818cf8' },
-  { key: 'experience' as const, label: 'Experience', icon: '⭐', color: '#34d399' },
+  { key: 'happiness' as const, label: 'شادی', icon: '😊', color: '#f472b6' },
+  { key: 'hunger' as const, label: 'گرسنگی', icon: '🍔', color: '#fb923c' },
+  { key: 'energy' as const, label: 'انرژی', icon: '⚡', color: '#facc15' },
+  { key: 'intelligence' as const, label: 'هوش', icon: '🧠', color: '#818cf8' },
+  { key: 'experience' as const, label: 'تجربه', icon: '⭐', color: '#34d399' },
 ];
 
 export default function PlayerStatsPanel() {

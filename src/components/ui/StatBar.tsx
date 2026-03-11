@@ -15,7 +15,7 @@ export default function StatBar({ label, value, max = 100, icon, color, onClick 
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 w-full p-2 rounded-xl bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors text-left ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
+      className={`flex items-center gap-2 w-full p-2 rounded-xl bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors text-right ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
     >
       <span className="text-lg w-7 text-center">{icon}</span>
       <div className="flex-1 min-w-0">

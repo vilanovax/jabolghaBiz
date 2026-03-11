@@ -25,7 +25,7 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-[100] bg-black/70 flex items-end justify-center">
       <div className="bg-zinc-900 w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Start New Business</h2>
+          <h2 className="text-lg font-bold">کسب‌وکار جدید</h2>
           <button onClick={onClose} className="p-1 hover:bg-zinc-800 rounded-full">
             <X size={20} />
           </button>
@@ -49,8 +49,8 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
                     </div>
                     <p className="text-xs text-zinc-400 mt-1">{t.description}</p>
                     <div className="flex gap-4 mt-2 text-[10px] text-zinc-500">
-                      <span>Rev: ${t.baseRevenue}/day</span>
-                      <span>Exp: ${t.baseExpenses}/day</span>
+                      <span>درآمد: {t.baseRevenue.toLocaleString('fa-IR')}/روز</span>
+                      <span>هزینه: {t.baseExpenses.toLocaleString('fa-IR')}/روز</span>
                     </div>
                   </div>
                 </div>
@@ -60,7 +60,7 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <Button onClick={handleCreate} disabled={!selected} fullWidth size="lg">
-          Create Business
+          ساخت کسب‌وکار
         </Button>
       </div>
     </div>

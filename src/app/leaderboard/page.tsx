@@ -14,15 +14,15 @@ export default function LeaderboardPage() {
     <div className="space-y-5 py-4">
       <div className="flex items-center gap-2">
         <Trophy size={22} className="text-yellow-400" />
-        <h1 className="text-xl font-black">Leaderboard</h1>
+        <h1 className="text-xl font-black">رتبه‌بندی</h1>
       </div>
 
       <Card className="text-center py-4">
-        <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Total Economy</p>
+        <p className="text-[10px] text-zinc-500 tracking-wider">اقتصاد کل</p>
         <p className="text-2xl font-black text-amber-400 font-mono">
-          ${new Intl.NumberFormat().format(totalWealth)}
+          {new Intl.NumberFormat().format(totalWealth)} تومان
         </p>
-        <p className="text-xs text-zinc-500 mt-1">{leaderboard.length} active players</p>
+        <p className="text-xs text-zinc-500 mt-1">{leaderboard.length} بازیکن فعال</p>
       </Card>
 
       <div className="space-y-2">

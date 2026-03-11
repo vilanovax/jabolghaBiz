@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JabolghaBiz - Business Empire",
-  description: "Build your business empire from nothing. Trade, compete, and dominate the market.",
+  title: "جابلقابیز - امپراتوری کسب‌وکار",
+  description: "از هیچ شروع کن، کسب‌وکار بساز، تجارت کن، رقابت کن و بازار رو تصاحب کن.",
 };
 
 export const viewport: Viewport = {
@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fa" dir="rtl">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <GameShell>{children}</GameShell>
       </body>

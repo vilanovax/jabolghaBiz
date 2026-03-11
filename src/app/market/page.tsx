@@ -14,9 +14,9 @@ export default function MarketPage() {
 
   return (
     <div className="space-y-5 py-4">
-      <h1 className="text-xl font-black">Market</h1>
+      <h1 className="text-xl font-black">بازار</h1>
 
-      {/* Tabs */}
+      {/* تب‌ها */}
       <div className="flex bg-zinc-800/50 rounded-xl p-1">
         <button
           onClick={() => setTab('prices')}
@@ -24,7 +24,7 @@ export default function MarketPage() {
             tab === 'prices' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Prices ({products.length})
+          قیمت‌ها ({products.length})
         </button>
         <button
           onClick={() => setTab('listings')}
@@ -32,15 +32,15 @@ export default function MarketPage() {
             tab === 'listings' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Listings ({listings.length})
+          آگهی‌ها ({listings.length})
         </button>
       </div>
 
-      {/* Content */}
+      {/* محتوا */}
       {tab === 'prices' && (
         <div className="space-y-3">
           <p className="text-xs text-zinc-500">
-            Real-time product prices based on supply & demand
+            قیمت لحظه‌ای محصولات بر اساس عرضه و تقاضا
           </p>
           {products.map((product) => (
             <ProductPriceCard key={product.id} product={product} />
@@ -51,12 +51,12 @@ export default function MarketPage() {
       {tab === 'listings' && (
         <div className="space-y-3">
           <p className="text-xs text-zinc-500">
-            Buy from other players or list your own products
+            از بازیکنان دیگر خرید کنید یا محصولات خود را بفروشید
           </p>
           {listings.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-3xl mb-2">📦</p>
-              <p className="text-sm text-zinc-400">No listings available</p>
+              <p className="text-sm text-zinc-400">آگهی‌ای موجود نیست</p>
             </div>
           ) : (
             listings.map((listing) => (

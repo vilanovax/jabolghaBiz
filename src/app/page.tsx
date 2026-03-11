@@ -23,51 +23,51 @@ export default function HomePage() {
 
   return (
     <div className="space-y-5 py-4">
-      {/* Welcome */}
+      {/* خوش‌آمدگویی */}
       <div>
         <h1 className="text-xl font-black">
-          Welcome back, <span className="text-indigo-400">{player.username}</span>
+          خوش برگشتی، <span className="text-indigo-400">{player.username}</span>
         </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">Here&apos;s your empire overview</p>
+        <p className="text-sm text-zinc-500 mt-0.5">نمای کلی امپراتوری شما</p>
       </div>
 
-      {/* Financial Summary */}
+      {/* خلاصه مالی */}
       <div className="grid grid-cols-2 gap-3">
         <Card glow="#6366f1">
-          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Total Balance</p>
+          <p className="text-[10px] text-zinc-500 tracking-wider">موجودی کل</p>
           <MoneyDisplay amount={player.balance} size="lg" />
         </Card>
         <Card glow="#10b981">
-          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Daily Profit</p>
+          <p className="text-[10px] text-zinc-500 tracking-wider">سود روزانه</p>
           <MoneyDisplay amount={totalProfit} size="lg" showSign />
         </Card>
       </div>
 
-      {/* Quick Stats */}
+      {/* آمار سریع */}
       <div className="grid grid-cols-3 gap-2">
         <Card className="text-center py-3">
           <Briefcase size={18} className="mx-auto text-indigo-400 mb-1" />
           <p className="text-lg font-bold">{businesses.length}</p>
-          <p className="text-[10px] text-zinc-500">Businesses</p>
+          <p className="text-[10px] text-zinc-500">کسب‌وکار</p>
         </Card>
         <Card className="text-center py-3">
           <TrendingUp size={18} className="mx-auto text-emerald-400 mb-1" />
-          <p className="text-lg font-bold">${totalRevenue.toLocaleString()}</p>
-          <p className="text-[10px] text-zinc-500">Revenue/day</p>
+          <p className="text-lg font-bold">{totalRevenue.toLocaleString('fa-IR')}</p>
+          <p className="text-[10px] text-zinc-500">درآمد/روز</p>
         </Card>
         <Card className="text-center py-3">
           <Star size={18} className="mx-auto text-amber-400 mb-1" />
           <p className="text-lg font-bold">{totalEmployees}</p>
-          <p className="text-[10px] text-zinc-500">Employees</p>
+          <p className="text-[10px] text-zinc-500">کارمندان</p>
         </Card>
       </div>
 
-      {/* My Businesses - Quick View */}
+      {/* کسب‌وکارهای من */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-sm">My Businesses</h2>
+          <h2 className="font-bold text-sm">کسب‌وکارهای من</h2>
           <Link href="/business" className="text-xs text-indigo-400 hover:text-indigo-300">
-            View All
+            مشاهده همه
           </Link>
         </div>
         <div className="space-y-2">
@@ -78,8 +78,8 @@ export default function HomePage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold truncate">{biz.name}</p>
                   <div className="flex items-center gap-2">
-                    <Badge text={`Lv.${biz.level}`} />
-                    <span className="text-[10px] text-zinc-500">{biz.employees.length} staff</span>
+                    <Badge text={`سطح ${biz.level}`} />
+                    <span className="text-[10px] text-zinc-500">{biz.employees.length} کارمند</span>
                   </div>
                 </div>
                 <MoneyDisplay amount={biz.profit} size="sm" showSign />
@@ -89,12 +89,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Market Trends */}
+      {/* روند بازار */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-sm">Trending Products</h2>
+          <h2 className="font-bold text-sm">محصولات پرطرفدار</h2>
           <Link href="/market" className="text-xs text-indigo-400 hover:text-indigo-300">
-            Market
+            بازار
           </Link>
         </div>
         <div className="grid grid-cols-3 gap-2">
@@ -105,7 +105,7 @@ export default function HomePage() {
               <Card key={prod.id} className="text-center py-3">
                 <span className="text-2xl">{prod.icon}</span>
                 <p className="text-xs font-bold mt-1">{prod.name}</p>
-                <p className="text-amber-400 font-mono text-xs">${prod.currentPrice}</p>
+                <p className="text-amber-400 font-mono text-xs">{prod.currentPrice.toLocaleString('fa-IR')}</p>
                 <p className={`text-[10px] ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
                   {isUp ? '+' : ''}{change}%
                 </p>
@@ -115,9 +115,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Player Stats */}
+      {/* آمار بازیکن */}
       <div>
-        <h2 className="font-bold text-sm mb-3">Your Stats</h2>
+        <h2 className="font-bold text-sm mb-3">وضعیت شما</h2>
         <PlayerStatsPanel />
       </div>
     </div>

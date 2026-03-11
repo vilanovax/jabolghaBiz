@@ -23,18 +23,18 @@ export default function MarketListingCard({ listing }: MarketListingCardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-sm">{listing.productName}</h3>
-          <p className="text-xs text-zinc-500">by {listing.sellerName}</p>
+          <p className="text-xs text-zinc-500">توسط {listing.sellerName}</p>
         </div>
-        <div className="text-right">
-          <p className="text-amber-400 font-mono text-sm font-bold">${listing.pricePerUnit}</p>
-          <p className="text-[10px] text-zinc-500">per unit</p>
+        <div className="text-left">
+          <p className="text-amber-400 font-mono text-sm font-bold">{listing.pricePerUnit.toLocaleString('fa-IR')}</p>
+          <p className="text-[10px] text-zinc-500">هر واحد</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-zinc-400">
-          Qty: <span className="text-white font-medium">{listing.quantity}</span>
-          <span className="text-zinc-600 ml-1">(Total: ${totalCost.toLocaleString()})</span>
+          تعداد: <span className="text-white font-medium">{listing.quantity}</span>
+          <span className="text-zinc-600 me-1">(مجموع: {totalCost.toLocaleString('fa-IR')})</span>
         </span>
         {!isOwn && (
           <Button
@@ -43,11 +43,11 @@ export default function MarketListingCard({ listing }: MarketListingCardProps) {
             size="sm"
             variant="success"
           >
-            Buy 1
+            خرید ۱
           </Button>
         )}
         {isOwn && (
-          <span className="text-xs text-indigo-400 font-medium">Your listing</span>
+          <span className="text-xs text-indigo-400 font-medium">آگهی شما</span>
         )}
       </div>
     </Card>

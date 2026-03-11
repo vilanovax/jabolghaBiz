@@ -29,6 +29,10 @@ interface GameState {
   fridayMarket: FridayMarketItem[];
   businessTemplates: BusinessTemplate[];
 
+  // Settings
+  currency: string;
+  setCurrency: (currency: string) => void;
+
   // Actions - Player
   updatePlayerStats: (stats: Partial<PlayerStats>) => void;
   updateBalance: (amount: number) => void;
@@ -56,6 +60,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   fridayMarket: mockFridayMarket,
   businessTemplates: businessTemplates,
 
+  // Settings
+  currency: 'تومان',
+  setCurrency: (currency) => set({ currency }),
+
   // Player actions
   updatePlayerStats: (stats) =>
     set((state) => ({
@@ -81,7 +89,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newBusiness: Business = {
       id: `biz-${Date.now()}`,
       ownerId: player.id,
-      name: `My ${template.name}`,
+      name: `${template.name} من`,
       type: template.type,
       level: 1,
       employees: [],
