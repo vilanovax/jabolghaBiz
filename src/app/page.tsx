@@ -1,6 +1,6 @@
 'use client';
 
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
 import Badge from '@/components/ui/Badge';
@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   CheckCircle2,
   Circle,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,8 +37,9 @@ export default function HomePage() {
   const businesses = useGameStore((s) => s.businesses);
   const products = useGameStore((s) => s.products);
 
-  const totalRevenue = businesses.reduce((sum, b) => sum + b.revenue, 0);
-  const totalProfit = businesses.reduce((sum, b) => sum + b.profit, 0);
+  const totalRevenue = businesses.reduce((sum, b) => sum + calcEffectiveRevenue(b), 0);
+  const totalExpenses = businesses.reduce((sum, b) => sum + calcTotalExpenses(b), 0);
+  const totalProfit = totalRevenue - totalExpenses;
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
   const empireValue = player.balance + businesses.reduce((sum, b) => sum + b.upgradeCost * b.level, 0);
 
@@ -68,7 +70,7 @@ export default function HomePage() {
           <MoneyDisplay amount={player.balance} size="lg" />
         </Card>
         <Card glow="#10b981">
-          <p className="text-[10px] text-zinc-500 tracking-wider">سود روزانه</p>
+          <p className="text-[10px] text-zinc-500 tracking-wider">سود/سیکل</p>
           <MoneyDisplay amount={totalProfit} size="lg" showSign />
         </Card>
       </div>
@@ -87,7 +89,7 @@ export default function HomePage() {
         <Card className="text-center py-3">
           <Users size={18} className="mx-auto text-cyan-400 mb-1" />
           <p className="text-sm font-bold">{totalEmployees}</p>
-          <p className="text-[10px] text-zinc-500">کارمندان</p>
+          <p className="text-[10px] text-zinc-500">نیروها</p>
         </Card>
       </div>
 
@@ -101,56 +103,59 @@ export default function HomePage() {
         </div>
         <div className="space-y-3">
           {businesses.map((biz) => {
-            const efficiency = biz.employees.length > 0
-              ? Math.round(biz.employees.reduce((s, e) => s + e.efficiency, 0) / biz.employees.length)
-              : 0;
+            const revenue = calcEffectiveRevenue(biz);
+            const expenses = calcTotalExpenses(biz);
+            const net = revenue - expenses;
             return (
-              <Card key={biz.id} className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{biz.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold truncate">{biz.name}</p>
-                      <Badge text={`سطح ${biz.level}`} />
+              <Link key={biz.id} href={`/business/${biz.id}`}>
+                <Card className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{biz.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold truncate">{biz.name}</p>
+                        <Badge text={`سطح ${biz.level}`} />
+                      </div>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">
+                        {biz.employees.length} نیرو · <Clock size={10} className="inline" /> {biz.cycleDuration} ثانیه
+                      </p>
                     </div>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">
-                      {biz.employees.length} کارمند · بازدهی: {efficiency}%
-                    </p>
+                    {biz.pendingRevenue > 0 && (
+                      <span className="text-[10px] bg-emerald-600/20 text-emerald-400 px-2 py-0.5 rounded-full animate-pulse">
+                        درآمد آماده
+                      </span>
+                    )}
                   </div>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
-                    <p className="text-[10px] text-zinc-500">درآمد</p>
-                    <p className="text-xs text-emerald-400 font-bold">{biz.revenue.toLocaleString('fa-IR')}/روز</p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
+                      <p className="text-[10px] text-zinc-500">درآمد/سیکل</p>
+                      <p className="text-xs text-emerald-400 font-bold">{revenue.toLocaleString('fa-IR')}</p>
+                    </div>
+                    <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
+                      <p className="text-[10px] text-zinc-500">هزینه/سیکل</p>
+                      <p className="text-xs text-red-400 font-bold">{expenses.toLocaleString('fa-IR')}</p>
+                    </div>
+                    <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
+                      <p className="text-[10px] text-zinc-500">سود خالص</p>
+                      <MoneyDisplay amount={net} size="sm" showSign />
+                    </div>
                   </div>
-                  <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
-                    <p className="text-[10px] text-zinc-500">هزینه</p>
-                    <p className="text-xs text-red-400 font-bold">{biz.expenses.toLocaleString('fa-IR')}/روز</p>
-                  </div>
-                  <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
-                    <p className="text-[10px] text-zinc-500">سود</p>
-                    <MoneyDisplay amount={biz.profit} size="sm" showSign />
-                  </div>
-                </div>
 
-                <div className="flex gap-2">
-                  <Link href="/business" className="flex-1">
+                  <div className="flex gap-2">
                     <Button fullWidth size="sm" variant="secondary">
                       <span className="flex items-center justify-center gap-1">
                         <Briefcase size={14} /> مدیریت
                       </span>
                     </Button>
-                  </Link>
-                  <Link href="/business" className="flex-1">
                     <Button fullWidth size="sm" variant="success">
                       <span className="flex items-center justify-center gap-1">
                         <ArrowUpCircle size={14} /> ارتقا
                       </span>
                     </Button>
-                  </Link>
-                </div>
-              </Card>
+                  </div>
+                </Card>
+              </Link>
             );
           })}
         </div>

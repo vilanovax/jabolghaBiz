@@ -5,18 +5,20 @@ import { useGameStore } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 
 export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
   const templates = useGameStore((s) => s.businessTemplates);
   const createBusiness = useGameStore((s) => s.createBusiness);
   const balance = useGameStore((s) => s.player.balance);
   const [selected, setSelected] = useState<string | null>(null);
+  const [customName, setCustomName] = useState('');
+
+  const selectedTemplate = templates.find((t) => t.type === selected);
 
   const handleCreate = () => {
-    const template = templates.find((t) => t.type === selected);
-    if (template) {
-      createBusiness(template);
+    if (selectedTemplate) {
+      createBusiness(selectedTemplate, customName.trim());
       onClose();
     }
   };
@@ -44,13 +46,15 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
                   <span className="text-3xl">{t.icon}</span>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-sm">{t.name}</h3>
+                      <h3 className="font-bold text-sm">{t.defaultName}</h3>
                       <MoneyDisplay amount={t.startCost} size="sm" />
                     </div>
                     <p className="text-xs text-zinc-400 mt-1">{t.description}</p>
                     <div className="flex gap-4 mt-2 text-[10px] text-zinc-500">
-                      <span>درآمد: {t.baseRevenue.toLocaleString('fa-IR')}/روز</span>
-                      <span>هزینه: {t.baseExpenses.toLocaleString('fa-IR')}/روز</span>
+                      <span>درآمد: {t.baseRevenue.toLocaleString('fa-IR')}/سیکل</span>
+                      <span className="flex items-center gap-0.5">
+                        <Clock size={10} /> {t.cycleDuration} ثانیه
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -58,6 +62,20 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
+
+        {/* نام سفارشی */}
+        {selected && (
+          <div className="mb-4">
+            <label className="text-xs text-zinc-400 mb-1.5 block">نام شرکت</label>
+            <input
+              type="text"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder={selectedTemplate?.defaultName}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+        )}
 
         <Button onClick={handleCreate} disabled={!selected} fullWidth size="lg">
           ساخت کسب‌وکار

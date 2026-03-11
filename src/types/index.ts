@@ -29,12 +29,49 @@ export type BusinessType =
   | 'transport'
   | 'farming';
 
-export interface Employee {
+// نقش‌های کارمندان
+export type EmployeeRole =
+  | 'base'        // نیروی پایه (برنامه‌نویس، کشاورز، آشپز...)
+  | 'manager'     // مدیر — ضریب افزایش درآمد
+  | 'accountant'  // حسابدار — جمع‌آوری اتوماتیک درآمد
+  | 'marketer'    // بازاریاب — افزایش درآمد محصولات
+  | 'sales';      // فروش — افزایش سرعت فروش
+
+export interface EmployeeTemplate {
   id: string;
   name: string;
-  role: string;
+  role: EmployeeRole;
+  roleName: string;       // نام فارسی نقش
+  icon: string;
+  salary: number;         // حقوق در هر سیکل
+  revenueBoost: number;   // درصد افزایش درآمد (مثلاً 0.2 = 20%)
+  autoCollect: boolean;   // آیا جمع‌آوری اتوماتیک فعال میکنه؟
+  hireCost: number;       // هزینه استخدام
+  description: string;
+}
+
+export interface HiredEmployee {
+  id: string;
+  templateId: string;
+  name: string;
+  role: EmployeeRole;
+  roleName: string;
+  icon: string;
   salary: number;
-  efficiency: number; // 0-100
+  revenueBoost: number;
+  autoCollect: boolean;
+  hiredAt: number;
+}
+
+// محصولات شرکت (قابل آنلاک)
+export interface BusinessProduct {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  unlockCost: number;
+  revenueBoost: number;   // افزایش درآمد هر سیکل
+  unlocked: boolean;
 }
 
 export interface Business {
@@ -43,24 +80,40 @@ export interface Business {
   name: string;
   type: BusinessType;
   level: number;
-  employees: Employee[];
-  productionCapacity: number;
-  expenses: number;
-  revenue: number;
-  profit: number;
   icon: string;
+
+  // سیستم درآمد تایمری
+  baseRevenue: number;        // درآمد پایه هر سیکل
+  cycleDuration: number;      // مدت هر سیکل (ثانیه)
+  lastCycleAt: number;        // timestamp آخرین سیکل
+  pendingRevenue: number;     // درآمد جمع‌نشده
+  maxPendingCycles: number;   // حداکثر سیکل‌های انباشته
+
+  // هزینه‌ها
+  expenses: number;           // هزینه‌های هر سیکل
   upgradeCost: number;
+
+  // نیروها و محصولات
+  employees: HiredEmployee[];
+  products: BusinessProduct[];
+
+  // تجهیزات اولیه
+  initialEquipment: string;
 }
 
 export interface BusinessTemplate {
   type: BusinessType;
-  name: string;
+  defaultName: string;
   icon: string;
   description: string;
   startCost: number;
   baseRevenue: number;
+  cycleDuration: number;       // ثانیه
   baseExpenses: number;
-  baseProductionCapacity: number;
+  maxPendingCycles: number;
+  initialEquipment: string;
+  availableEmployees: EmployeeTemplate[];
+  availableProducts: BusinessProduct[];
 }
 
 // ==================== MARKET ====================
@@ -100,7 +153,7 @@ export interface ProductionChain {
   input: { productId: string; quantity: number }[];
   output: { productId: string; quantity: number };
   businessType: BusinessType;
-  duration: number; // seconds
+  duration: number;
 }
 
 // ==================== SOCIAL ====================

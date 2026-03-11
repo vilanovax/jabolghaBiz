@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses } from '@/store/gameStore';
 import BusinessCard from '@/components/business/BusinessCard';
 import NewBusinessModal from '@/components/business/NewBusinessModal';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
@@ -13,13 +13,13 @@ export default function BusinessPage() {
   const businesses = useGameStore((s) => s.businesses);
   const [showNewBiz, setShowNewBiz] = useState(false);
 
-  const totalRevenue = businesses.reduce((sum, b) => sum + b.revenue, 0);
-  const totalExpenses = businesses.reduce((sum, b) => sum + b.expenses, 0);
-  const totalProfit = businesses.reduce((sum, b) => sum + b.profit, 0);
+  const totalRevenue = businesses.reduce((sum, b) => sum + calcEffectiveRevenue(b), 0);
+  const totalExpenses = businesses.reduce((sum, b) => sum + calcTotalExpenses(b), 0);
+  const totalProfit = totalRevenue - totalExpenses;
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
 
   return (
-    <div className="space-y-5 py-4">
+    <div className="space-y-5 py-4 pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black">کسب‌وکارهای من</h1>
         <Button onClick={() => setShowNewBiz(true)} size="sm">
@@ -34,14 +34,14 @@ export default function BusinessPage() {
         <Card className="flex items-center gap-2 p-3">
           <TrendingUp size={16} className="text-emerald-400" />
           <div>
-            <p className="text-[10px] text-zinc-500">درآمد</p>
+            <p className="text-[10px] text-zinc-500">درآمد/سیکل</p>
             <MoneyDisplay amount={totalRevenue} size="sm" />
           </div>
         </Card>
         <Card className="flex items-center gap-2 p-3">
           <DollarSign size={16} className="text-amber-400" />
           <div>
-            <p className="text-[10px] text-zinc-500">سود</p>
+            <p className="text-[10px] text-zinc-500">سود/سیکل</p>
             <MoneyDisplay amount={totalProfit} size="sm" showSign />
           </div>
         </Card>
@@ -49,9 +49,9 @@ export default function BusinessPage() {
 
       <div className="flex items-center gap-4 text-xs text-zinc-400">
         <span className="flex items-center gap-1">
-          <Users size={14} /> {totalEmployees} کارمند
+          <Users size={14} /> {totalEmployees} نیرو
         </span>
-        <span>هزینه‌ها: {totalExpenses.toLocaleString('fa-IR')}/روز</span>
+        <span>هزینه/سیکل: {totalExpenses.toLocaleString('fa-IR')}</span>
       </div>
 
       {/* لیست کسب‌وکارها */}
