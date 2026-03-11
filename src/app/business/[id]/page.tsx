@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -26,6 +26,7 @@ export default function BusinessDetailPage() {
   const [tab, setTab] = useState<Tab>('overview');
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [collectAnim, setCollectAnim] = useState<number | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -38,6 +39,14 @@ export default function BusinessDetailPage() {
     }, 1000);
     return () => clearInterval(interval);
   }, [biz]);
+
+  const handleCollect = useCallback(() => {
+    if (!biz || biz.pendingRevenue <= 0) return;
+    const amount = biz.pendingRevenue;
+    collectRevenue(biz.id);
+    setCollectAnim(amount);
+    setTimeout(() => setCollectAnim(null), 1500);
+  }, [biz, collectRevenue]);
 
   if (!biz) {
     return (
@@ -55,6 +64,12 @@ export default function BusinessDetailPage() {
   const isAuto = hasAccountant(biz);
   const hasPending = biz.pendingRevenue > 0;
   const companyValue = biz.baseRevenue * biz.level * 10;
+
+  // پیش‌نمایش ارتقا
+  const nextBaseRevenue = Math.round(biz.baseRevenue * 1.25);
+  const nextUpgradeCost = Math.round(biz.upgradeCost * 1.6);
+  const nextEffectiveRevenue = calcEffectiveRevenue({ ...biz, baseRevenue: nextBaseRevenue });
+  const nextNetProfit = nextEffectiveRevenue - totalExpenses;
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -80,7 +95,7 @@ export default function BusinessDetailPage() {
 
   return (
     <div className="space-y-3 py-4 pb-32">
-      {/* هدر — نام + سطح + سود + ارزش */}
+      {/* هدر — نام + سطح + تجهیزات + مالی */}
       <div className="flex items-center gap-3">
         <Link href="/business" className="text-zinc-500 hover:text-zinc-300">
           <ChevronRight size={20} />
@@ -93,17 +108,20 @@ export default function BusinessDetailPage() {
               LV {biz.level}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[10px] mt-0.5">
-            <span className="text-zinc-500">{biz.initialEquipment}</span>
-            <span className="text-zinc-600">|</span>
+          <p className="text-[10px] text-zinc-500 mt-0.5">💻 {biz.initialEquipment}</p>
+          <div className="flex items-center gap-2.5 text-[10px] mt-0.5">
             <span className="text-zinc-500">
-              💰 سود: <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              درآمد: <span className="text-emerald-400 font-fa font-bold">{effectiveRevenue.toLocaleString('fa-IR')}</span>
+            </span>
+            <span className="text-zinc-700">|</span>
+            <span className="text-zinc-500">
+              هزینه: <span className="text-red-400 font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
+            </span>
+            <span className="text-zinc-700">|</span>
+            <span className="text-zinc-500">
+              سود: <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
               </span>
-            </span>
-            <span className="text-zinc-600">|</span>
-            <span className="text-zinc-500">
-              💎 <span className="text-amber-400 font-fa font-bold">{companyValue.toLocaleString('fa-IR')}</span>
             </span>
           </div>
         </div>
@@ -112,8 +130,17 @@ export default function BusinessDetailPage() {
       {/* تایمر فشرده + جمع‌آوری */}
       <Card
         glow={hasPending ? '#10b981' : '#3f3f46'}
-        className={`text-center py-3 ${hasPending ? 'animate-pulse-glow' : ''}`}
+        className={`text-center py-3 relative overflow-hidden ${hasPending ? 'animate-pulse-glow' : ''}`}
       >
+        {/* انیمیشن جمع‌آوری */}
+        {collectAnim !== null && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <span className="text-emerald-400 font-black text-lg font-fa animate-collect">
+              +{collectAnim.toLocaleString('fa-IR')} تومان
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center justify-center gap-4">
           {/* حلقه تایمر کوچک */}
           <div className="relative w-20 h-20 shrink-0">
@@ -129,8 +156,8 @@ export default function BusinessDetailPage() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Clock size={11} className="text-zinc-500 mb-0.5" />
               <span className="text-sm font-black font-fa">{formatTime(timeLeft)}</span>
+              <span className="text-[8px] text-zinc-500">تا تولید بعدی</span>
             </div>
           </div>
 
@@ -142,7 +169,7 @@ export default function BusinessDetailPage() {
 
             {hasPending ? (
               <button
-                onClick={() => collectRevenue(biz.id)}
+                onClick={handleCollect}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg font-bold text-[11px] active:scale-95 transition-all"
               >
                 💰 جمع‌آوری <span className="font-fa">{biz.pendingRevenue.toLocaleString('fa-IR')}</span>
@@ -159,29 +186,6 @@ export default function BusinessDetailPage() {
           </div>
         </div>
       </Card>
-
-      {/* آمار مالی — نوار افقی فشرده */}
-      <div className="flex items-center justify-between bg-zinc-800/50 rounded-xl px-3 py-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px]">📈</span>
-          <span className="text-[10px] text-zinc-500">درآمد:</span>
-          <span className="text-[10px] text-emerald-400 font-fa font-bold">{effectiveRevenue.toLocaleString('fa-IR')}</span>
-        </div>
-        <div className="w-px h-3.5 bg-zinc-700" />
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px]">💸</span>
-          <span className="text-[10px] text-zinc-500">هزینه:</span>
-          <span className="text-[10px] text-red-400 font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
-        </div>
-        <div className="w-px h-3.5 bg-zinc-700" />
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px]">💰</span>
-          <span className="text-[10px] text-zinc-500">سود:</span>
-          <span className={`text-[10px] font-fa font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
-          </span>
-        </div>
-      </div>
 
       {/* تب‌ها */}
       <div className="flex bg-zinc-800/50 rounded-xl p-1">
@@ -221,7 +225,7 @@ export default function BusinessDetailPage() {
             </div>
           </Card>
 
-          {/* اطلاعات شرکت */}
+          {/* اطلاعات شرکت — گرید ۲ ستونه */}
           <Card className="space-y-2.5">
             <p className="text-xs font-bold">🏢 اطلاعات شرکت</p>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -274,8 +278,8 @@ export default function BusinessDetailPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold truncate">{emp.name}</p>
                       <p className="text-[9px] text-zinc-500">
-                        {emp.revenueBoost > 0 && <span className="text-emerald-400">+{(emp.revenueBoost * 100).toFixed(0)}% 📈</span>}
-                        {emp.autoCollect && <span className="text-emerald-400">🧮 خودکار</span>}
+                        {emp.revenueBoost > 0 && <span className="text-emerald-400">+{(emp.revenueBoost * 100).toFixed(0)}% درآمد 📈</span>}
+                        {emp.autoCollect && <span className="text-emerald-400">🧮 جمع‌آوری خودکار</span>}
                       </p>
                     </div>
                     <span className="text-[9px] text-red-400/70 font-fa shrink-0">{emp.salary.toLocaleString('fa-IR')}/سیکل</span>
@@ -304,7 +308,8 @@ export default function BusinessDetailPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold truncate">{et.name}</p>
                     <p className="text-[9px] text-zinc-500">
-                      {et.description}
+                      {et.revenueBoost > 0 && <span className="text-emerald-400">+{(et.revenueBoost * 100).toFixed(0)}% درآمد</span>}
+                      {et.autoCollect && <span className="text-emerald-400">جمع‌آوری خودکار</span>}
                       {' · '}
                       <span className="font-fa text-zinc-600">{et.salary.toLocaleString('fa-IR')}/سیکل</span>
                     </p>
@@ -348,8 +353,10 @@ export default function BusinessDetailPage() {
                     )}
                   </div>
                   <p className="text-[9px] text-zinc-500">{prod.description}</p>
-                  <p className="text-[10px] text-emerald-400 font-bold mt-0.5">
-                    +<span className="font-fa">{prod.revenueBoost.toLocaleString('fa-IR')}</span> تومان/سیکل
+                  <p className="text-[10px] mt-0.5">
+                    <span className="text-zinc-500">درآمد محصول: </span>
+                    <span className="text-emerald-400 font-bold font-fa">+{prod.revenueBoost.toLocaleString('fa-IR')}</span>
+                    <span className="text-zinc-500"> تومان/سیکل</span>
                   </p>
                 </div>
               </div>
@@ -367,9 +374,26 @@ export default function BusinessDetailPage() {
         </div>
       )}
 
-      {/* دکمه ارتقا — ثابت پایین صفحه */}
+      {/* دکمه ارتقا — ثابت پایین صفحه با پیش‌نمایش */}
       <div className="fixed bottom-20 left-0 right-0 px-4 z-40">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto space-y-1.5">
+          {/* پیش‌نمایش ارتقا */}
+          {biz.level < biz.maxLevel && (
+            <div className="bg-zinc-900/95 backdrop-blur-md rounded-xl px-3 py-2 border border-zinc-700/50 flex items-center justify-between text-[10px]">
+              <span className="text-zinc-400">سطح {biz.level + 1}:</span>
+              <span className="text-zinc-500">
+                سود{' '}
+                <span className="text-zinc-400 font-fa">{netProfit.toLocaleString('fa-IR')}</span>
+                <span className="text-zinc-600 mx-1">→</span>
+                <span className="text-emerald-400 font-fa font-bold">{nextNetProfit.toLocaleString('fa-IR')}</span>
+              </span>
+              <span className="text-zinc-600">|</span>
+              <span className="text-zinc-500">
+                ارتقای بعد{' '}
+                <span className="text-amber-400 font-fa">{nextUpgradeCost.toLocaleString('fa-IR')}</span>
+              </span>
+            </div>
+          )}
           <Button
             onClick={() => upgradeBusiness(biz.id)}
             disabled={balance < biz.upgradeCost || biz.level >= biz.maxLevel}
