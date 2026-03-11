@@ -13,6 +13,7 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "vazirmatn": "^33.0.3",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

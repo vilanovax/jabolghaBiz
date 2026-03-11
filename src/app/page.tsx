@@ -3,10 +3,33 @@
 import { useGameStore } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
-import PlayerStatsPanel from '@/components/player/PlayerStatsPanel';
 import Badge from '@/components/ui/Badge';
-import { TrendingUp, Briefcase, Star } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import {
+  TrendingUp,
+  Briefcase,
+  Users,
+  Crown,
+  ArrowUpCircle,
+  ShoppingCart,
+  CheckCircle2,
+  Circle,
+} from 'lucide-react';
 import Link from 'next/link';
+
+const demandLabel = (supply: number, demand: number) => {
+  const ratio = demand / supply;
+  if (ratio > 1.3) return { text: 'بالا', color: 'text-emerald-400' };
+  if (ratio > 0.8) return { text: 'متوسط', color: 'text-amber-400' };
+  return { text: 'پایین', color: 'text-red-400' };
+};
+
+const supplyLabel = (supply: number, demand: number) => {
+  const ratio = supply / demand;
+  if (ratio > 1.3) return { text: 'بالا', color: 'text-emerald-400' };
+  if (ratio > 0.8) return { text: 'متوسط', color: 'text-amber-400' };
+  return { text: 'پایین', color: 'text-red-400' };
+};
 
 export default function HomePage() {
   const player = useGameStore((s) => s.player);
@@ -16,22 +39,29 @@ export default function HomePage() {
   const totalRevenue = businesses.reduce((sum, b) => sum + b.revenue, 0);
   const totalProfit = businesses.reduce((sum, b) => sum + b.profit, 0);
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
+  const empireValue = player.balance + businesses.reduce((sum, b) => sum + b.upgradeCost * b.level, 0);
 
   const topProducts = [...products]
     .sort((a, b) => (b.currentPrice - b.basePrice) / b.basePrice - (a.currentPrice - a.basePrice) / a.basePrice)
-    .slice(0, 3);
+    .slice(0, 4);
+
+  const dailyTasks = [
+    { text: 'یک کارمند جدید استخدام کن', done: false },
+    { text: 'یک کسب‌وکار را ارتقا بده', done: false },
+    { text: 'محصولی در بازار بفروش', done: true },
+  ];
 
   return (
-    <div className="space-y-5 py-4">
+    <div className="space-y-5 py-4 pb-24">
       {/* خوش‌آمدگویی */}
       <div>
         <h1 className="text-xl font-black">
           خوش برگشتی، <span className="text-indigo-400">{player.username}</span>
         </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">نمای کلی امپراتوری شما</p>
+        <p className="text-sm text-zinc-500 mt-0.5">داشبورد امپراتوری کسب‌وکار شما</p>
       </div>
 
-      {/* خلاصه مالی */}
+      {/* ===================== خلاصه امپراتوری ===================== */}
       <div className="grid grid-cols-2 gap-3">
         <Card glow="#6366f1">
           <p className="text-[10px] text-zinc-500 tracking-wider">موجودی کل</p>
@@ -43,26 +73,25 @@ export default function HomePage() {
         </Card>
       </div>
 
-      {/* آمار سریع */}
       <div className="grid grid-cols-3 gap-2">
         <Card className="text-center py-3">
+          <Crown size={18} className="mx-auto text-amber-400 mb-1" />
+          <p className="text-sm font-bold">{empireValue.toLocaleString('fa-IR')}</p>
+          <p className="text-[10px] text-zinc-500">ارزش امپراتوری</p>
+        </Card>
+        <Card className="text-center py-3">
           <Briefcase size={18} className="mx-auto text-indigo-400 mb-1" />
-          <p className="text-lg font-bold">{businesses.length}</p>
+          <p className="text-sm font-bold">{businesses.length}</p>
           <p className="text-[10px] text-zinc-500">کسب‌وکار</p>
         </Card>
         <Card className="text-center py-3">
-          <TrendingUp size={18} className="mx-auto text-emerald-400 mb-1" />
-          <p className="text-lg font-bold">{totalRevenue.toLocaleString('fa-IR')}</p>
-          <p className="text-[10px] text-zinc-500">درآمد/روز</p>
-        </Card>
-        <Card className="text-center py-3">
-          <Star size={18} className="mx-auto text-amber-400 mb-1" />
-          <p className="text-lg font-bold">{totalEmployees}</p>
+          <Users size={18} className="mx-auto text-cyan-400 mb-1" />
+          <p className="text-sm font-bold">{totalEmployees}</p>
           <p className="text-[10px] text-zinc-500">کارمندان</p>
         </Card>
       </div>
 
-      {/* کسب‌وکارهای من */}
+      {/* ===================== کسب‌وکارهای من ===================== */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-sm">کسب‌وکارهای من</h2>
@@ -70,56 +99,151 @@ export default function HomePage() {
             مشاهده همه
           </Link>
         </div>
-        <div className="space-y-2">
-          {businesses.map((biz) => (
-            <Link key={biz.id} href="/business">
-              <Card className="flex items-center gap-3 hover:bg-zinc-700/40">
-                <span className="text-2xl">{biz.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate">{biz.name}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge text={`سطح ${biz.level}`} />
-                    <span className="text-[10px] text-zinc-500">{biz.employees.length} کارمند</span>
+        <div className="space-y-3">
+          {businesses.map((biz) => {
+            const efficiency = biz.employees.length > 0
+              ? Math.round(biz.employees.reduce((s, e) => s + e.efficiency, 0) / biz.employees.length)
+              : 0;
+            return (
+              <Card key={biz.id} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{biz.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold truncate">{biz.name}</p>
+                      <Badge text={`سطح ${biz.level}`} />
+                    </div>
+                    <p className="text-[10px] text-zinc-500 mt-0.5">
+                      {biz.employees.length} کارمند · بازدهی: {efficiency}%
+                    </p>
                   </div>
                 </div>
-                <MoneyDisplay amount={biz.profit} size="sm" showSign />
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
 
-      {/* روند بازار */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-sm">محصولات پرطرفدار</h2>
-          <Link href="/market" className="text-xs text-indigo-400 hover:text-indigo-300">
-            بازار
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {topProducts.map((prod) => {
-            const change = (((prod.currentPrice - prod.basePrice) / prod.basePrice) * 100).toFixed(0);
-            const isUp = prod.currentPrice >= prod.basePrice;
-            return (
-              <Card key={prod.id} className="text-center py-3">
-                <span className="text-2xl">{prod.icon}</span>
-                <p className="text-xs font-bold mt-1">{prod.name}</p>
-                <p className="text-amber-400 font-mono text-xs">{prod.currentPrice.toLocaleString('fa-IR')}</p>
-                <p className={`text-[10px] ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {isUp ? '+' : ''}{change}%
-                </p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
+                    <p className="text-[10px] text-zinc-500">درآمد</p>
+                    <p className="text-xs text-emerald-400 font-bold">{biz.revenue.toLocaleString('fa-IR')}/روز</p>
+                  </div>
+                  <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
+                    <p className="text-[10px] text-zinc-500">هزینه</p>
+                    <p className="text-xs text-red-400 font-bold">{biz.expenses.toLocaleString('fa-IR')}/روز</p>
+                  </div>
+                  <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
+                    <p className="text-[10px] text-zinc-500">سود</p>
+                    <MoneyDisplay amount={biz.profit} size="sm" showSign />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Link href="/business" className="flex-1">
+                    <Button fullWidth size="sm" variant="secondary">
+                      <span className="flex items-center justify-center gap-1">
+                        <Briefcase size={14} /> مدیریت
+                      </span>
+                    </Button>
+                  </Link>
+                  <Link href="/business" className="flex-1">
+                    <Button fullWidth size="sm" variant="success">
+                      <span className="flex items-center justify-center gap-1">
+                        <ArrowUpCircle size={14} /> ارتقا
+                      </span>
+                    </Button>
+                  </Link>
+                </div>
               </Card>
             );
           })}
         </div>
       </div>
 
-      {/* آمار بازیکن */}
+      {/* ===================== روند بازار ===================== */}
       <div>
-        <h2 className="font-bold text-sm mb-3">وضعیت شما</h2>
-        <PlayerStatsPanel />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-sm">روند بازار</h2>
+          <Link href="/market" className="text-xs text-indigo-400 hover:text-indigo-300">
+            <ShoppingCart size={14} className="inline me-1" />
+            ورود به بازار
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {topProducts.map((prod) => {
+            const change = (((prod.currentPrice - prod.basePrice) / prod.basePrice) * 100).toFixed(0);
+            const isUp = prod.currentPrice >= prod.basePrice;
+            const demand = demandLabel(prod.supply, prod.demand);
+            const supply = supplyLabel(prod.supply, prod.demand);
+
+            return (
+              <Card key={prod.id} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{prod.icon}</span>
+                  <div>
+                    <p className="text-xs font-bold">{prod.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-amber-400 font-mono text-xs font-bold">
+                        {prod.currentPrice.toLocaleString('fa-IR')}
+                      </span>
+                      <span className={`text-[10px] font-medium ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {isUp ? '+' : ''}{change}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-zinc-500">تقاضا: <span className={demand.color}>{demand.text}</span></span>
+                  <span className="text-zinc-500">عرضه: <span className={supply.color}>{supply.text}</span></span>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       </div>
+
+      {/* ===================== ماموریت‌های روزانه ===================== */}
+      <div>
+        <h2 className="font-bold text-sm mb-3">ماموریت‌های روزانه</h2>
+        <Card className="space-y-2">
+          {dailyTasks.map((task, i) => (
+            <div key={i} className="flex items-center gap-2 py-1">
+              {task.done ? (
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+              ) : (
+                <Circle size={16} className="text-zinc-600 shrink-0" />
+              )}
+              <span className={`text-xs ${task.done ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}>
+                {task.text}
+              </span>
+            </div>
+          ))}
+        </Card>
+      </div>
+
+      {/* ===================== وضعیت شخصی (مینیمال) ===================== */}
+      <div>
+        <h2 className="font-bold text-sm mb-3">وضعیت شخصی</h2>
+        <Card className="flex items-center justify-around py-3">
+          {[
+            { icon: '😊', value: player.stats.happiness, label: 'شادی' },
+            { icon: '🍔', value: player.stats.hunger, label: 'گرسنگی' },
+            { icon: '⚡', value: player.stats.energy, label: 'انرژی' },
+            { icon: '🧠', value: player.stats.intelligence, label: 'هوش' },
+            { icon: '⭐', value: player.stats.experience, label: 'تجربه' },
+          ].map((stat) => (
+            <Link key={stat.label} href="/profile" className="flex flex-col items-center gap-0.5 group">
+              <span className="text-lg group-hover:scale-110 transition-transform">{stat.icon}</span>
+              <span className="text-xs font-bold text-zinc-200">{stat.value}</span>
+              <span className="text-[9px] text-zinc-600">{stat.label}</span>
+            </Link>
+          ))}
+        </Card>
+      </div>
+
+      {/* ===================== دکمه اصلی شناور ===================== */}
+      <Link href="/business" className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+        <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center gap-2">
+          <Briefcase size={18} />
+          مدیریت کسب‌وکارها
+        </button>
+      </Link>
     </div>
   );
 }
