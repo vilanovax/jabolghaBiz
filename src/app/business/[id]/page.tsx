@@ -21,6 +21,7 @@ export default function BusinessDetailPage() {
   const collectRevenue = useGameStore((s) => s.collectRevenue);
   const upgradeBusiness = useGameStore((s) => s.upgradeBusiness);
   const hireEmployee = useGameStore((s) => s.hireEmployee);
+  const upgradeEmployee = useGameStore((s) => s.upgradeEmployee);
   const unlockProduct = useGameStore((s) => s.unlockProduct);
 
   const [tab, setTab] = useState<Tab>('overview');
@@ -272,50 +273,116 @@ export default function BusinessDetailPage() {
             <div>
               <p className="text-[10px] font-bold mb-2 text-zinc-400">نیروهای فعلی</p>
               <div className="space-y-1.5">
-                {biz.employees.map((emp) => (
-                  <div key={emp.id} className="flex items-center gap-2.5 bg-zinc-800/60 rounded-xl px-3 py-2 border border-zinc-700/30">
-                    <span className="text-lg">{emp.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">{emp.name}</p>
-                      <p className="text-[9px] text-zinc-500">
-                        {emp.revenueBoost > 0 && <span className="text-emerald-400">+{(emp.revenueBoost * 100).toFixed(0)}% درآمد 📈</span>}
-                        {emp.autoCollect && <span className="text-emerald-400">🧮 جمع‌آوری خودکار</span>}
-                      </p>
+                {biz.employees.map((emp) => {
+                  const canUpgrade = emp.employeeLevel < emp.maxUpgradeLevel;
+                  const upgCost = canUpgrade ? emp.baseHireCost * Math.pow(2, emp.employeeLevel) : 0;
+                  const canAffordUpg = balance >= upgCost;
+                  const levelBoost = (1 + (emp.employeeLevel - 1) * 0.5);
+                  const effectiveBoost = emp.revenueBoost * levelBoost;
+                  return (
+                    <div key={emp.id} className="bg-zinc-800/60 rounded-xl px-3 py-2.5 border border-zinc-700/30">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">{emp.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-bold truncate">{emp.name}</p>
+                            {emp.maxUpgradeLevel > 1 && (
+                              <span className="text-[8px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded font-bold shrink-0">
+                                L{emp.employeeLevel}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-zinc-500">
+                            {emp.revenueBoost > 0 && (
+                              <span className="text-emerald-400">+{(effectiveBoost * 100).toFixed(0)}% درآمد 📈</span>
+                            )}
+                            {emp.autoCollect && <span className="text-emerald-400">🧮 جمع‌آوری خودکار</span>}
+                            {' · '}
+                            <span className="font-fa text-zinc-600">{emp.salary.toLocaleString('fa-IR')}/سیکل</span>
+                          </p>
+                        </div>
+                        {canUpgrade ? (
+                          <button
+                            onClick={() => upgradeEmployee(biz.id, emp.id)}
+                            disabled={!canAffordUpg}
+                            className="shrink-0 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white px-2 py-1 rounded-lg text-[9px] font-bold active:scale-95 transition-all"
+                          >
+                            ⬆ L{emp.employeeLevel + 1}
+                            <br />
+                            <span className="font-fa">{upgCost.toLocaleString('fa-IR')}</span>
+                          </button>
+                        ) : (
+                          <span className="text-emerald-400 text-xs shrink-0">✅</span>
+                        )}
+                      </div>
+                      {/* نوار پیشرفت سطح */}
+                      {emp.maxUpgradeLevel > 1 && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-indigo-500 rounded-full transition-all"
+                              style={{ width: `${(emp.employeeLevel / emp.maxUpgradeLevel) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-[8px] text-zinc-500 font-fa">{emp.employeeLevel}/{emp.maxUpgradeLevel}</span>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-[9px] text-red-400/70 font-fa shrink-0">{emp.salary.toLocaleString('fa-IR')}/سیکل</span>
-                    <span className="text-emerald-400 text-xs">✅</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* استخدام */}
+          {/* درخت رشد — استخدام */}
           <p className="text-[10px] font-bold text-zinc-400">
-            استخدام نیروی جدید ({biz.employees.length}/{biz.maxEmployees})
+            درخت رشد نیروها ({biz.employees.length}/{biz.maxEmployees})
           </p>
           <div className="space-y-1.5">
             {template?.availableEmployees.map((et) => {
               const alreadyHired = biz.employees.some((e) => e.templateId === et.id);
+              const isLocked = biz.level < et.unlockLevel;
               const capacityFull = biz.employees.length >= biz.maxEmployees;
               const canAfford = balance >= et.hireCost;
+
+              if (alreadyHired) return null; // نمایش در لیست فعلی بالا
+
               return (
                 <div
                   key={et.id}
-                  className={`flex items-center gap-2.5 bg-zinc-800/40 rounded-xl px-3 py-2.5 border border-zinc-700/30 ${alreadyHired ? 'opacity-40' : ''}`}
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 border ${
+                    isLocked
+                      ? 'bg-zinc-900/40 border-zinc-800/30 opacity-60'
+                      : 'bg-zinc-800/40 border-zinc-700/30'
+                  }`}
                 >
-                  <span className="text-lg">{et.icon}</span>
+                  <span className={`text-lg ${isLocked ? 'grayscale' : ''}`}>{et.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold truncate">{et.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className={`text-xs font-bold truncate ${isLocked ? 'text-zinc-500' : ''}`}>{et.name}</p>
+                      {et.tier === 'legendary' && !isLocked && (
+                        <span className="text-[8px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold">افسانه‌ای</span>
+                      )}
+                    </div>
                     <p className="text-[9px] text-zinc-500">
-                      {et.revenueBoost > 0 && <span className="text-emerald-400">+{(et.revenueBoost * 100).toFixed(0)}% درآمد</span>}
-                      {et.autoCollect && <span className="text-emerald-400">جمع‌آوری خودکار</span>}
-                      {' · '}
-                      <span className="font-fa text-zinc-600">{et.salary.toLocaleString('fa-IR')}/سیکل</span>
+                      {isLocked ? (
+                        <span className="text-zinc-600">🔒 سطح {et.unlockLevel.toLocaleString('fa-IR')} شرکت</span>
+                      ) : (
+                        <>
+                          {et.revenueBoost > 0 && <span className="text-emerald-400">+{(et.revenueBoost * 100).toFixed(0)}% درآمد</span>}
+                          {et.autoCollect && <span className="text-emerald-400">جمع‌آوری خودکار</span>}
+                          {et.expenseReduction && <span className="text-sky-400"> · هزینه -{(et.expenseReduction * 100).toFixed(0)}%</span>}
+                          {et.cycleDurationReduction && <span className="text-purple-400"> · سیکل -{(et.cycleDurationReduction * 100).toFixed(0)}%</span>}
+                          {' · '}
+                          <span className="font-fa text-zinc-600">{et.salary.toLocaleString('fa-IR')}/سیکل</span>
+                        </>
+                      )}
                     </p>
                   </div>
-                  {alreadyHired ? (
-                    <span className="text-[9px] text-zinc-500 shrink-0">✅ استخدام‌شده</span>
+                  {isLocked ? (
+                    <span className="text-[9px] text-zinc-600 shrink-0 flex items-center gap-0.5">
+                      <Lock size={10} /> LV{et.unlockLevel}
+                    </span>
                   ) : capacityFull ? (
                     <span className="text-[9px] text-zinc-500 shrink-0">ظرفیت پر</span>
                   ) : (

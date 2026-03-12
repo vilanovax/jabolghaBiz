@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import {
   PlayerProfile,
   Business,
@@ -24,10 +25,14 @@ import {
 
 // ==================== Helper Functions ====================
 
-// محاسبه درآمد واقعی — ضریب کارمندان با سقف 2.5x + بوست مطلق محصولات
+// محاسبه درآمد واقعی — ضریب کارمندان (با سطح نیرو) با سقف 3.5x + بوست مطلق محصولات
 export function calcEffectiveRevenue(biz: Business): number {
-  const staffBoostSum = biz.employees.reduce((sum, e) => sum + e.revenueBoost, 0);
-  const staffMultiplier = Math.min(1 + staffBoostSum, 2.5); // حداکثر ۱۵۰٪ بوست
+  // بوست هر نیرو بر اساس سطح: L1=base, L2=+50%, L3=+100%
+  const staffBoostSum = biz.employees.reduce((sum, e) => {
+    const levelMultiplier = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+    return sum + e.revenueBoost * levelMultiplier;
+  }, 0);
+  const staffMultiplier = Math.min(1 + staffBoostSum, 3.5); // حداکثر ۲۵۰٪ بوست
   const productBoost = biz.products
     .filter((p) => p.unlocked)
     .reduce((sum, p) => sum + p.revenueBoost, 0);
@@ -76,8 +81,9 @@ interface GameState {
   tickBusinesses: () => void;
   collectRevenue: (businessId: string) => void;
 
-  // Business — استخدام و محصول
+  // Business — استخدام، ارتقا و محصول
   hireEmployee: (businessId: string, template: EmployeeTemplate) => void;
+  upgradeEmployee: (businessId: string, employeeId: string) => void;
   unlockProduct: (businessId: string, productId: string) => void;
 
   // Market
@@ -89,7 +95,7 @@ interface GameState {
   setActiveTab: (tab: string) => void;
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>()(persist((set, get) => ({
   player: mockPlayer,
   businesses: mockBusinesses,
   products: mockProducts,
@@ -238,8 +244,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   // ==================== Business — استخدام و محصول ====================
 
   hireEmployee: (businessId, template) => {
-    const { player } = get();
+    const { player, businesses } = get();
     if (player.balance < template.hireCost) return;
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz) return;
+    // بررسی سطح شرکت
+    if (biz.level < template.unlockLevel) return;
 
     set((state) => ({
       businesses: state.businesses.map((b) => {
@@ -263,11 +273,43 @@ export const useGameStore = create<GameState>((set, get) => ({
               revenueBoost: template.revenueBoost,
               autoCollect: template.autoCollect,
               hiredAt: Date.now(),
+              employeeLevel: 1,
+              maxUpgradeLevel: template.maxUpgradeLevel,
+              baseHireCost: template.hireCost,
             },
           ],
         };
       }),
       player: { ...state.player, balance: state.player.balance - template.hireCost },
+    }));
+  },
+
+  upgradeEmployee: (businessId, employeeId) => {
+    const { player, businesses } = get();
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz) return;
+    const emp = biz.employees.find((e) => e.id === employeeId);
+    if (!emp) return;
+    // بررسی حداکثر سطح
+    if (emp.employeeLevel >= emp.maxUpgradeLevel) return;
+    // هزینه ارتقا: L1→L2 = hireCost×2, L2→L3 = hireCost×4
+    const upgradeCost = emp.baseHireCost * Math.pow(2, emp.employeeLevel);
+    if (player.balance < upgradeCost) return;
+
+    set((state) => ({
+      businesses: state.businesses.map((b) =>
+        b.id === businessId
+          ? {
+              ...b,
+              employees: b.employees.map((e) =>
+                e.id === employeeId
+                  ? { ...e, employeeLevel: e.employeeLevel + 1 }
+                  : e
+              ),
+            }
+          : b
+      ),
+      player: { ...state.player, balance: state.player.balance - upgradeCost },
     }));
   },
 
@@ -364,4 +406,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
+}), {
+  name: 'jabolgha-save',
+  partialize: (state) => ({
+    player: state.player,
+    businesses: state.businesses,
+    products: state.products,
+    listings: state.listings,
+  }),
 }));

@@ -37,6 +37,9 @@ export type EmployeeRole =
   | 'marketer'    // بازاریاب — افزایش درآمد محصولات
   | 'sales';      // فروش — افزایش سرعت فروش
 
+// تایر نیرو — سطح‌بندی
+export type EmployeeTier = 'worker' | 'senior' | 'manager' | 'accountant' | 'marketer' | 'legendary';
+
 export interface EmployeeTemplate {
   id: string;
   name: string;
@@ -48,6 +51,12 @@ export interface EmployeeTemplate {
   autoCollect: boolean;   // آیا جمع‌آوری اتوماتیک فعال میکنه؟
   hireCost: number;       // هزینه استخدام
   description: string;
+  // سیستم درخت رشد
+  unlockLevel: number;    // سطح شرکت برای آنلاک
+  tier: EmployeeTier;     // تایر نیرو
+  maxUpgradeLevel: number; // حداکثر سطح نیرو (1 یا 3)
+  expenseReduction?: number; // کاهش هزینه (برای مکانیک و مدیر زنجیره تأمین)
+  cycleDurationReduction?: number; // کاهش زمان سیکل (برای نیروهای legendary)
 }
 
 export interface HiredEmployee {
@@ -61,6 +70,10 @@ export interface HiredEmployee {
   revenueBoost: number;
   autoCollect: boolean;
   hiredAt: number;
+  // سیستم ارتقا
+  employeeLevel: number;  // سطح فعلی نیرو (1-3)
+  maxUpgradeLevel: number;
+  baseHireCost: number;   // هزینه اولیه — برای محاسبه هزینه ارتقا
 }
 
 // محصولات شرکت (قابل آنلاک)
