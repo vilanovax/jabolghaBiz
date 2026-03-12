@@ -263,23 +263,23 @@ export default function BusinessDetailPage() {
             onClick={() => setShowOfficeSheet(true)}
             className="w-full text-right active:scale-[0.98] transition-transform"
           >
-            <div className="relative overflow-hidden rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-bl from-indigo-950/60 via-surface-card/80 to-surface-elevated/60">
+            <div className="rounded-2xl border border-line bg-surface-card/60 overflow-hidden">
               {/* نوار بالا */}
-              <div className="bg-indigo-600/20 px-3 py-1.5 flex items-center justify-between border-b border-indigo-500/20">
+              <div className="px-3 py-1.5 flex items-center justify-between border-b border-line/50">
                 <div className="flex items-center gap-1.5">
-                  <Building2 size={12} className="text-indigo-400" />
-                  <span className="text-[9px] font-bold text-indigo-300">دفتر کار</span>
+                  <Building2 size={12} className="text-fg-secondary" />
+                  <span className="text-[9px] font-bold text-fg-secondary">دفتر کار</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[9px] text-indigo-400 font-bold">LV {officeLevel}</span>
-                  <ChevronUp size={12} className="text-indigo-400" />
+                  <span className="text-[9px] text-fg-muted font-bold">LV {officeLevel}</span>
+                  <ChevronUp size={12} className="text-fg-muted" />
                 </div>
               </div>
 
               <div className="p-3 space-y-2.5">
                 {/* آیکون + نام + متراژ */}
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-2xl">
+                  <div className="w-12 h-12 rounded-xl bg-surface-inset/50 border border-line/50 flex items-center justify-center text-2xl">
                     {currentOffice.icon}
                   </div>
                   <div className="flex-1">
@@ -287,9 +287,9 @@ export default function BusinessDetailPage() {
                     <p className="text-[10px] text-fg-muted font-fa">{currentOffice.area} متر مربع · اجاره {currentOffice.rent.toLocaleString('fa-IR')}/سیکل</p>
                   </div>
                   {nextOffice && (
-                    <div className="shrink-0 bg-amber-500/15 border border-amber-500/20 rounded-lg px-2 py-1 text-center">
-                      <p className="text-[8px] text-amber-400 font-bold">ارتقا</p>
-                      <p className="text-[8px] text-amber-300">{nextOffice.icon}</p>
+                    <div className="shrink-0 bg-surface-inset/50 border border-line/50 rounded-lg px-2 py-1 text-center">
+                      <p className="text-[8px] text-fg-muted font-bold">ارتقا</p>
+                      <p className="text-[8px]">{nextOffice.icon}</p>
                     </div>
                   )}
                 </div>
@@ -303,7 +303,7 @@ export default function BusinessDetailPage() {
                     </div>
                     <div className="h-1.5 bg-progress-bg rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${empFill >= 1 ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                        className="h-full rounded-full transition-all bg-fg-muted"
                         style={{ width: `${empFill * 100}%` }}
                       />
                     </div>
@@ -315,7 +315,7 @@ export default function BusinessDetailPage() {
                     </div>
                     <div className="h-1.5 bg-progress-bg rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${prodFill >= 1 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                        className="h-full rounded-full transition-all bg-fg-muted"
                         style={{ width: `${prodFill * 100}%` }}
                       />
                     </div>
@@ -323,7 +323,7 @@ export default function BusinessDetailPage() {
                 </div>
 
                 {/* CTA */}
-                <div className="flex items-center justify-center gap-1 text-[10px] text-indigo-400 font-bold pt-0.5">
+                <div className="flex items-center justify-center gap-1 text-[10px] text-fg-secondary font-bold pt-0.5">
                   <span>مشاهده سطوح دفتر و ارتقا</span>
                   <ChevronUp size={14} />
                 </div>
@@ -406,7 +406,7 @@ export default function BusinessDetailPage() {
                 <div className="w-10 h-1 rounded-full bg-fg-faint/30 mb-3" />
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    <Building2 size={18} className="text-indigo-400" />
+                    <Building2 size={18} className="text-fg-secondary" />
                     <h2 className="text-sm font-black">ارتقا دفتر کار</h2>
                   </div>
                   <button
@@ -433,28 +433,23 @@ export default function BusinessDetailPage() {
                       {/* خط اتصال عمودی */}
                       {index > 0 && (
                         <div className={`absolute -top-2.5 right-[26px] w-0.5 h-2.5 ${
-                          isOwned || isCurrent ? 'bg-indigo-500' : 'bg-fg-faint/20'
+                          isOwned || isCurrent ? 'bg-fg-muted' : 'bg-fg-faint/20'
                         }`} />
                       )}
 
-                      <div className={`rounded-2xl border-2 overflow-hidden transition-all ${
+                      <div className={`rounded-2xl border overflow-hidden transition-all ${
                         isCurrent
-                          ? 'border-indigo-500 bg-gradient-to-bl from-indigo-950/40 to-surface-card/80 shadow-lg shadow-indigo-500/10'
+                          ? 'border-fg-muted bg-surface-card/80'
                           : isNext
-                            ? 'border-amber-500/40 bg-gradient-to-bl from-amber-950/20 to-surface-card/60'
+                            ? 'border-line bg-surface-card/60'
                             : isOwned
-                              ? 'border-emerald-500/30 bg-surface-card/40 opacity-60'
+                              ? 'border-line/30 bg-surface-card/40 opacity-60'
                               : 'border-line/30 bg-surface-card/30 opacity-40'
                       }`}>
                         <div className="p-3">
                           <div className="flex items-start gap-3">
                             {/* آیکون بزرگ */}
-                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl shrink-0 ${
-                              isCurrent ? 'bg-indigo-500/20 border border-indigo-500/30'
-                              : isNext ? 'bg-amber-500/15 border border-amber-500/25'
-                              : isOwned ? 'bg-emerald-500/15 border border-emerald-500/20'
-                              : 'bg-surface-inset/50 border border-line/30'
-                            }`}>
+                            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl shrink-0 bg-surface-inset/50 border border-line/30">
                               {isLocked ? <Lock size={22} className="text-fg-faint" /> : tier.icon}
                             </div>
 
@@ -463,10 +458,10 @@ export default function BusinessDetailPage() {
                               <div className="flex items-center gap-2 mb-1">
                                 <p className="text-sm font-black">{tier.name}</p>
                                 {isCurrent && (
-                                  <span className="text-[8px] bg-indigo-500 text-white px-1.5 py-0.5 rounded-full font-bold">فعلی</span>
+                                  <span className="text-[8px] bg-fg-muted/20 text-fg-secondary px-1.5 py-0.5 rounded-full font-bold">فعلی</span>
                                 )}
                                 {isOwned && (
-                                  <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">قبلی</span>
+                                  <span className="text-[8px] bg-fg-faint/15 text-fg-muted px-1.5 py-0.5 rounded-full font-bold">قبلی</span>
                                 )}
                               </div>
                               <p className="text-[10px] text-fg-muted font-fa">{tier.area} متر مربع</p>
@@ -474,15 +469,15 @@ export default function BusinessDetailPage() {
                               {/* آمار — گرید */}
                               <div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
                                 <div className="text-center">
-                                  <p className="text-lg font-black text-indigo-400 font-fa">{tier.maxEmployees}</p>
+                                  <p className="text-lg font-black text-fg font-fa">{tier.maxEmployees}</p>
                                   <p className="text-[8px] text-fg-muted">ظرفیت نیرو</p>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-lg font-black text-emerald-400 font-fa">{tier.maxProducts}</p>
+                                  <p className="text-lg font-black text-fg font-fa">{tier.maxProducts}</p>
                                   <p className="text-[8px] text-fg-muted">ظرفیت محصول</p>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-lg font-black text-amber-400 font-fa">{tier.rent.toLocaleString('fa-IR')}</p>
+                                  <p className="text-lg font-black text-fg font-fa">{tier.rent.toLocaleString('fa-IR')}</p>
                                   <p className="text-[8px] text-fg-muted">اجاره/سیکل</p>
                                 </div>
                               </div>
@@ -490,13 +485,13 @@ export default function BusinessDetailPage() {
                               {/* پیشرفت نسبت به سطح قبل */}
                               {prevTier && !isOwned && (
                                 <div className="flex flex-wrap gap-1.5 mt-2">
-                                  <span className="text-[8px] bg-indigo-500/15 text-indigo-400 px-1.5 py-0.5 rounded-full font-bold">
+                                  <span className="text-[8px] bg-surface-inset/50 text-fg-secondary px-1.5 py-0.5 rounded-full font-bold">
                                     +{tier.maxEmployees - prevTier.maxEmployees} نیرو
                                   </span>
-                                  <span className="text-[8px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">
+                                  <span className="text-[8px] bg-surface-inset/50 text-fg-secondary px-1.5 py-0.5 rounded-full font-bold">
                                     +{tier.maxProducts - prevTier.maxProducts} محصول
                                   </span>
-                                  <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">
+                                  <span className="text-[8px] bg-surface-inset/50 text-fg-secondary px-1.5 py-0.5 rounded-full font-bold">
                                     +{(tier.rent - prevTier.rent).toLocaleString('fa-IR')} اجاره
                                   </span>
                                 </div>
@@ -512,7 +507,7 @@ export default function BusinessDetailPage() {
                                 if (canAfford) setShowOfficeSheet(false);
                               }}
                               disabled={!canAfford}
-                              className="w-full mt-3 bg-gradient-to-l from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-40 disabled:from-surface-inset disabled:to-surface-inset text-white py-2.5 rounded-xl text-xs font-black active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+                              className="w-full mt-3 bg-accent-positive hover:opacity-90 disabled:opacity-40 disabled:bg-surface-inset text-white py-2.5 rounded-xl text-xs font-black active:scale-[0.97] transition-all flex items-center justify-center gap-2"
                             >
                               <ArrowUpCircle size={16} />
                               ارتقا — <span className="font-fa">{tier.upgradeCost.toLocaleString('fa-IR')}</span> تومان
