@@ -194,6 +194,21 @@ export interface FridayMarketItem {
   available: boolean;
 }
 
+// ==================== NEWS ====================
+
+export type NewsCategory = 'market' | 'ranking' | 'gold' | 'currency' | 'crypto' | 'stock' | 'event';
+
+export interface NewsArticle {
+  id: string;
+  title: string;
+  summary: string;
+  category: NewsCategory;
+  icon: string;
+  timestamp: number;
+  isBreaking?: boolean;
+  relatedBusinessType?: BusinessType;
+}
+
 // ==================== NAVIGATION ====================
 
 export interface NavItem {

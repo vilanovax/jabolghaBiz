@@ -9,6 +9,7 @@ import {
   BusinessTemplate,
   PlayerStats,
   EmployeeTemplate,
+  NewsArticle,
 } from '@/types';
 import {
   mockPlayer,
@@ -18,6 +19,7 @@ import {
   mockLeaderboard,
   mockFridayMarket,
   businessTemplates,
+  mockNews,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -56,6 +58,7 @@ interface GameState {
   listings: MarketListing[];
   leaderboard: LeaderboardEntry[];
   fridayMarket: FridayMarketItem[];
+  news: NewsArticle[];
   businessTemplates: BusinessTemplate[];
 
   currency: string;
@@ -92,6 +95,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   products: mockProducts,
   listings: mockListings,
   leaderboard: mockLeaderboard,
+  news: mockNews,
   fridayMarket: mockFridayMarket,
   businessTemplates: businessTemplates,
 

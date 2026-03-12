@@ -3,6 +3,7 @@ import {
   Business,
   BusinessTemplate,
   Product,
+  NewsArticle,
   MarketListing,
   LeaderboardEntry,
   FridayMarketItem,
@@ -238,4 +239,52 @@ export const mockFridayMarket: FridayMarketItem[] = [
   { id: 'fm-4', name: 'قهوه', icon: '☕', price: 150, effect: { energy: 10, happiness: 5 }, available: true },
   { id: 'fm-5', name: 'کنسول بازی', icon: '🎮', price: 5_000, effect: { happiness: 25 }, available: false },
   { id: 'fm-6', name: 'اشتراک باشگاه', icon: '💪', price: 1_000, effect: { energy: 15, happiness: 10 }, available: true },
+];
+
+// ==================== NEWS ====================
+
+const now = Date.now();
+const HOUR = 3600_000;
+
+export const mockNews: NewsArticle[] = [
+  {
+    id: 'news-1', title: 'رشد ۱۵٪ قیمت گندم در بازار', summary: 'قیمت گندم به دلیل کاهش عرضه و افزایش تقاضای نانوایی‌ها رشد چشمگیری داشت.',
+    category: 'market', icon: '🌾', timestamp: now - HOUR * 1, isBreaking: true, relatedBusinessType: 'farming',
+  },
+  {
+    id: 'news-2', title: 'سلطان‌تجارت رکورد ثروت را شکست', summary: 'بازیکن سلطان‌تجارت با عبور از مرز ۲.۵ میلیون تومان، رکورد جدیدی ثبت کرد.',
+    category: 'ranking', icon: '👑', timestamp: now - HOUR * 2,
+  },
+  {
+    id: 'news-3', title: 'طلا به بالاترین قیمت ۳ ماهه رسید', summary: 'هر گرم طلای ۱۸ عیار به ۳,۸۵۰,۰۰۰ تومان رسید. کارشناسان ادامه رشد را پیش‌بینی می‌کنند.',
+    category: 'gold', icon: '🥇', timestamp: now - HOUR * 3,
+  },
+  {
+    id: 'news-4', title: 'دلار در بازار آزاد ثابت ماند', summary: 'نرخ دلار در محدوده ۶۵ هزار تومان تثبیت شد. بازار ارز در آرامش نسبی است.',
+    category: 'currency', icon: '💵', timestamp: now - HOUR * 5,
+  },
+  {
+    id: 'news-5', title: 'بیت‌کوین از مرز ۱۰۰ هزار دلار عبور کرد', summary: 'بیت‌کوین با رشد ۸٪ در ۲۴ ساعت اخیر، رکورد تاریخی جدیدی ثبت کرد.',
+    category: 'crypto', icon: '₿', timestamp: now - HOUR * 6, isBreaking: true,
+  },
+  {
+    id: 'news-6', title: 'شاخص بورس ۲٪ رشد کرد', summary: 'شاخص کل بورس با معاملات مثبت گروه‌های خودرویی و بانکی، ۲ درصد رشد کرد.',
+    category: 'stock', icon: '📈', timestamp: now - HOUR * 8,
+  },
+  {
+    id: 'news-7', title: 'افت تقاضای پنیر در بازار', summary: 'با افزایش عرضه شیر، قیمت پنیر ۱۰٪ کاهش یافت. فرصتی برای خرید ارزان!',
+    category: 'market', icon: '🧀', timestamp: now - HOUR * 10,
+  },
+  {
+    id: 'news-8', title: 'جشنواره بهاره: تخفیف ۲۰٪ استخدام', summary: 'به مناسبت بهار، تمام هزینه‌های استخدام نیرو تا پایان هفته ۲۰٪ تخفیف دارد!',
+    category: 'event', icon: '🎉', timestamp: now - HOUR * 12,
+  },
+  {
+    id: 'news-9', title: 'رستوران‌ها پرسودترین کسب‌وکار ماه شدند', summary: 'با افزایش تقاضای غذا، حاشیه سود رستوران‌ها به بالاترین سطح رسید.',
+    category: 'market', icon: '🍽️', timestamp: now - HOUR * 15, relatedBusinessType: 'restaurant',
+  },
+  {
+    id: 'news-10', title: 'اتریوم ۵٪ رشد کرد', summary: 'قیمت اتریوم با اعلام آپدیت جدید شبکه، ۵ درصد افزایش یافت.',
+    category: 'crypto', icon: 'Ξ', timestamp: now - HOUR * 18,
+  },
 ];
