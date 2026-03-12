@@ -53,10 +53,10 @@ export default function NewsCard({ article }: { article: NewsArticle }) {
             >
               {categoryLabels[article.category]}
             </span>
-            <span className="text-[9px] text-zinc-600 mr-auto font-fa">{timeAgo(article.timestamp)}</span>
+            <span className="text-[9px] text-fg-faint mr-auto font-fa">{timeAgo(article.timestamp)}</span>
           </div>
-          <h3 className="text-xs font-bold text-white leading-relaxed">{article.title}</h3>
-          <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">{article.summary}</p>
+          <h3 className="text-xs font-bold text-fg leading-relaxed">{article.title}</h3>
+          <p className="text-[10px] text-fg-secondary mt-1 leading-relaxed">{article.summary}</p>
         </div>
       </div>
     </Card>

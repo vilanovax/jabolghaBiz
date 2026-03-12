@@ -23,18 +23,18 @@ export default function MarketListingCard({ listing }: MarketListingCardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-sm">{listing.productName}</h3>
-          <p className="text-xs text-zinc-500">توسط {listing.sellerName}</p>
+          <p className="text-xs text-fg-muted">توسط {listing.sellerName}</p>
         </div>
         <div className="text-left">
-          <p className="text-amber-400 font-fa text-sm font-bold">{listing.pricePerUnit.toLocaleString('fa-IR')}</p>
-          <p className="text-[10px] text-zinc-500">هر واحد</p>
+          <p className="text-accent-money font-fa text-sm font-bold">{listing.pricePerUnit.toLocaleString('fa-IR')}</p>
+          <p className="text-[10px] text-fg-muted">هر واحد</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-zinc-400">
-          تعداد: <span className="text-white font-medium">{listing.quantity}</span>
-          <span className="text-zinc-600 me-1">(مجموع: {totalCost.toLocaleString('fa-IR')})</span>
+        <span className="text-xs text-fg-secondary">
+          تعداد: <span className="text-fg font-medium">{listing.quantity}</span>
+          <span className="text-fg-faint me-1">(مجموع: {totalCost.toLocaleString('fa-IR')})</span>
         </span>
         {!isOwn && (
           <Button

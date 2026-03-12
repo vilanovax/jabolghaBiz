@@ -17,11 +17,11 @@ export default function MarketPage() {
       <h1 className="text-xl font-black">بازار</h1>
 
       {/* تب‌ها */}
-      <div className="flex bg-zinc-800/50 rounded-xl p-1">
+      <div className="flex bg-surface-card/50 rounded-xl p-1">
         <button
           onClick={() => setTab('prices')}
           className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'prices' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+            tab === 'prices' ? 'bg-indigo-600 text-white' : 'text-fg-secondary hover:text-fg'
           }`}
         >
           قیمت‌ها ({products.length})
@@ -29,7 +29,7 @@ export default function MarketPage() {
         <button
           onClick={() => setTab('listings')}
           className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'listings' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+            tab === 'listings' ? 'bg-indigo-600 text-white' : 'text-fg-secondary hover:text-fg'
           }`}
         >
           آگهی‌ها ({listings.length})
@@ -39,7 +39,7 @@ export default function MarketPage() {
       {/* محتوا */}
       {tab === 'prices' && (
         <div className="space-y-3">
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-fg-muted">
             قیمت لحظه‌ای محصولات بر اساس عرضه و تقاضا
           </p>
           {products.map((product) => (
@@ -50,13 +50,13 @@ export default function MarketPage() {
 
       {tab === 'listings' && (
         <div className="space-y-3">
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-fg-muted">
             از بازیکنان دیگر خرید کنید یا محصولات خود را بفروشید
           </p>
           {listings.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-3xl mb-2">📦</p>
-              <p className="text-sm text-zinc-400">آگهی‌ای موجود نیست</p>
+              <p className="text-sm text-fg-secondary">آگهی‌ای موجود نیست</p>
             </div>
           ) : (
             listings.map((listing) => (

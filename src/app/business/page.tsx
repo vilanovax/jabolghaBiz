@@ -31,25 +31,25 @@ export default function BusinessPage() {
 
       {/* خلاصه — نوار افقی فشرده با ایموجی */}
       {businesses.length > 0 && (
-        <div className="flex items-center justify-between bg-zinc-800/50 rounded-xl px-3 py-2.5">
+        <div className="flex items-center justify-between bg-surface-card/50 rounded-xl px-3 py-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-xs">📈</span>
-            <span className="text-[11px] text-zinc-400">سود:</span>
+            <span className="text-[11px] text-fg-secondary">سود:</span>
             <span className={`text-[11px] font-fa font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('fa-IR')}
             </span>
           </div>
-          <div className="w-px h-4 bg-zinc-700" />
+          <div className="w-px h-4 bg-surface-inset" />
           <div className="flex items-center gap-1.5">
             <span className="text-xs">💸</span>
-            <span className="text-[11px] text-zinc-400">هزینه:</span>
+            <span className="text-[11px] text-fg-secondary">هزینه:</span>
             <span className="text-[11px] text-red-400 font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
           </div>
-          <div className="w-px h-4 bg-zinc-700" />
+          <div className="w-px h-4 bg-surface-inset" />
           <div className="flex items-center gap-1.5">
             <span className="text-xs">👥</span>
-            <span className="text-[11px] text-zinc-300 font-bold font-fa">{totalEmployees.toLocaleString('fa-IR')}</span>
-            <span className="text-[11px] text-zinc-400">نفر</span>
+            <span className="text-[11px] text-fg-secondary font-bold font-fa">{totalEmployees.toLocaleString('fa-IR')}</span>
+            <span className="text-[11px] text-fg-secondary">نفر</span>
           </div>
         </div>
       )}
@@ -59,8 +59,8 @@ export default function BusinessPage() {
         {businesses.length === 0 ? (
           <Card className="text-center py-12">
             <p className="text-4xl mb-3">🚀</p>
-            <p className="text-sm text-zinc-300 font-bold">هنوز کسب‌وکاری ندارید</p>
-            <p className="text-xs text-zinc-600 mt-1">اولین کسب‌وکارتان را راه‌اندازی کنید و شروع به کسب درآمد کنید!</p>
+            <p className="text-sm text-fg-secondary font-bold">هنوز کسب‌وکاری ندارید</p>
+            <p className="text-xs text-fg-faint mt-1">اولین کسب‌وکارتان را راه‌اندازی کنید و شروع به کسب درآمد کنید!</p>
             <div className="mt-5">
               <Button onClick={() => setShowNewBiz(true)} size="lg">
                 <span className="flex items-center gap-2">
@@ -76,7 +76,7 @@ export default function BusinessPage() {
             {/* دکمه ساخت کسب‌وکار جدید */}
             <button
               onClick={() => setShowNewBiz(true)}
-              className="w-full border-2 border-dashed border-zinc-700 hover:border-indigo-500 rounded-2xl py-4 text-zinc-500 hover:text-indigo-400 transition-colors flex items-center justify-center gap-2 text-sm font-semibold"
+              className="w-full border-2 border-dashed border-line hover:border-indigo-500 rounded-2xl py-4 text-fg-muted hover:text-indigo-400 transition-colors flex items-center justify-center gap-2 text-sm font-semibold"
             >
               🚀 راه‌اندازی کسب‌وکار جدید
             </button>

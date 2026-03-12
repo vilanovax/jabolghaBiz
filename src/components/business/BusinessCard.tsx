@@ -48,7 +48,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
       glow={hasPending ? '#10b981' : undefined}
     >
       {/* progress bar + زمان باقیمانده */}
-      <div className="relative h-1.5 bg-zinc-800 -mx-4 -mt-4 mb-3 group">
+      <div className="relative h-1.5 bg-surface-card -mx-4 -mt-4 mb-3 group">
         <div
           className="h-full transition-all duration-1000 rounded-l-full"
           style={{
@@ -57,7 +57,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
           }}
         />
         {/* زمان باقیمانده روی progress bar */}
-        <span className="absolute left-1/2 -translate-x-1/2 -bottom-4 text-[9px] text-zinc-500 font-fa">
+        <span className="absolute left-1/2 -translate-x-1/2 -bottom-4 text-[9px] text-fg-muted font-fa">
           {hasPending ? '✅ آماده جمع‌آوری' : `⏱ ${formatTime(timeLeft)} تا تولید بعدی`}
         </span>
       </div>
@@ -68,7 +68,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
           <span className="text-2xl">{business.icon}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-white text-sm truncate">{business.name}</h3>
+              <h3 className="font-bold text-fg text-sm truncate">{business.name}</h3>
               <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/15 px-1.5 py-0.5 rounded">
                 LV {business.level}
               </span>
@@ -81,26 +81,26 @@ export default function BusinessCard({ business }: BusinessCardProps) {
 
         {/* ردیف ۲: درآمد / هزینه / سود */}
         <div className="flex items-center gap-3 mt-2 text-[10px]">
-          <span className="text-zinc-500">
-            درآمد <span className="text-emerald-400 font-fa font-bold">{effectiveRevenue.toLocaleString('fa-IR')}</span>
+          <span className="text-fg-muted">
+            درآمد <span className="text-accent-positive font-fa font-bold">{effectiveRevenue.toLocaleString('fa-IR')}</span>
           </span>
-          <span className="text-zinc-700">|</span>
-          <span className="text-zinc-500">
-            هزینه <span className="text-red-400 font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
+          <span className="text-fg-faint">|</span>
+          <span className="text-fg-muted">
+            هزینه <span className="text-accent-negative font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
           </span>
-          <span className="text-zinc-700">|</span>
-          <span className="text-zinc-500">
+          <span className="text-fg-faint">|</span>
+          <span className="text-fg-muted">
             سود{' '}
-            <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-accent-positive' : 'text-accent-negative'}`}>
               {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
             </span>
           </span>
         </div>
 
         {/* ردیف ۳: کارکنان + ارزش شرکت */}
-        <div className="flex items-center justify-between mt-1.5 text-[10px] text-zinc-500">
+        <div className="flex items-center justify-between mt-1.5 text-[10px] text-fg-muted">
           <span>👥 کارکنان {business.employees.length} از {business.maxEmployees}</span>
-          <span>💎 ارزش: <span className="text-amber-400 font-fa font-bold">{companyValue.toLocaleString('fa-IR')}</span></span>
+          <span>💎 ارزش: <span className="text-accent-money font-fa font-bold">{companyValue.toLocaleString('fa-IR')}</span></span>
         </div>
       </Link>
 

@@ -1,16 +1,113 @@
 @import "tailwindcss";
 @import "vazirmatn/Vazirmatn-font-face.css";
 
+/* ==================== Design Tokens ==================== */
+
 :root {
+  /* Surface */
+  --surface: #ffffff;
+  --surface-elevated: #f4f4f5;
+  --surface-card: #e4e4e7;
+  --surface-inset: #d4d4d8;
+
+  /* Foreground */
+  --fg: #18181b;
+  --fg-secondary: #52525b;
+  --fg-muted: #71717a;
+  --fg-faint: #a1a1aa;
+
+  /* Border */
+  --line: #d4d4d8;
+  --line-subtle: rgba(212, 212, 216, 0.5);
+  --line-hover: #a1a1aa;
+
+  /* Navigation */
+  --nav: #ffffff;
+  --nav-line: #e4e4e7;
+
+  /* Accent (text on surface) */
+  --accent-money: #b45309;
+  --accent-positive: #059669;
+  --accent-negative: #dc2626;
+  --accent-info: #4f46e5;
+
+  /* Misc */
+  --progress-bg: #d4d4d8;
+  --chart-bar: #a1a1aa;
+  --scrollbar-thumb: #d4d4d8;
+  --ring-bg: #d4d4d8;
+
+  --background: #ffffff;
+  --foreground: #18181b;
+}
+
+.dark {
+  --surface: #09090b;
+  --surface-elevated: #18181b;
+  --surface-card: #27272a;
+  --surface-inset: #3f3f46;
+
+  --fg: #fafafa;
+  --fg-secondary: #a1a1aa;
+  --fg-muted: #71717a;
+  --fg-faint: #52525b;
+
+  --line: #3f3f46;
+  --line-subtle: rgba(63, 63, 70, 0.5);
+  --line-hover: #52525b;
+
+  --nav: #18181b;
+  --nav-line: #27272a;
+
+  --accent-money: #fbbf24;
+  --accent-positive: #34d399;
+  --accent-negative: #f87171;
+  --accent-info: #818cf8;
+
+  --progress-bg: #3f3f46;
+  --chart-bar: #52525b;
+  --scrollbar-thumb: #3f3f46;
+  --ring-bg: #27272a;
+
   --background: #09090b;
   --foreground: #fafafa;
 }
 
-@theme inline {
+/* ==================== Tailwind Theme ==================== */
+
+@theme {
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-card: var(--surface-card);
+  --color-surface-inset: var(--surface-inset);
+
+  --color-fg: var(--fg);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+
+  --color-line: var(--line);
+  --color-line-subtle: var(--line-subtle);
+  --color-line-hover: var(--line-hover);
+
+  --color-nav: var(--nav);
+  --color-nav-line: var(--nav-line);
+
+  --color-accent-money: var(--accent-money);
+  --color-accent-positive: var(--accent-positive);
+  --color-accent-negative: var(--accent-negative);
+  --color-accent-info: var(--accent-info);
+
+  --color-progress-bg: var(--progress-bg);
+  --color-chart-bar: var(--chart-bar);
+  --color-ring-bg: var(--ring-bg);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-mono: var(--font-geist-mono);
 }
+
+/* ==================== Base ==================== */
 
 body {
   background: var(--background);
@@ -21,7 +118,6 @@ body {
   overscroll-behavior: none;
 }
 
-/* عدد فارسی زیبا با وزیرمتن */
 .font-fa {
   font-family: 'Vazirmatn', system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
@@ -47,7 +143,7 @@ input, textarea {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 

@@ -42,17 +42,17 @@ export default function ProfilePage() {
         <Card className="text-center py-3">
           <Shield size={16} className="mx-auto text-indigo-400 mb-1" />
           <p className="text-sm font-bold">{player.level}</p>
-          <p className="text-[10px] text-zinc-500">سطح</p>
+          <p className="text-[10px] text-fg-muted">سطح</p>
         </Card>
         <Card className="text-center py-3">
           <Star size={16} className="mx-auto text-amber-400 mb-1" />
           <p className="text-sm font-bold">{businesses.length}</p>
-          <p className="text-[10px] text-zinc-500">کسب‌وکار</p>
+          <p className="text-[10px] text-fg-muted">کسب‌وکار</p>
         </Card>
         <Card className="text-center py-3">
           <Calendar size={16} className="mx-auto text-emerald-400 mb-1" />
           <p className="text-sm font-bold">{player.createdAt.split('-')[0]}</p>
-          <p className="text-[10px] text-zinc-500">عضویت</p>
+          <p className="text-[10px] text-fg-muted">عضویت</p>
         </Card>
       </div>
 
@@ -65,7 +65,7 @@ export default function ProfilePage() {
       {/* بازار جمعه */}
       <div>
         <h2 className="font-bold text-sm mb-1">بازار جمعه</h2>
-        <p className="text-xs text-zinc-500 mb-3">آیتم‌های ویژه برای تقویت وضعیت شما</p>
+        <p className="text-xs text-fg-muted mb-3">آیتم‌های ویژه برای تقویت وضعیت شما</p>
         <div className="grid grid-cols-2 gap-2">
           {fridayMarket.map((item) => {
             const canAfford = player.balance >= item.price;
@@ -82,7 +82,7 @@ export default function ProfilePage() {
                   <span className="text-2xl">{item.icon}</span>
                   <p className="text-xs font-bold mt-1">{item.name}</p>
                   <MoneyDisplay amount={item.price} size="sm" />
-                  <p className="text-[10px] text-zinc-500 mt-0.5">{effects}</p>
+                  <p className="text-[10px] text-fg-muted mt-0.5">{effects}</p>
                 </div>
                 <Button
                   onClick={() => buyFridayItem(item.id)}

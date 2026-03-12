@@ -60,17 +60,17 @@ export default function HomePage() {
         <h1 className="text-xl font-black">
           خوش برگشتی، <span className="text-indigo-400">{player.username}</span>
         </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">داشبورد امپراتوری کسب‌وکار شما</p>
+        <p className="text-sm text-fg-muted mt-0.5">داشبورد امپراتوری کسب‌وکار شما</p>
       </div>
 
       {/* ===================== خلاصه امپراتوری ===================== */}
       <div className="grid grid-cols-2 gap-3">
         <Card glow="#6366f1">
-          <p className="text-[10px] text-zinc-500 tracking-wider">موجودی کل</p>
+          <p className="text-[10px] text-fg-muted tracking-wider">موجودی کل</p>
           <MoneyDisplay amount={player.balance} size="lg" />
         </Card>
         <Card glow="#10b981">
-          <p className="text-[10px] text-zinc-500 tracking-wider">سود/سیکل</p>
+          <p className="text-[10px] text-fg-muted tracking-wider">سود/سیکل</p>
           <MoneyDisplay amount={totalProfit} size="lg" showSign />
         </Card>
       </div>
@@ -79,17 +79,17 @@ export default function HomePage() {
         <Card className="text-center py-3">
           <Crown size={18} className="mx-auto text-amber-400 mb-1" />
           <p className="text-sm font-bold">{empireValue.toLocaleString('fa-IR')}</p>
-          <p className="text-[10px] text-zinc-500">ارزش امپراتوری</p>
+          <p className="text-[10px] text-fg-muted">ارزش امپراتوری</p>
         </Card>
         <Card className="text-center py-3">
           <Briefcase size={18} className="mx-auto text-indigo-400 mb-1" />
           <p className="text-sm font-bold">{businesses.length}</p>
-          <p className="text-[10px] text-zinc-500">کسب‌وکار</p>
+          <p className="text-[10px] text-fg-muted">کسب‌وکار</p>
         </Card>
         <Card className="text-center py-3">
           <Users size={18} className="mx-auto text-cyan-400 mb-1" />
           <p className="text-sm font-bold">{totalEmployees}</p>
-          <p className="text-[10px] text-zinc-500">نیروها</p>
+          <p className="text-[10px] text-fg-muted">نیروها</p>
         </Card>
       </div>
 
@@ -116,7 +116,7 @@ export default function HomePage() {
                         <p className="text-sm font-bold truncate">{biz.name}</p>
                         <Badge text={`سطح ${biz.level}`} />
                       </div>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">
+                      <p className="text-[10px] text-fg-muted mt-0.5">
                         {biz.employees.length} نیرو · <Clock size={10} className="inline" /> {biz.cycleDuration} ثانیه
                       </p>
                     </div>
@@ -128,16 +128,16 @@ export default function HomePage() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
-                      <p className="text-[10px] text-zinc-500">درآمد/سیکل</p>
+                    <div className="bg-surface-elevated/60 rounded-lg py-1.5 px-1">
+                      <p className="text-[10px] text-fg-muted">درآمد/سیکل</p>
                       <p className="text-xs text-emerald-400 font-bold">{revenue.toLocaleString('fa-IR')}</p>
                     </div>
-                    <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
-                      <p className="text-[10px] text-zinc-500">هزینه/سیکل</p>
+                    <div className="bg-surface-elevated/60 rounded-lg py-1.5 px-1">
+                      <p className="text-[10px] text-fg-muted">هزینه/سیکل</p>
                       <p className="text-xs text-red-400 font-bold">{expenses.toLocaleString('fa-IR')}</p>
                     </div>
-                    <div className="bg-zinc-900/60 rounded-lg py-1.5 px-1">
-                      <p className="text-[10px] text-zinc-500">سود خالص</p>
+                    <div className="bg-surface-elevated/60 rounded-lg py-1.5 px-1">
+                      <p className="text-[10px] text-fg-muted">سود خالص</p>
                       <MoneyDisplay amount={net} size="sm" showSign />
                     </div>
                   </div>
@@ -194,8 +194,8 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-zinc-500">تقاضا: <span className={demand.color}>{demand.text}</span></span>
-                  <span className="text-zinc-500">عرضه: <span className={supply.color}>{supply.text}</span></span>
+                  <span className="text-fg-muted">تقاضا: <span className={demand.color}>{demand.text}</span></span>
+                  <span className="text-fg-muted">عرضه: <span className={supply.color}>{supply.text}</span></span>
                 </div>
               </Card>
             );
@@ -212,9 +212,9 @@ export default function HomePage() {
               {task.done ? (
                 <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
               ) : (
-                <Circle size={16} className="text-zinc-600 shrink-0" />
+                <Circle size={16} className="text-fg-faint shrink-0" />
               )}
-              <span className={`text-xs ${task.done ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}>
+              <span className={`text-xs ${task.done ? 'text-fg-muted line-through' : 'text-fg-secondary'}`}>
                 {task.text}
               </span>
             </div>
@@ -235,8 +235,8 @@ export default function HomePage() {
           ].map((stat) => (
             <Link key={stat.label} href="/profile" className="flex flex-col items-center gap-0.5 group">
               <span className="text-lg group-hover:scale-110 transition-transform">{stat.icon}</span>
-              <span className="text-xs font-bold text-zinc-200">{stat.value}</span>
-              <span className="text-[9px] text-zinc-600">{stat.label}</span>
+              <span className="text-xs font-bold text-fg">{stat.value}</span>
+              <span className="text-[9px] text-fg-faint">{stat.label}</span>
             </Link>
           ))}
         </Card>

@@ -18,11 +18,11 @@ export default function LeaderboardPage() {
       </div>
 
       <Card className="text-center py-4">
-        <p className="text-[10px] text-zinc-500 tracking-wider">اقتصاد کل</p>
-        <p className="text-2xl font-black text-amber-400 font-fa">
+        <p className="text-[10px] text-fg-muted tracking-wider">اقتصاد کل</p>
+        <p className="text-2xl font-black text-accent-money font-fa">
           {new Intl.NumberFormat('fa-IR').format(totalWealth)} تومان
         </p>
-        <p className="text-xs text-zinc-500 mt-1">{leaderboard.length} بازیکن فعال</p>
+        <p className="text-xs text-fg-muted mt-1">{leaderboard.length} بازیکن فعال</p>
       </Card>
 
       <div className="space-y-2">

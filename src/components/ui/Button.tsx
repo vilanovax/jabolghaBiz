@@ -13,7 +13,7 @@ interface ButtonProps {
 
 const variants = {
   primary: 'bg-indigo-600 hover:bg-indigo-500 text-white',
-  secondary: 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200',
+  secondary: 'bg-surface-inset hover:bg-line-hover text-fg',
   danger: 'bg-red-600 hover:bg-red-500 text-white',
   success: 'bg-emerald-600 hover:bg-emerald-500 text-white',
 };

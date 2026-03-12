@@ -32,12 +32,12 @@ export default function ProductPriceCard({ product }: ProductPriceCardProps) {
           <span className="text-xl">{product.icon}</span>
           <div>
             <h4 className="text-sm font-bold">{product.name}</h4>
-            <span className="text-[10px] text-zinc-500">{categoryLabels[product.category] || product.category}</span>
+            <span className="text-[10px] text-fg-muted">{categoryLabels[product.category] || product.category}</span>
           </div>
         </div>
         <div className="text-left">
-          <p className="text-amber-400 font-fa font-bold">{product.currentPrice.toLocaleString('fa-IR')}</p>
-          <p className={`text-[10px] font-medium ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+          <p className="text-accent-money font-fa font-bold">{product.currentPrice.toLocaleString('fa-IR')}</p>
+          <p className={`text-[10px] font-medium ${isUp ? 'text-accent-positive' : 'text-accent-negative'}`}>
             {isUp ? '+' : ''}{pricePct}%
           </p>
         </div>
@@ -51,14 +51,14 @@ export default function ProductPriceCard({ product }: ProductPriceCardProps) {
           return (
             <div
               key={i}
-              className={`flex-1 rounded-sm ${isLast ? (isUp ? 'bg-emerald-500' : 'bg-red-500') : 'bg-zinc-600'}`}
+              className={`flex-1 rounded-sm ${isLast ? (isUp ? 'bg-emerald-500' : 'bg-red-500') : 'bg-chart-bar'}`}
               style={{ height: `${Math.max(height, 10)}%` }}
             />
           );
         })}
       </div>
 
-      <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
+      <div className="flex justify-between text-[10px] text-fg-muted mt-1">
         <span>عرضه: {product.supply}</span>
         <span>تقاضا: {product.demand}</span>
       </div>

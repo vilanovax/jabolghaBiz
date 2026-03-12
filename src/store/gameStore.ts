@@ -69,6 +69,9 @@ interface GameState {
   currency: string;
   setCurrency: (currency: string) => void;
 
+  theme: 'dark' | 'light';
+  setTheme: (theme: 'dark' | 'light') => void;
+
   // Player
   updatePlayerStats: (stats: Partial<PlayerStats>) => void;
   updateBalance: (amount: number) => void;
@@ -107,6 +110,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
   currency: 'تومان',
   setCurrency: (currency) => set({ currency }),
+
+  theme: 'dark',
+  setTheme: (theme) => set({ theme }),
 
   // ==================== Player ====================
 
@@ -413,5 +419,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     businesses: state.businesses,
     products: state.products,
     listings: state.listings,
+    theme: state.theme,
+    currency: state.currency,
   }),
 }));
