@@ -5,14 +5,53 @@ import { useState, useEffect, useCallback } from 'react';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { businessTemplates } from '@/data/mock';
+import { businessTemplates, getOfficeTier, OFFICE_TIERS } from '@/data/mock';
 import {
   ArrowUpCircle, Users, Package, ChevronRight,
-  Lock, Unlock, Clock, Coins,
+  Lock, Unlock, Clock, Coins, Building2, X, ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
+import { BusinessProduct, Business, EmployeeRole } from '@/types';
+import MoneyDisplay from '@/components/ui/MoneyDisplay';
 
 type Tab = 'overview' | 'employees' | 'products';
+
+const roleLabels: Record<EmployeeRole, string> = {
+  base: 'نیروی پایه',
+  manager: 'مدیر',
+  accountant: 'حسابدار',
+  marketer: 'بازاریاب',
+  sales: 'فروش',
+};
+
+function checkProductReqs(biz: Business, prod: BusinessProduct): { label: string; met: boolean }[] {
+  const req = prod.requirements;
+  if (!req) return [];
+  const checks: { label: string; met: boolean }[] = [];
+  if (req.officeLevel) {
+    const office = getOfficeTier(req.officeLevel);
+    checks.push({
+      label: `${office.icon} ${office.name}`,
+      met: (biz.officeLevel ?? 1) >= req.officeLevel,
+    });
+  }
+  if (req.businessLevel) {
+    checks.push({
+      label: `سطح ${req.businessLevel} شرکت`,
+      met: biz.level >= req.businessLevel,
+    });
+  }
+  if (req.employees) {
+    for (const empReq of req.employees) {
+      const count = biz.employees.filter((e) => e.role === empReq.role).length;
+      checks.push({
+        label: `${empReq.count} ${roleLabels[empReq.role]}`,
+        met: count >= empReq.count,
+      });
+    }
+  }
+  return checks;
+}
 
 export default function BusinessDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +59,7 @@ export default function BusinessDetailPage() {
   const balance = useGameStore((s) => s.player.balance);
   const collectRevenue = useGameStore((s) => s.collectRevenue);
   const upgradeBusiness = useGameStore((s) => s.upgradeBusiness);
+  const upgradeOffice = useGameStore((s) => s.upgradeOffice);
   const hireEmployee = useGameStore((s) => s.hireEmployee);
   const upgradeEmployee = useGameStore((s) => s.upgradeEmployee);
   const unlockProduct = useGameStore((s) => s.unlockProduct);
@@ -28,6 +68,7 @@ export default function BusinessDetailPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
   const [collectAnim, setCollectAnim] = useState<number | null>(null);
+  const [showOfficeSheet, setShowOfficeSheet] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -208,8 +249,88 @@ export default function BusinessDetailPage() {
       </div>
 
       {/* ==================== تب کلی ==================== */}
-      {tab === 'overview' && (
+      {tab === 'overview' && (() => {
+        const officeLevel = biz.officeLevel ?? 1;
+        const currentOffice = getOfficeTier(officeLevel);
+        const isMaxOffice = officeLevel >= OFFICE_TIERS.length;
+        const nextOffice = !isMaxOffice ? getOfficeTier(officeLevel + 1) : null;
+        const empFill = biz.employees.length / currentOffice.maxEmployees;
+        const prodFill = biz.products.filter((p) => p.unlocked).length / currentOffice.maxProducts;
+        return (
         <div className="space-y-3">
+          {/* کارت دفتر — استایل بازی */}
+          <button
+            onClick={() => setShowOfficeSheet(true)}
+            className="w-full text-right active:scale-[0.98] transition-transform"
+          >
+            <div className="relative overflow-hidden rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-bl from-indigo-950/60 via-surface-card/80 to-surface-elevated/60">
+              {/* نوار بالا */}
+              <div className="bg-indigo-600/20 px-3 py-1.5 flex items-center justify-between border-b border-indigo-500/20">
+                <div className="flex items-center gap-1.5">
+                  <Building2 size={12} className="text-indigo-400" />
+                  <span className="text-[9px] font-bold text-indigo-300">دفتر کار</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-indigo-400 font-bold">LV {officeLevel}</span>
+                  <ChevronUp size={12} className="text-indigo-400" />
+                </div>
+              </div>
+
+              <div className="p-3 space-y-2.5">
+                {/* آیکون + نام + متراژ */}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-2xl">
+                    {currentOffice.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-black">{currentOffice.name}</p>
+                    <p className="text-[10px] text-fg-muted font-fa">{currentOffice.area} متر مربع · اجاره {currentOffice.rent.toLocaleString('fa-IR')}/سیکل</p>
+                  </div>
+                  {nextOffice && (
+                    <div className="shrink-0 bg-amber-500/15 border border-amber-500/20 rounded-lg px-2 py-1 text-center">
+                      <p className="text-[8px] text-amber-400 font-bold">ارتقا</p>
+                      <p className="text-[8px] text-amber-300">{nextOffice.icon}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* بارهای ظرفیت */}
+                <div className="space-y-1.5">
+                  <div>
+                    <div className="flex items-center justify-between text-[9px] mb-0.5">
+                      <span className="text-fg-muted">👥 نیروی انسانی</span>
+                      <span className="text-fg font-fa font-bold">{biz.employees.length}/{currentOffice.maxEmployees}</span>
+                    </div>
+                    <div className="h-1.5 bg-progress-bg rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${empFill >= 1 ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                        style={{ width: `${empFill * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-[9px] mb-0.5">
+                      <span className="text-fg-muted">🧪 محصولات</span>
+                      <span className="text-fg font-fa font-bold">{biz.products.filter((p) => p.unlocked).length}/{currentOffice.maxProducts}</span>
+                    </div>
+                    <div className="h-1.5 bg-progress-bg rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${prodFill >= 1 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${prodFill * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="flex items-center justify-center gap-1 text-[10px] text-indigo-400 font-bold pt-0.5">
+                  <span>مشاهده سطوح دفتر و ارتقا</span>
+                  <ChevronUp size={14} />
+                </div>
+              </div>
+            </div>
+          </button>
+
           {/* نوار پیشرفت سطح */}
           <Card className="space-y-2">
             <div className="flex items-center justify-between">
@@ -263,7 +384,166 @@ export default function BusinessDetailPage() {
             </div>
           </Card>
         </div>
-      )}
+        );
+      })()}
+
+      {/* ==================== باتن‌شیت دفتر کار ==================== */}
+      {showOfficeSheet && (() => {
+        const officeLevel = biz.officeLevel ?? 1;
+        const nextOffice = officeLevel < OFFICE_TIERS.length ? getOfficeTier(officeLevel + 1) : null;
+        return (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            onClick={() => setShowOfficeSheet(false)}
+          />
+          {/* Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+            <div className="max-w-lg mx-auto bg-surface-elevated rounded-t-3xl border-t border-x border-line overflow-hidden">
+              {/* Handle + Header */}
+              <div className="flex flex-col items-center pt-3 pb-2 px-4 border-b border-line/50">
+                <div className="w-10 h-1 rounded-full bg-fg-faint/30 mb-3" />
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <Building2 size={18} className="text-indigo-400" />
+                    <h2 className="text-sm font-black">ارتقا دفتر کار</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowOfficeSheet(false)}
+                    className="p-1.5 rounded-full hover:bg-surface-card transition-colors text-fg-muted"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Tier List */}
+              <div className="px-4 py-3 space-y-2.5 max-h-[65vh] overflow-y-auto">
+                {OFFICE_TIERS.map((tier, index) => {
+                  const isCurrent = tier.level === officeLevel;
+                  const isOwned = tier.level < officeLevel;
+                  const isNext = tier.level === officeLevel + 1;
+                  const isLocked = tier.level > officeLevel + 1;
+                  const canAfford = balance >= tier.upgradeCost;
+                  const prevTier = index > 0 ? OFFICE_TIERS[index - 1] : null;
+
+                  return (
+                    <div key={tier.level} className="relative">
+                      {/* خط اتصال عمودی */}
+                      {index > 0 && (
+                        <div className={`absolute -top-2.5 right-[26px] w-0.5 h-2.5 ${
+                          isOwned || isCurrent ? 'bg-indigo-500' : 'bg-fg-faint/20'
+                        }`} />
+                      )}
+
+                      <div className={`rounded-2xl border-2 overflow-hidden transition-all ${
+                        isCurrent
+                          ? 'border-indigo-500 bg-gradient-to-bl from-indigo-950/40 to-surface-card/80 shadow-lg shadow-indigo-500/10'
+                          : isNext
+                            ? 'border-amber-500/40 bg-gradient-to-bl from-amber-950/20 to-surface-card/60'
+                            : isOwned
+                              ? 'border-emerald-500/30 bg-surface-card/40 opacity-60'
+                              : 'border-line/30 bg-surface-card/30 opacity-40'
+                      }`}>
+                        <div className="p-3">
+                          <div className="flex items-start gap-3">
+                            {/* آیکون بزرگ */}
+                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl shrink-0 ${
+                              isCurrent ? 'bg-indigo-500/20 border border-indigo-500/30'
+                              : isNext ? 'bg-amber-500/15 border border-amber-500/25'
+                              : isOwned ? 'bg-emerald-500/15 border border-emerald-500/20'
+                              : 'bg-surface-inset/50 border border-line/30'
+                            }`}>
+                              {isLocked ? <Lock size={22} className="text-fg-faint" /> : tier.icon}
+                            </div>
+
+                            {/* اطلاعات */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-sm font-black">{tier.name}</p>
+                                {isCurrent && (
+                                  <span className="text-[8px] bg-indigo-500 text-white px-1.5 py-0.5 rounded-full font-bold">فعلی</span>
+                                )}
+                                {isOwned && (
+                                  <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">قبلی</span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-fg-muted font-fa">{tier.area} متر مربع</p>
+
+                              {/* آمار — گرید */}
+                              <div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-2">
+                                <div className="text-center">
+                                  <p className="text-lg font-black text-indigo-400 font-fa">{tier.maxEmployees}</p>
+                                  <p className="text-[8px] text-fg-muted">ظرفیت نیرو</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-lg font-black text-emerald-400 font-fa">{tier.maxProducts}</p>
+                                  <p className="text-[8px] text-fg-muted">ظرفیت محصول</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-lg font-black text-amber-400 font-fa">{tier.rent.toLocaleString('fa-IR')}</p>
+                                  <p className="text-[8px] text-fg-muted">اجاره/سیکل</p>
+                                </div>
+                              </div>
+
+                              {/* پیشرفت نسبت به سطح قبل */}
+                              {prevTier && !isOwned && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  <span className="text-[8px] bg-indigo-500/15 text-indigo-400 px-1.5 py-0.5 rounded-full font-bold">
+                                    +{tier.maxEmployees - prevTier.maxEmployees} نیرو
+                                  </span>
+                                  <span className="text-[8px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">
+                                    +{tier.maxProducts - prevTier.maxProducts} محصول
+                                  </span>
+                                  <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">
+                                    +{(tier.rent - prevTier.rent).toLocaleString('fa-IR')} اجاره
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* دکمه ارتقا */}
+                          {isNext && (
+                            <button
+                              onClick={() => {
+                                upgradeOffice(biz.id);
+                                if (canAfford) setShowOfficeSheet(false);
+                              }}
+                              disabled={!canAfford}
+                              className="w-full mt-3 bg-gradient-to-l from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-40 disabled:from-surface-inset disabled:to-surface-inset text-white py-2.5 rounded-xl text-xs font-black active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+                            >
+                              <ArrowUpCircle size={16} />
+                              ارتقا — <span className="font-fa">{tier.upgradeCost.toLocaleString('fa-IR')}</span> تومان
+                            </button>
+                          )}
+                          {isLocked && (
+                            <div className="mt-2 text-center">
+                              <p className="text-[9px] text-fg-faint flex items-center justify-center gap-1">
+                                <Lock size={10} /> ابتدا سطح قبلی را ارتقا دهید
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* فوتر — موجودی */}
+              <div className="px-4 py-3 border-t border-line/50 bg-surface-card/30">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-fg-muted">موجودی شما:</span>
+                  <span className="text-accent-money font-fa font-bold">{balance.toLocaleString('fa-IR')} تومان</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+        );
+      })()}
 
       {/* ==================== تب نیروها ==================== */}
       {tab === 'employees' && (
@@ -338,6 +618,11 @@ export default function BusinessDetailPage() {
           <p className="text-[10px] font-bold text-fg-secondary">
             درخت رشد نیروها ({biz.employees.length}/{biz.maxEmployees})
           </p>
+          {biz.employees.length >= biz.maxEmployees && (biz.officeLevel ?? 1) < OFFICE_TIERS.length && (
+            <p className="text-[9px] text-amber-400 bg-amber-500/10 rounded-lg px-2 py-1.5 flex items-center gap-1">
+              <Building2 size={12} /> ظرفیت دفتر پر است — برای استخدام بیشتر دفتر را ارتقا دهید
+            </p>
+          )}
           <div className="space-y-1.5">
             {template?.availableEmployees.map((et) => {
               const alreadyHired = biz.employees.some((e) => e.templateId === et.id);
@@ -404,7 +689,14 @@ export default function BusinessDetailPage() {
       {/* ==================== تب محصولات ==================== */}
       {tab === 'products' && (
         <div className="space-y-2">
-          {biz.products.map((prod) => (
+          {biz.products.map((prod) => {
+            const reqChecks = checkProductReqs(biz, prod);
+            const allMet = reqChecks.every((r) => r.met);
+            const unlockedCount = biz.products.filter((p) => p.unlocked).length;
+            const capacityFull = unlockedCount >= biz.maxProducts;
+            const canUnlock = allMet && !capacityFull && balance >= prod.unlockCost;
+
+            return (
             <div key={prod.id} className="bg-surface-card/40 rounded-xl px-3 py-3 border border-line/30 space-y-2">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{prod.icon}</span>
@@ -427,17 +719,38 @@ export default function BusinessDetailPage() {
                   </p>
                 </div>
               </div>
+              {/* پیش‌نیازها */}
+              {!prod.unlocked && reqChecks.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 px-1">
+                  {reqChecks.map((r, i) => (
+                    <span key={i} className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                      r.met
+                        ? 'bg-emerald-500/15 text-emerald-400'
+                        : 'bg-red-500/10 text-red-400'
+                    }`}>
+                      {r.met ? '✅' : '❌'} {r.label}
+                    </span>
+                  ))}
+                </div>
+              )}
               {!prod.unlocked && (
-                <button
-                  onClick={() => unlockProduct(biz.id, prod.id)}
-                  disabled={balance < prod.unlockCost}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
-                >
-                  آنلاک — <span className="font-fa">{prod.unlockCost.toLocaleString('fa-IR')}</span> تومان
-                </button>
+                <>
+                  {capacityFull ? (
+                    <p className="text-[9px] text-amber-400 text-center">ظرفیت محصولات پر — دفتر را ارتقا دهید</p>
+                  ) : (
+                    <button
+                      onClick={() => unlockProduct(biz.id, prod.id)}
+                      disabled={!canUnlock}
+                      className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
+                    >
+                      آنلاک — <span className="font-fa">{prod.unlockCost.toLocaleString('fa-IR')}</span> تومان
+                    </button>
+                  )}
+                </>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

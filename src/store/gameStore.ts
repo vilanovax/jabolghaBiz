@@ -21,6 +21,8 @@ import {
   mockFridayMarket,
   businessTemplates,
   mockNews,
+  getOfficeTier,
+  OFFICE_TIERS,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -39,10 +41,11 @@ export function calcEffectiveRevenue(biz: Business): number {
   return Math.round(biz.baseRevenue * staffMultiplier) + productBoost;
 }
 
-// محاسبه هزینه‌های کل (حقوق + هزینه پایه)
+// محاسبه هزینه‌های کل (حقوق + هزینه پایه + اجاره دفتر)
 export function calcTotalExpenses(biz: Business): number {
   const salaries = biz.employees.reduce((s, e) => s + e.salary, 0);
-  return biz.expenses + salaries;
+  const officeTier = getOfficeTier(biz.officeLevel ?? 1);
+  return biz.expenses + salaries + officeTier.rent;
 }
 
 // آیا شرکت حسابدار دارد؟
@@ -84,7 +87,8 @@ interface GameState {
   tickBusinesses: () => void;
   collectRevenue: (businessId: string) => void;
 
-  // Business — استخدام، ارتقا و محصول
+  // Business — دفتر، استخدام، ارتقا و محصول
+  upgradeOffice: (businessId: string) => void;
   hireEmployee: (businessId: string, template: EmployeeTemplate) => void;
   upgradeEmployee: (businessId: string, employeeId: string) => void;
   unlockProduct: (businessId: string, productId: string) => void;
@@ -132,6 +136,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     const { player } = get();
     if (player.balance < template.startCost) return;
 
+    const startOffice = getOfficeTier(1);
     const newBiz: Business = {
       id: `biz-${Date.now()}`,
       ownerId: player.id,
@@ -146,8 +151,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       maxPendingCycles: template.maxPendingCycles,
       expenses: template.baseExpenses,
       upgradeCost: Math.round(template.startCost * 1.5),
-      maxEmployees: template.maxEmployees,
-      maxProducts: template.maxProducts,
+      officeLevel: 1,
+      maxEmployees: startOffice.maxEmployees,
+      maxProducts: startOffice.maxProducts,
       maxLevel: template.maxLevel,
       employees: [],
       products: template.availableProducts.map((p) => ({ ...p })),
@@ -174,9 +180,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
               level: b.level + 1,
               baseRevenue: Math.round(b.baseRevenue * 1.25),
               upgradeCost: Math.round(b.upgradeCost * 1.6),
-              // افزایش ظرفیت با ارتقا
-              maxEmployees: b.maxEmployees + (b.level % 3 === 0 ? 1 : 0),
-              maxProducts: b.maxProducts + (b.level % 5 === 0 ? 1 : 0),
             }
           : b
       ),
@@ -245,6 +248,32 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         },
       };
     });
+  },
+
+  // ==================== Business — دفتر کار ====================
+
+  upgradeOffice: (businessId) => {
+    const { player, businesses } = get();
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz) return;
+    const currentLevel = biz.officeLevel ?? 1;
+    if (currentLevel >= OFFICE_TIERS.length) return;
+    const nextTier = getOfficeTier(currentLevel + 1);
+    if (player.balance < nextTier.upgradeCost) return;
+
+    set((state) => ({
+      businesses: state.businesses.map((b) =>
+        b.id === businessId
+          ? {
+              ...b,
+              officeLevel: currentLevel + 1,
+              maxEmployees: nextTier.maxEmployees,
+              maxProducts: nextTier.maxProducts,
+            }
+          : b
+      ),
+      player: { ...state.player, balance: state.player.balance - nextTier.upgradeCost },
+    }));
   },
 
   // ==================== Business — استخدام و محصول ====================
@@ -328,6 +357,18 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     // بررسی ظرفیت محصولات
     const unlockedCount = biz.products.filter((p) => p.unlocked).length;
     if (unlockedCount >= biz.maxProducts) return;
+    // بررسی پیش‌نیازها
+    if (prod.requirements) {
+      const req = prod.requirements;
+      if (req.officeLevel && (biz.officeLevel ?? 1) < req.officeLevel) return;
+      if (req.businessLevel && biz.level < req.businessLevel) return;
+      if (req.employees) {
+        for (const empReq of req.employees) {
+          const count = biz.employees.filter((e) => e.role === empReq.role).length;
+          if (count < empReq.count) return;
+        }
+      }
+    }
 
     set((state) => ({
       businesses: state.businesses.map((b) =>

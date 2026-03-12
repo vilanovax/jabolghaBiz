@@ -76,6 +76,25 @@ export interface HiredEmployee {
   baseHireCost: number;   // هزینه اولیه — برای محاسبه هزینه ارتقا
 }
 
+// سطوح دفتر کار
+export interface OfficeTier {
+  level: number;
+  name: string;
+  icon: string;
+  area: number;           // متراژ (مترمربع)
+  maxEmployees: number;
+  maxProducts: number;
+  rent: number;           // اجاره هر سیکل
+  upgradeCost: number;    // هزینه ارتقا به این سطح
+}
+
+// پیش‌نیاز محصولات
+export interface ProductRequirements {
+  officeLevel?: number;
+  employees?: { role: EmployeeRole; count: number }[];
+  businessLevel?: number;
+}
+
 // محصولات شرکت (قابل آنلاک)
 export interface BusinessProduct {
   id: string;
@@ -85,6 +104,7 @@ export interface BusinessProduct {
   unlockCost: number;
   revenueBoost: number;   // افزایش درآمد هر سیکل
   unlocked: boolean;
+  requirements?: ProductRequirements;
 }
 
 export interface Business {
@@ -110,7 +130,10 @@ export interface Business {
   employees: HiredEmployee[];
   products: BusinessProduct[];
 
-  // ظرفیت‌ها
+  // دفتر کار
+  officeLevel: number;    // سطح دفتر (1-4)
+
+  // ظرفیت‌ها (مشتق از سطح دفتر)
   maxEmployees: number;
   maxProducts: number;
   maxLevel: number;

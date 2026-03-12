@@ -168,3 +168,13 @@ input, textarea {
 .animate-collect {
   animation: collect-float 1.5s ease-out forwards;
 }
+
+/* Bottom sheet slide up */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
