@@ -10,6 +10,7 @@ import {
   EmployeeTemplate,
   BusinessProduct,
   OfficeTier,
+  EventTemplate,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -543,3 +544,133 @@ export const RUSH_HOUR = {
   intervalMs: 3 * 60 * 60 * 1000, // هر 3 ساعت
   multiplier: 2,                   // ×2 تولید
 };
+
+// ==================== RANDOM EVENTS ====================
+
+export const EVENT_CONFIG = {
+  checkIntervalMs: 60 * 1000,        // چک هر 60 ثانیه
+  minTimeBetweenMs: 2 * 60 * 1000,   // حداقل 2 دقیقه بین رویدادها
+  triggerChance: 0.35,                // 35% شانس هر چک
+  maxActiveEvents: 2,
+};
+
+export const EVENT_TEMPLATES: EventTemplate[] = [
+  // ===== GLOBAL =====
+  {
+    id: 'evt-boom', title: 'رونق اقتصادی', description: 'اقتصاد در شرایط عالی است! درآمد تمام شرکت‌ها افزایش می‌یابد.',
+    icon: '📈', severity: 'major', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 1.3, durationMs: 5 * 60 * 1000, isPositive: true,
+    newsTitle: 'رونق اقتصادی: درآمدها ۳۰٪ افزایش یافت', newsSummary: 'شاخص‌های اقتصادی مثبت شد. تمام کسب‌وکارها از رشد بهره‌مند هستند.',
+  },
+  {
+    id: 'evt-recession', title: 'رکود اقتصادی', description: 'بازار دچار رکود شده. درآمد همه شرکت‌ها کاهش می‌یابد.',
+    icon: '📉', severity: 'major', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 0.7, durationMs: 5 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-recession-ad', label: 'کمپین تبلیغاتی', icon: '📢', cost: 15_000, effectMultiplier: 0.5, description: 'با تبلیغات، اثر رکود را کاهش دهید' }],
+    newsTitle: 'رکود اقتصادی: کاهش ۳۰٪ درآمدها', newsSummary: 'رکود بازار باعث افت درآمد کسب‌وکارها شده است.',
+  },
+  {
+    id: 'evt-tax-audit', title: 'بازرسی مالیاتی', description: 'سازمان مالیات از شما بازرسی کرد! جریمه پرداخت شد.',
+    icon: '🏛️', severity: 'major', scope: 'global',
+    effect: 'instant_balance', effectValue: -0.07, durationMs: 0, isPositive: false,
+    newsTitle: 'بازرسی مالیاتی از کسب‌وکارها', newsSummary: 'سازمان امور مالیاتی جریمه‌هایی صادر کرد.',
+  },
+  {
+    id: 'evt-subsidy', title: 'یارانه دولتی', description: 'دولت به کسب‌وکارها یارانه پرداخت کرد!',
+    icon: '🏦', severity: 'major', scope: 'global',
+    effect: 'instant_balance', effectValue: 0.05, durationMs: 0, isPositive: true,
+    newsTitle: 'پرداخت یارانه دولتی به کارآفرینان', newsSummary: 'دولت بسته حمایتی ویژه‌ای برای کسب‌وکارها تصویب کرد.',
+  },
+
+  // ===== FARMING =====
+  {
+    id: 'evt-drought', title: 'خشکسالی', description: 'خشکسالی شدید مزارع را تحت تأثیر قرار داده.',
+    icon: '🏜️', severity: 'major', scope: 'business_type', targetBusinessType: 'farming',
+    effect: 'revenue_multiplier', effectValue: 0.5, durationMs: 4 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-drought-irrigation', label: 'آبیاری اضطراری', icon: '💧', cost: 10_000, effectMultiplier: 0.5, description: 'نصب آبیاری اضطراری برای کاهش خسارت' }],
+    newsTitle: 'خشکسالی: برداشت محصول ۵۰٪ کاهش یافت', newsSummary: 'خشکسالی شدید در مناطق کشاورزی باعث افت تولید شده.',
+  },
+  {
+    id: 'evt-harvest', title: 'فصل برداشت عالی', description: 'شرایط آب و هوایی عالی! محصولات فراوان.',
+    icon: '🌾', severity: 'minor', scope: 'business_type', targetBusinessType: 'farming',
+    effect: 'revenue_multiplier', effectValue: 1.5, durationMs: 4 * 60 * 1000, isPositive: true,
+    responseOptions: [{ id: 'resp-harvest-invest', label: 'سرمایه‌گذاری بیشتر', icon: '🌱', cost: 8_000, effectMultiplier: 1.3, description: 'با سرمایه‌گذاری، سود برداشت را بیشتر کنید' }],
+    newsTitle: 'فصل برداشت: رکورد تولید شکسته شد', newsSummary: 'شرایط جوی مناسب باعث برداشت فوق‌العاده شد.',
+  },
+
+  // ===== RESTAURANT =====
+  {
+    id: 'evt-food-critic', title: 'بازدید منتقد غذا', description: 'یک منتقد معروف از رستوران شما تعریف کرد!',
+    icon: '⭐', severity: 'major', scope: 'business_type', targetBusinessType: 'restaurant',
+    effect: 'revenue_multiplier', effectValue: 1.8, durationMs: 3 * 60 * 1000, isPositive: true,
+    responseOptions: [{ id: 'resp-critic-menu', label: 'منوی ویژه ارائه بده', icon: '🍽️', cost: 12_000, effectMultiplier: 1.2, description: 'منوی VIP برای جذب مشتری بیشتر' }],
+    newsTitle: 'منتقد غذا: این رستوران فوق‌العاده است!', newsSummary: 'بازدید منتقد مشهور باعث هجوم مشتریان شد.',
+  },
+  {
+    id: 'evt-food-scandal', title: 'مسمومیت غذایی', description: 'گزارش مسمومیت غذایی! مشتریان ناراضی هستند.',
+    icon: '🤢', severity: 'major', scope: 'business_type', targetBusinessType: 'restaurant',
+    effect: 'revenue_multiplier', effectValue: 0.4, durationMs: 4 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-scandal-pr', label: 'بحران‌مدیری', icon: '📋', cost: 20_000, effectMultiplier: 0.4, description: 'استخدام تیم روابط عمومی برای مدیریت بحران' }],
+    newsTitle: 'بحران بهداشتی در رستوران‌ها', newsSummary: 'گزارش مسمومیت غذایی باعث کاهش شدید مشتریان شد.',
+  },
+
+  // ===== FACTORY =====
+  {
+    id: 'evt-breakdown', title: 'خرابی تجهیزات', description: 'خط تولید از کار افتاده! تعمیرات ضروری است.',
+    icon: '🔧', severity: 'minor', scope: 'business_type', targetBusinessType: 'factory',
+    effect: 'revenue_multiplier', effectValue: 0.6, durationMs: 3 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-breakdown-fix', label: 'تعمیر فوری', icon: '🛠️', cost: 15_000, effectMultiplier: 0.0, description: 'تیم تعمیرات اضطراری بفرستید' }],
+    newsTitle: 'توقف تولید در کارخانه‌ها', newsSummary: 'خرابی تجهیزات باعث کاهش ظرفیت تولید شد.',
+  },
+  {
+    id: 'evt-automation-grant', title: 'کمک‌هزینه اتوماسیون', description: 'دولت برای اتوماسیون کارخانه‌ها کمک‌هزینه داد!',
+    icon: '🤖', severity: 'minor', scope: 'business_type', targetBusinessType: 'factory',
+    effect: 'revenue_multiplier', effectValue: 1.4, durationMs: 5 * 60 * 1000, isPositive: true,
+    newsTitle: 'کمک‌هزینه اتوماسیون صنعتی', newsSummary: 'دولت از اتوماسیون کارخانه‌ها حمایت مالی می‌کند.',
+  },
+
+  // ===== APP_STARTUP =====
+  {
+    id: 'evt-viral', title: 'اپ وایرال شد!', description: 'اپلیکیشن شما در شبکه‌های اجتماعی ترند شد!',
+    icon: '🚀', severity: 'major', scope: 'business_type', targetBusinessType: 'app_startup',
+    effect: 'revenue_multiplier', effectValue: 2.0, durationMs: 2 * 60 * 1000, isPositive: true,
+    responseOptions: [{ id: 'resp-viral-ads', label: 'تبلیغات بیشتر', icon: '📢', cost: 20_000, effectMultiplier: 1.3, description: 'از فرصت استفاده کنید و تبلیغ کنید' }],
+    newsTitle: 'اپلیکیشن ایرانی در صدر دانلودها!', newsSummary: 'یک استارتاپ ایرانی با رشد انفجاری کاربران مواجه شد.',
+  },
+  {
+    id: 'evt-server-crash', title: 'سرور از کار افتاد', description: 'سرورها داون شدند! کاربران نمی‌توانند وارد شوند.',
+    icon: '💥', severity: 'minor', scope: 'business_type', targetBusinessType: 'app_startup',
+    effect: 'revenue_multiplier', effectValue: 0.3, durationMs: 3 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-server-fix', label: 'سرور ابری بخر', icon: '☁️', cost: 25_000, effectMultiplier: 0.0, description: 'مهاجرت فوری به سرور ابری' }],
+    newsTitle: 'قطعی سرویس: کاربران ناراضی', newsSummary: 'مشکلات فنی باعث قطعی طولانی سرویس شد.',
+  },
+
+  // ===== SUPERMARKET =====
+  {
+    id: 'evt-supplier-deal', title: 'قرارداد ویژه تأمین‌کننده', description: 'یک تأمین‌کننده تخفیف ویژه داد! هزینه‌ها کاهش یافت.',
+    icon: '🤝', severity: 'minor', scope: 'business_type', targetBusinessType: 'supermarket',
+    effect: 'expense_multiplier', effectValue: 0.7, durationMs: 5 * 60 * 1000, isPositive: true,
+    newsTitle: 'تخفیف ویژه تأمین‌کنندگان به فروشگاه‌ها', newsSummary: 'قراردادهای جدید باعث کاهش هزینه‌های فروشگاه‌ها شد.',
+  },
+  {
+    id: 'evt-shoplifting', title: 'موج سرقت از فروشگاه', description: 'سرقت‌های مکرر خسارت مالی وارد کرد!',
+    icon: '🦹', severity: 'minor', scope: 'business_type', targetBusinessType: 'supermarket',
+    effect: 'instant_balance', effectValue: -0.03, durationMs: 0, isPositive: false,
+    newsTitle: 'افزایش سرقت از فروشگاه‌ها', newsSummary: 'موج سرقت باعث خسارت مالی به فروشگاه‌ها شد.',
+  },
+
+  // ===== TRANSPORT =====
+  {
+    id: 'evt-fuel-spike', title: 'جهش قیمت سوخت', description: 'قیمت بنزین و گازوئیل ناگهان افزایش یافت!',
+    icon: '⛽', severity: 'minor', scope: 'business_type', targetBusinessType: 'transport',
+    effect: 'expense_multiplier', effectValue: 1.5, durationMs: 4 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-fuel-electric', label: 'اجاره خودرو برقی', icon: '🔋', cost: 18_000, effectMultiplier: 0.5, description: 'با اجاره خودروی برقی هزینه سوخت را کاهش دهید' }],
+    newsTitle: 'جهش قیمت سوخت: هزینه حمل‌ونقل بالا رفت', newsSummary: 'افزایش ناگهانی قیمت سوخت فشار زیادی بر ناوگان وارد کرد.',
+  },
+  {
+    id: 'evt-big-contract', title: 'قرارداد بزرگ حمل', description: 'یک قرارداد حمل سنگین به شرکت شما رسید!',
+    icon: '📋', severity: 'minor', scope: 'business_type', targetBusinessType: 'transport',
+    effect: 'revenue_multiplier', effectValue: 1.5, durationMs: 5 * 60 * 1000, isPositive: true,
+    newsTitle: 'قرارداد بزرگ حمل‌ونقل امضا شد', newsSummary: 'یک شرکت حمل‌ونقل قرارداد سنگین جدیدی بست.',
+  },
+];

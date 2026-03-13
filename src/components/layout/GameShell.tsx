@@ -7,6 +7,7 @@ import { useGameTick } from '@/hooks/useGameTick';
 import { useGameStore } from '@/store/gameStore';
 import { X, CheckCircle2, Circle } from 'lucide-react';
 import DailyBonusModal from '@/components/hooks/DailyBonusModal';
+import EventModal from '@/components/hooks/EventModal';
 
 const dailyTasks = [
   { text: 'یک کارمند جدید استخدام کن', done: false },
@@ -19,6 +20,8 @@ export default function GameShell({ children }: { children: ReactNode }) {
 
   const theme = useGameStore((s) => s.theme);
   const canClaimDailyBonus = useGameStore((s) => s.canClaimDailyBonus);
+  const pendingEventId = useGameStore((s) => s.randomEvents.pendingEventId);
+  const dismissPendingEvent = useGameStore((s) => s.dismissPendingEvent);
   const [hydrated, setHydrated] = useState(false);
   const [showMissions, setShowMissions] = useState(false);
   const [showDailyBonus, setShowDailyBonus] = useState(false);
@@ -62,6 +65,11 @@ export default function GameShell({ children }: { children: ReactNode }) {
 
       {/* Daily Bonus Modal */}
       {showDailyBonus && <DailyBonusModal onClose={() => setShowDailyBonus(false)} />}
+
+      {/* Event Modal */}
+      {pendingEventId && !showDailyBonus && (
+        <EventModal eventId={pendingEventId} onClose={dismissPendingEvent} />
+      )}
 
       {/* باتن‌شیت ماموریت‌های روزانه */}
       {showMissions && (

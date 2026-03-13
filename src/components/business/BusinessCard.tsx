@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Business, BusinessTemplate } from '@/types';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant, getNextUnlock } from '@/store/gameStore';
 import { businessTemplates } from '@/data/mock';
+import EventBanner from '@/components/hooks/EventBanner';
 import Link from 'next/link';
 
 interface BusinessCardProps {
@@ -12,6 +13,10 @@ interface BusinessCardProps {
 
 export default function BusinessCard({ business }: BusinessCardProps) {
   const collectRevenue = useGameStore((s) => s.collectRevenue);
+  const activeEvents = useGameStore((s) => s.randomEvents.activeEvents);
+  const relevantEvents = activeEvents.filter(
+    (e) => (e.scope === 'global' || e.targetBusinessType === business.type) && e.effect !== 'instant_balance'
+  );
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [collectAnim, setCollectAnim] = useState<number | null>(null);
@@ -130,6 +135,15 @@ export default function BusinessCard({ business }: BusinessCardProps) {
             </span>
           </span>
         </div>
+
+        {/* Active events */}
+        {relevantEvents.length > 0 && (
+          <div className="mt-2 space-y-1.5">
+            {relevantEvents.map((evt) => (
+              <EventBanner key={evt.id} event={evt} />
+            ))}
+          </div>
+        )}
 
         {/* Next Unlock teaser */}
         {nextUnlock && (

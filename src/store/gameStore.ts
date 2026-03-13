@@ -14,6 +14,9 @@ import {
   OfficeTier,
   DailyBonusState,
   RushHourState,
+  RandomEventState,
+  ActiveEvent,
+  BusinessType,
 } from '@/types';
 import {
   mockPlayer,
@@ -28,6 +31,8 @@ import {
   OFFICE_TIERS,
   DAILY_BONUS_REWARDS,
   RUSH_HOUR,
+  EVENT_CONFIG,
+  EVENT_TEMPLATES,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -195,6 +200,14 @@ interface GameState {
   getRushHourTimeLeft: () => number;     // ms until rush hour ends (0 if inactive)
   getNextRushHour: () => number;         // ms until next rush hour starts
 
+  // Random Events
+  randomEvents: RandomEventState;
+  triggerRandomEvent: () => void;
+  respondToEvent: (eventId: string, responseOptionId: string) => void;
+  expireEvents: () => void;
+  dismissPendingEvent: () => void;
+  getEventMultiplier: (businessType: BusinessType) => { revenueMultiplier: number; expenseMultiplier: number };
+
   activeTab: string;
   setActiveTab: (tab: string) => void;
 }
@@ -297,9 +310,13 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
         const effectiveRevenue = calcEffectiveRevenue(biz);
         const totalExpenses = calcTotalExpenses(biz);
+        // Event multipliers
+        const eventMult = get().getEventMultiplier(biz.type);
+        const adjustedRevenue = Math.round(effectiveRevenue * eventMult.revenueMultiplier);
+        const adjustedExpenses = Math.round(totalExpenses * eventMult.expenseMultiplier);
         // Rush Hour ×2 multiplier
         const rushMultiplier = get().isRushHourActive() ? RUSH_HOUR.multiplier : 1;
-        const netPerCycle = Math.max(0, Math.round((effectiveRevenue - totalExpenses) * rushMultiplier));
+        const netPerCycle = Math.max(0, Math.round((adjustedRevenue - adjustedExpenses) * rushMultiplier));
 
         // سیکل‌های عادی (تا سقف) + بازده کاهشی (۲۰٪ بعد از سقف)
         const normalCycles = Math.min(completedCycles, biz.maxPendingCycles);
@@ -623,6 +640,180 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     return RUSH_HOUR.intervalMs - cyclePosition;
   },
 
+  // ==================== Random Events ====================
+
+  randomEvents: { activeEvents: [], lastEventCheckAt: 0, pendingEventId: null },
+
+  triggerRandomEvent: () => {
+    const { randomEvents, player, businesses, news } = get();
+    const now = Date.now();
+
+    // حداقل فاصله بین رویدادها
+    if (now - randomEvents.lastEventCheckAt < EVENT_CONFIG.minTimeBetweenMs) {
+      set({ randomEvents: { ...randomEvents, lastEventCheckAt: now } });
+      return;
+    }
+
+    // حداکثر رویداد فعال
+    if (randomEvents.activeEvents.length >= EVENT_CONFIG.maxActiveEvents) {
+      set({ randomEvents: { ...randomEvents, lastEventCheckAt: now } });
+      return;
+    }
+
+    // شانس
+    if (Math.random() > EVENT_CONFIG.triggerChance) {
+      set({ randomEvents: { ...randomEvents, lastEventCheckAt: now } });
+      return;
+    }
+
+    // فیلتر رویدادهای واجد شرایط
+    const activeTemplateIds = randomEvents.activeEvents.map((e) => e.templateId);
+    const playerBusinessTypes = new Set(businesses.map((b) => b.type));
+
+    const eligible = EVENT_TEMPLATES.filter((t) => {
+      if (activeTemplateIds.includes(t.id)) return false;
+      if (t.scope === 'business_type' && t.targetBusinessType && !playerBusinessTypes.has(t.targetBusinessType)) return false;
+      return true;
+    });
+
+    if (eligible.length === 0) {
+      set({ randomEvents: { ...randomEvents, lastEventCheckAt: now } });
+      return;
+    }
+
+    // انتخاب تصادفی
+    const template = eligible[Math.floor(Math.random() * eligible.length)];
+
+    // اثر فوری روی موجودی
+    if (template.effect === 'instant_balance') {
+      const amount = Math.round(player.balance * template.effectValue);
+      const finalAmount = template.isPositive ? Math.max(amount, 5_000) : amount;
+
+      // خبر اضافه کن
+      const newsItem: NewsArticle = {
+        id: `news-evt-${now}`, title: template.newsTitle, summary: template.newsSummary,
+        category: 'event', icon: template.icon, timestamp: now,
+        isBreaking: template.severity === 'major',
+        relatedBusinessType: template.targetBusinessType,
+      };
+
+      set({
+        player: { ...player, balance: player.balance + finalAmount },
+        news: [newsItem, ...news].slice(0, 20),
+        randomEvents: {
+          ...randomEvents,
+          lastEventCheckAt: now,
+          pendingEventId: template.severity === 'major' ? `evt-inst-${now}` : null,
+        },
+      });
+
+      // برای مودال instant، یک ActiveEvent موقتی بساز (expires بعد 10 ثانیه)
+      if (template.severity === 'major') {
+        const instantEvent: ActiveEvent = {
+          id: `evt-inst-${now}`, templateId: template.id,
+          title: template.title, description: template.description + ` (${finalAmount > 0 ? '+' : ''}${finalAmount.toLocaleString('fa-IR')})`,
+          icon: template.icon, severity: template.severity, scope: template.scope,
+          targetBusinessType: template.targetBusinessType,
+          effect: template.effect, effectValue: template.effectValue,
+          isPositive: template.isPositive, startedAt: now, expiresAt: now + 10_000,
+          responded: true, // instant events have no response
+        };
+        set((s) => ({
+          randomEvents: { ...s.randomEvents, activeEvents: [...s.randomEvents.activeEvents, instantEvent], pendingEventId: instantEvent.id },
+        }));
+      }
+      return;
+    }
+
+    // رویداد مدت‌دار
+    const activeEvent: ActiveEvent = {
+      id: `evt-${now}`, templateId: template.id,
+      title: template.title, description: template.description,
+      icon: template.icon, severity: template.severity, scope: template.scope,
+      targetBusinessType: template.targetBusinessType,
+      effect: template.effect, effectValue: template.effectValue,
+      isPositive: template.isPositive, startedAt: now, expiresAt: now + template.durationMs,
+      responded: false,
+    };
+
+    const newsItem: NewsArticle = {
+      id: `news-evt-${now}`, title: template.newsTitle, summary: template.newsSummary,
+      category: 'event', icon: template.icon, timestamp: now,
+      isBreaking: template.severity === 'major',
+      relatedBusinessType: template.targetBusinessType,
+    };
+
+    set({
+      randomEvents: {
+        activeEvents: [...randomEvents.activeEvents, activeEvent],
+        lastEventCheckAt: now,
+        pendingEventId: template.severity === 'major' ? activeEvent.id : null,
+      },
+      news: [newsItem, ...news].slice(0, 20),
+    });
+  },
+
+  respondToEvent: (eventId, responseOptionId) => {
+    const { randomEvents, player } = get();
+    const event = randomEvents.activeEvents.find((e) => e.id === eventId);
+    if (!event || event.responded) return;
+
+    const template = EVENT_TEMPLATES.find((t) => t.id === event.templateId);
+    if (!template?.responseOptions) return;
+    const option = template.responseOptions.find((o) => o.id === responseOptionId);
+    if (!option || player.balance < option.cost) return;
+
+    // محاسبه effectValue جدید
+    let newEffectValue = event.effectValue;
+    if (option.effectMultiplier === 0) {
+      newEffectValue = 1.0; // کامل نفی
+    } else if (event.isPositive) {
+      newEffectValue = event.effectValue * option.effectMultiplier; // تقویت
+    } else {
+      // کاهش خسارت: حرکت به سمت 1.0
+      const penalty = 1 - event.effectValue;
+      newEffectValue = 1 - penalty * (1 - option.effectMultiplier);
+    }
+
+    set({
+      randomEvents: {
+        ...randomEvents,
+        activeEvents: randomEvents.activeEvents.map((e) =>
+          e.id === eventId
+            ? { ...e, effectValue: newEffectValue, responded: true, responseUsed: responseOptionId }
+            : e
+        ),
+      },
+      player: { ...player, balance: player.balance - option.cost },
+    });
+  },
+
+  expireEvents: () => {
+    const now = Date.now();
+    const { randomEvents } = get();
+    const filtered = randomEvents.activeEvents.filter((e) => e.expiresAt > now);
+    if (filtered.length !== randomEvents.activeEvents.length) {
+      set({ randomEvents: { ...randomEvents, activeEvents: filtered } });
+    }
+  },
+
+  dismissPendingEvent: () => {
+    set((s) => ({ randomEvents: { ...s.randomEvents, pendingEventId: null } }));
+  },
+
+  getEventMultiplier: (businessType) => {
+    const { randomEvents } = get();
+    let revenueMultiplier = 1;
+    let expenseMultiplier = 1;
+    for (const evt of randomEvents.activeEvents) {
+      if (evt.scope === 'global' || evt.targetBusinessType === businessType) {
+        if (evt.effect === 'revenue_multiplier') revenueMultiplier *= evt.effectValue;
+        if (evt.effect === 'expense_multiplier') expenseMultiplier *= evt.effectValue;
+      }
+    }
+    return { revenueMultiplier, expenseMultiplier };
+  },
+
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
@@ -636,5 +827,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     currency: state.currency,
     dailyBonus: state.dailyBonus,
     rushHour: state.rushHour,
+    randomEvents: state.randomEvents,
   }),
 }));

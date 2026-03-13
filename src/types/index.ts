@@ -257,6 +257,62 @@ export interface RushHourState {
   lastStartedAt: number;         // timestamp آخرین شروع
 }
 
+// ==================== RANDOM EVENTS ====================
+
+export type EventSeverity = 'minor' | 'major';
+export type EventEffect = 'revenue_multiplier' | 'expense_multiplier' | 'instant_balance';
+export type EventScope = 'global' | 'business_type';
+
+export interface EventResponseOption {
+  id: string;
+  label: string;
+  icon: string;
+  cost: number;
+  effectMultiplier: number;  // 0=fully negate, 0.5=halve penalty, 1.3=amplify benefit
+  description: string;
+}
+
+export interface EventTemplate {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  severity: EventSeverity;
+  scope: EventScope;
+  targetBusinessType?: BusinessType;
+  effect: EventEffect;
+  effectValue: number;       // multiplier or % of balance
+  durationMs: number;        // 0=instant
+  isPositive: boolean;
+  responseOptions?: EventResponseOption[];
+  newsTitle: string;
+  newsSummary: string;
+}
+
+export interface ActiveEvent {
+  id: string;
+  templateId: string;
+  title: string;
+  description: string;
+  icon: string;
+  severity: EventSeverity;
+  scope: EventScope;
+  targetBusinessType?: BusinessType;
+  effect: EventEffect;
+  effectValue: number;
+  isPositive: boolean;
+  startedAt: number;
+  expiresAt: number;
+  responded: boolean;
+  responseUsed?: string;
+}
+
+export interface RandomEventState {
+  activeEvents: ActiveEvent[];
+  lastEventCheckAt: number;
+  pendingEventId: string | null;  // instance id for modal
+}
+
 // ==================== NAVIGATION ====================
 
 export interface NavItem {

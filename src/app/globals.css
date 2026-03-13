@@ -228,3 +228,31 @@ input, textarea {
 .animate-level-flash {
   animation: level-flash 0.8s ease-out;
 }
+
+/* Event modal entrance */
+@keyframes event-flash {
+  0% { opacity: 0; transform: scale(0.8) translateY(-10px); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { transform: scale(1) translateY(0); }
+}
+.animate-event-flash {
+  animation: event-flash 0.5s ease-out;
+}
+
+/* Event banner pulse — positive (green) */
+@keyframes event-pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.15); }
+  50% { box-shadow: 0 0 10px 2px rgba(34, 197, 94, 0.1); }
+}
+.animate-event-pulse-green {
+  animation: event-pulse-green 2.5s ease-in-out infinite;
+}
+
+/* Event banner pulse — negative (red) */
+@keyframes event-pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.15); }
+  50% { box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.1); }
+}
+.animate-event-pulse-red {
+  animation: event-pulse-red 2s ease-in-out infinite;
+}

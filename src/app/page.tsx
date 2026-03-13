@@ -15,9 +15,13 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import RushHourBanner from '@/components/hooks/RushHourBanner';
+import EventBanner from '@/components/hooks/EventBanner';
 
 export default function HomePage() {
   const player = useGameStore((s) => s.player);
+  const activeEvents = useGameStore((s) => s.randomEvents.activeEvents).filter(
+    (e) => e.effect !== 'instant_balance'
+  );
   const businesses = useGameStore((s) => s.businesses);
   const products = useGameStore((s) => s.products);
 
@@ -48,6 +52,19 @@ export default function HomePage() {
 
       {/* ===================== Rush Hour ===================== */}
       <RushHourBanner />
+
+      {/* ===================== رویدادهای فعال ===================== */}
+      {activeEvents.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="font-bold text-sm flex items-center gap-1.5">
+            ⚡ رویدادهای فعال
+            <span className="text-[9px] bg-[#EF4444]/15 text-[#EF4444] px-1.5 py-0.5 rounded-[999px] font-bold">{activeEvents.length}</span>
+          </h2>
+          {activeEvents.map((evt) => (
+            <EventBanner key={evt.id} event={evt} showFull />
+          ))}
+        </div>
+      )}
 
       {/* ===================== آمار سریع ===================== */}
       <div className="flex items-center justify-around py-3 border-y border-line-subtle">
