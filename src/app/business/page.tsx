@@ -76,9 +76,11 @@ export default function BusinessPage() {
             {/* دکمه ساخت کسب‌وکار جدید */}
             <button
               onClick={() => setShowNewBiz(true)}
-              className="w-full border-2 border-dashed border-line hover:border-indigo-500 rounded-2xl py-4 text-fg-muted hover:text-indigo-400 transition-colors flex items-center justify-center gap-2 text-sm font-semibold"
+              className="w-full border-2 border-dashed border-[#6366F1]/30 hover:border-[#6366F1]/60 rounded-[18px] py-5 transition-all flex items-center justify-center gap-2 text-sm font-black active:scale-[0.97] hover:bg-[#6366F1]/5"
+              style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.03), rgba(139,92,246,0.06))' }}
             >
-              🚀 راه‌اندازی کسب‌وکار جدید
+              <span className="text-xl">🚀</span>
+              <span className="text-[#6366F1]">راه‌اندازی کسب‌وکار جدید</span>
             </button>
           </>
         )}

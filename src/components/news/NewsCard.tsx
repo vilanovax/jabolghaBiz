@@ -23,6 +23,16 @@ const categoryColors: Record<NewsCategory, string> = {
   event: '#ec4899',
 };
 
+const categoryGlow: Record<NewsCategory, 'primary' | 'profit' | 'gold'> = {
+  market: 'primary',
+  ranking: 'gold',
+  gold: 'gold',
+  currency: 'profit',
+  crypto: 'primary',
+  stock: 'primary',
+  event: 'primary',
+};
+
 function timeAgo(timestamp: number): string {
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60_000);
@@ -38,7 +48,7 @@ export default function NewsCard({ article }: { article: NewsArticle }) {
   return (
     <Card
       className={`${article.isBreaking ? 'animate-pulse-glow' : ''}`}
-      glow={article.isBreaking ? categoryColors[article.category] : undefined}
+      glow={article.isBreaking ? categoryGlow[article.category] : 'none'}
     >
       <div className="flex gap-3">
         <span className="text-2xl shrink-0">{article.icon}</span>

@@ -63,13 +63,7 @@ const appStartupEmployees: EmployeeTemplate[] = [
     id: 'emp-as-5', name: 'بازاریاب دیجیتال', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
     salary: 2_000, revenueBoost: 0.25, autoCollect: false, hireCost: 20_000,
     description: 'افزایش ۲۵٪ درآمد محصولات',
-    unlockLevel: 8, tier: 'marketer', maxUpgradeLevel: 1,
-  },
-  {
-    id: 'emp-as-6', name: 'کارشناس فروش', role: 'sales', roleName: 'فروش', icon: '🤝',
-    salary: 1_800, revenueBoost: 0.15, autoCollect: false, hireCost: 15_000,
-    description: 'افزایش ۱۵٪ سرعت فروش',
-    unlockLevel: 10, tier: 'senior', maxUpgradeLevel: 3,
+    unlockLevel: 10, tier: 'marketer', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-as-7', name: 'CTO', role: 'manager', roleName: 'مدیر فنی', icon: '🧠',
@@ -93,22 +87,16 @@ const farmingEmployees: EmployeeTemplate[] = [
     unlockLevel: 3, tier: 'worker', maxUpgradeLevel: 3,
   },
   {
-    id: 'emp-fm-3', name: 'راننده تراکتور', role: 'base', roleName: 'راننده', icon: '🚜',
-    salary: 1_500, revenueBoost: 0.25, autoCollect: false, hireCost: 15_000,
-    description: 'افزایش ۲۵٪ سرعت برداشت',
-    unlockLevel: 4, tier: 'senior', maxUpgradeLevel: 3,
+    id: 'emp-fm-5', name: 'مدیر مزرعه', role: 'manager', roleName: 'مدیر', icon: '👔',
+    salary: 2_800, revenueBoost: 0.35, autoCollect: false, hireCost: 40_000,
+    description: 'افزایش ۳۵٪ درآمد مزرعه',
+    unlockLevel: 4, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-fm-4', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
     salary: 2_000, revenueBoost: 0, autoCollect: true, hireCost: 25_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
     unlockLevel: 6, tier: 'accountant', maxUpgradeLevel: 1,
-  },
-  {
-    id: 'emp-fm-5', name: 'مدیر مزرعه', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 2_800, revenueBoost: 0.35, autoCollect: false, hireCost: 40_000,
-    description: 'افزایش ۳۵٪ درآمد مزرعه',
-    unlockLevel: 8, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-fm-6', name: 'بازاریاب', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
@@ -138,22 +126,16 @@ const restaurantEmployees: EmployeeTemplate[] = [
     unlockLevel: 3, tier: 'worker', maxUpgradeLevel: 3,
   },
   {
-    id: 'emp-rs-3', name: 'سرآشپز', role: 'base', roleName: 'سرآشپز', icon: '👨‍🍳',
-    salary: 2_200, revenueBoost: 0.3, autoCollect: false, hireCost: 25_000,
-    description: 'افزایش ۳۰٪ درآمد آشپزخانه',
-    unlockLevel: 4, tier: 'senior', maxUpgradeLevel: 3,
+    id: 'emp-rs-5', name: 'مدیر رستوران', role: 'manager', roleName: 'مدیر', icon: '👔',
+    salary: 3_000, revenueBoost: 0.35, autoCollect: false, hireCost: 45_000,
+    description: 'افزایش ۳۵٪ درآمد رستوران',
+    unlockLevel: 4, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-rs-4', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
     salary: 2_200, revenueBoost: 0, autoCollect: true, hireCost: 30_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
     unlockLevel: 6, tier: 'accountant', maxUpgradeLevel: 1,
-  },
-  {
-    id: 'emp-rs-5', name: 'مدیر رستوران', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 3_000, revenueBoost: 0.35, autoCollect: false, hireCost: 45_000,
-    description: 'افزایش ۳۵٪ درآمد رستوران',
-    unlockLevel: 8, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-rs-6', name: 'بازاریاب', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
@@ -183,22 +165,16 @@ const factoryEmployees: EmployeeTemplate[] = [
     unlockLevel: 3, tier: 'worker', maxUpgradeLevel: 3,
   },
   {
-    id: 'emp-fc-3', name: 'مهندس تولید', role: 'base', roleName: 'مهندس', icon: '🔧',
-    salary: 2_500, revenueBoost: 0.3, autoCollect: false, hireCost: 30_000,
-    description: 'افزایش ۳۰٪ بهره‌وری خط تولید',
-    unlockLevel: 4, tier: 'senior', maxUpgradeLevel: 3,
+    id: 'emp-fc-5', name: 'مدیر کارخانه', role: 'manager', roleName: 'مدیر', icon: '👔',
+    salary: 3_500, revenueBoost: 0.35, autoCollect: false, hireCost: 50_000,
+    description: 'افزایش ۳۵٪ درآمد کارخانه',
+    unlockLevel: 4, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-fc-4', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
     salary: 2_500, revenueBoost: 0, autoCollect: true, hireCost: 30_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
     unlockLevel: 6, tier: 'accountant', maxUpgradeLevel: 1,
-  },
-  {
-    id: 'emp-fc-5', name: 'مدیر کارخانه', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 3_500, revenueBoost: 0.35, autoCollect: false, hireCost: 50_000,
-    description: 'افزایش ۳۵٪ درآمد کارخانه',
-    unlockLevel: 8, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-fc-6', name: 'بازاریاب صنعتی', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
@@ -228,22 +204,16 @@ const supermarketEmployees: EmployeeTemplate[] = [
     unlockLevel: 3, tier: 'worker', maxUpgradeLevel: 3,
   },
   {
-    id: 'emp-sm-3', name: 'مسئول قفسه‌چینی', role: 'base', roleName: 'قفسه‌چین', icon: '🏷️',
-    salary: 1_300, revenueBoost: 0.2, autoCollect: false, hireCost: 12_000,
-    description: 'افزایش ۲۰٪ نظم فروشگاه',
-    unlockLevel: 4, tier: 'senior', maxUpgradeLevel: 3,
+    id: 'emp-sm-5', name: 'مدیر فروشگاه', role: 'manager', roleName: 'مدیر', icon: '👔',
+    salary: 3_000, revenueBoost: 0.35, autoCollect: false, hireCost: 45_000,
+    description: 'افزایش ۳۵٪ درآمد فروشگاه',
+    unlockLevel: 4, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-sm-4', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
     salary: 2_200, revenueBoost: 0, autoCollect: true, hireCost: 28_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
     unlockLevel: 6, tier: 'accountant', maxUpgradeLevel: 1,
-  },
-  {
-    id: 'emp-sm-5', name: 'مدیر فروشگاه', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 3_000, revenueBoost: 0.35, autoCollect: false, hireCost: 45_000,
-    description: 'افزایش ۳۵٪ درآمد فروشگاه',
-    unlockLevel: 8, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-sm-6', name: 'بازاریاب', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
@@ -273,22 +243,16 @@ const transportEmployees: EmployeeTemplate[] = [
     unlockLevel: 3, tier: 'worker', maxUpgradeLevel: 3,
   },
   {
-    id: 'emp-tr-3', name: 'مکانیک', role: 'base', roleName: 'مکانیک', icon: '🔧',
-    salary: 1_800, revenueBoost: 0, autoCollect: false, hireCost: 18_000,
-    description: 'کاهش ۱۵٪ هزینه‌های تعمیرات',
-    unlockLevel: 4, tier: 'senior', maxUpgradeLevel: 3, expenseReduction: 0.15,
+    id: 'emp-tr-5', name: 'مدیر ناوگان', role: 'manager', roleName: 'مدیر', icon: '👔',
+    salary: 3_500, revenueBoost: 0.35, autoCollect: false, hireCost: 50_000,
+    description: 'افزایش ۳۵٪ درآمد ناوگان',
+    unlockLevel: 4, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-tr-4', name: 'حسابدار', role: 'accountant', roleName: 'حسابدار', icon: '🧮',
     salary: 2_500, revenueBoost: 0, autoCollect: true, hireCost: 30_000,
     description: 'جمع‌آوری اتوماتیک درآمد',
     unlockLevel: 6, tier: 'accountant', maxUpgradeLevel: 1,
-  },
-  {
-    id: 'emp-tr-5', name: 'مدیر ناوگان', role: 'manager', roleName: 'مدیر', icon: '👔',
-    salary: 3_500, revenueBoost: 0.35, autoCollect: false, hireCost: 50_000,
-    description: 'افزایش ۳۵٪ درآمد ناوگان',
-    unlockLevel: 8, tier: 'manager', maxUpgradeLevel: 1,
   },
   {
     id: 'emp-tr-6', name: 'بازاریاب', role: 'marketer', roleName: 'بازاریاب', icon: '📢',
@@ -307,10 +271,10 @@ const transportEmployees: EmployeeTemplate[] = [
 // ==================== OFFICE TIERS ====================
 
 export const OFFICE_TIERS: OfficeTier[] = [
-  { level: 1, name: 'اتاق کار', icon: '🏠', area: 30, maxEmployees: 3, maxProducts: 1, rent: 500, upgradeCost: 0 },
-  { level: 2, name: 'دفتر', icon: '🏢', area: 60, maxEmployees: 5, maxProducts: 2, rent: 1_500, upgradeCost: 25_000 },
-  { level: 3, name: 'دفتر بزرگ', icon: '🏗️', area: 120, maxEmployees: 7, maxProducts: 3, rent: 3_500, upgradeCost: 60_000 },
-  { level: 4, name: 'ساختمان تجاری', icon: '🏛️', area: 250, maxEmployees: 10, maxProducts: 5, rent: 7_000, upgradeCost: 150_000 },
+  { level: 1, name: 'اتاق کار', icon: '🏠', area: 30, maxEmployees: 3, maxProducts: 1, rent: 500, upgradeCost: 0, requiredBusinessLevel: 1 },
+  { level: 2, name: 'دفتر', icon: '🏢', area: 60, maxEmployees: 5, maxProducts: 2, rent: 1_500, upgradeCost: 25_000, requiredBusinessLevel: 8 },
+  { level: 3, name: 'دفتر بزرگ', icon: '🏗️', area: 120, maxEmployees: 7, maxProducts: 3, rent: 3_500, upgradeCost: 60_000, requiredBusinessLevel: 14 },
+  { level: 4, name: 'ساختمان تجاری', icon: '🏛️', area: 250, maxEmployees: 10, maxProducts: 5, rent: 7_000, upgradeCost: 150_000, requiredBusinessLevel: 18 },
 ];
 
 export function getOfficeTier(level: number): OfficeTier {
@@ -320,62 +284,74 @@ export function getOfficeTier(level: number): OfficeTier {
 // ==================== BUSINESS PRODUCT TEMPLATES ====================
 
 const appStartupProducts: BusinessProduct[] = [
-  { id: 'bp-a1', name: 'اپلیکیشن فروشگاهی', icon: '🛒', description: 'طراحی و توسعه اپ فروشگاه آنلاین', unlockCost: 30_000, revenueBoost: 3_000, unlocked: false },
+  { id: 'bp-a1', name: 'اپلیکیشن فروشگاهی', icon: '🛒', description: 'طراحی و توسعه اپ فروشگاه آنلاین', unlockCost: 30_000, revenueBoost: 3_000, unlocked: false,
+    requirements: { businessLevel: 5 },
+  },
   { id: 'bp-a2', name: 'سامانه حسابداری', icon: '📊', description: 'نرم‌افزار مدیریت مالی', unlockCost: 50_000, revenueBoost: 5_000, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 2 }], businessLevel: 5 },
+    requirements: { businessLevel: 12 },
   },
   { id: 'bp-a3', name: 'بازی موبایل', icon: '🎮', description: 'توسعه بازی موبایلی پرطرفدار', unlockCost: 80_000, revenueBoost: 8_000, unlocked: false,
-    requirements: { officeLevel: 3, employees: [{ role: 'base', count: 3 }, { role: 'marketer', count: 1 }], businessLevel: 10 },
+    requirements: { businessLevel: 18, officeLevel: 3 },
   },
 ];
 
 const farmingProducts: BusinessProduct[] = [
-  { id: 'bp-f1', name: 'گلخانه', icon: '🌿', description: 'کشت محصولات گلخانه‌ای', unlockCost: 20_000, revenueBoost: 2_000, unlocked: false },
+  { id: 'bp-f1', name: 'گلخانه', icon: '🌿', description: 'کشت محصولات گلخانه‌ای', unlockCost: 20_000, revenueBoost: 2_000, unlocked: false,
+    requirements: { businessLevel: 5 },
+  },
   { id: 'bp-f2', name: 'دامداری', icon: '🐄', description: 'پرورش دام و تولید لبنیات', unlockCost: 40_000, revenueBoost: 4_000, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 2 }], businessLevel: 5 },
+    requirements: { businessLevel: 12 },
   },
   { id: 'bp-f3', name: 'زنبورداری', icon: '🍯', description: 'تولید عسل طبیعی', unlockCost: 15_000, revenueBoost: 1_500, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 1 }], businessLevel: 3 },
+    requirements: { businessLevel: 18, officeLevel: 3 },
   },
 ];
 
 const restaurantProducts: BusinessProduct[] = [
-  { id: 'bp-r1', name: 'منوی ویژه', icon: '⭐', description: 'غذاهای ویژه با حاشیه سود بالا', unlockCost: 25_000, revenueBoost: 2_500, unlocked: false },
+  { id: 'bp-r1', name: 'منوی ویژه', icon: '⭐', description: 'غذاهای ویژه با حاشیه سود بالا', unlockCost: 25_000, revenueBoost: 2_500, unlocked: false,
+    requirements: { businessLevel: 5 },
+  },
   { id: 'bp-r2', name: 'سرویس بیرون‌بر', icon: '🛵', description: 'ارسال غذا به درب منزل', unlockCost: 35_000, revenueBoost: 3_500, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 2 }], businessLevel: 4 },
+    requirements: { businessLevel: 12 },
   },
   { id: 'bp-r3', name: 'کترینگ', icon: '🎉', description: 'سرویس‌دهی به مراسم و مهمانی‌ها', unlockCost: 50_000, revenueBoost: 5_000, unlocked: false,
-    requirements: { officeLevel: 3, employees: [{ role: 'base', count: 3 }, { role: 'manager', count: 1 }], businessLevel: 8 },
+    requirements: { businessLevel: 18, officeLevel: 3 },
   },
 ];
 
 const factoryProducts: BusinessProduct[] = [
-  { id: 'bp-fc1', name: 'خط بسته‌بندی', icon: '📦', description: 'بسته‌بندی محصولات برای فروش مستقیم', unlockCost: 35_000, revenueBoost: 3_000, unlocked: false },
+  { id: 'bp-fc1', name: 'خط بسته‌بندی', icon: '📦', description: 'بسته‌بندی محصولات برای فروش مستقیم', unlockCost: 35_000, revenueBoost: 3_000, unlocked: false,
+    requirements: { businessLevel: 5 },
+  },
   { id: 'bp-fc2', name: 'خط تولید دوم', icon: '⚙️', description: 'افزایش ظرفیت تولید', unlockCost: 60_000, revenueBoost: 5_500, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 2 }], businessLevel: 5 },
+    requirements: { businessLevel: 12 },
   },
   { id: 'bp-fc3', name: 'آزمایشگاه کنترل کیفیت', icon: '🔬', description: 'ارتقای کیفیت و ارزش محصولات', unlockCost: 90_000, revenueBoost: 8_000, unlocked: false,
-    requirements: { officeLevel: 3, employees: [{ role: 'base', count: 3 }, { role: 'manager', count: 1 }], businessLevel: 10 },
+    requirements: { businessLevel: 18, officeLevel: 3 },
   },
 ];
 
 const supermarketProducts: BusinessProduct[] = [
-  { id: 'bp-sm1', name: 'بخش نانوایی', icon: '🍞', description: 'تولید و فروش نان تازه', unlockCost: 20_000, revenueBoost: 2_000, unlocked: false },
+  { id: 'bp-sm1', name: 'بخش نانوایی', icon: '🍞', description: 'تولید و فروش نان تازه', unlockCost: 20_000, revenueBoost: 2_000, unlocked: false,
+    requirements: { businessLevel: 5 },
+  },
   { id: 'bp-sm2', name: 'بخش آنلاین', icon: '🛒', description: 'فروشگاه اینترنتی و ارسال به درب منزل', unlockCost: 45_000, revenueBoost: 4_000, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 2 }], businessLevel: 5 },
+    requirements: { businessLevel: 12 },
   },
   { id: 'bp-sm3', name: 'بازار میوه و تره‌بار', icon: '🍎', description: 'بخش ویژه محصولات تازه', unlockCost: 60_000, revenueBoost: 5_500, unlocked: false,
-    requirements: { officeLevel: 3, employees: [{ role: 'base', count: 3 }, { role: 'marketer', count: 1 }], businessLevel: 8 },
+    requirements: { businessLevel: 18, officeLevel: 3 },
   },
 ];
 
 const transportProducts: BusinessProduct[] = [
-  { id: 'bp-tr1', name: 'خط شهری', icon: '🏙️', description: 'سرویس حمل‌ونقل درون‌شهری', unlockCost: 40_000, revenueBoost: 3_500, unlocked: false },
+  { id: 'bp-tr1', name: 'خط شهری', icon: '🏙️', description: 'سرویس حمل‌ونقل درون‌شهری', unlockCost: 40_000, revenueBoost: 3_500, unlocked: false,
+    requirements: { businessLevel: 5 },
+  },
   { id: 'bp-tr2', name: 'خط بین‌شهری', icon: '🛤️', description: 'حمل بار بین شهرها', unlockCost: 70_000, revenueBoost: 6_000, unlocked: false,
-    requirements: { officeLevel: 2, employees: [{ role: 'base', count: 2 }], businessLevel: 5 },
+    requirements: { businessLevel: 12 },
   },
   { id: 'bp-tr3', name: 'انبار سردخانه‌دار', icon: '❄️', description: 'حمل کالاهای یخچالی با سود بیشتر', unlockCost: 100_000, revenueBoost: 9_000, unlocked: false,
-    requirements: { officeLevel: 3, employees: [{ role: 'base', count: 3 }, { role: 'manager', count: 1 }], businessLevel: 10 },
+    requirements: { businessLevel: 18, officeLevel: 3 },
   },
 ];
 
@@ -386,7 +362,7 @@ export const businessTemplates: BusinessTemplate[] = [
     type: 'app_startup', defaultName: 'داده‌پردازان', icon: '📱',
     description: 'شرکت برنامه‌نویسی. با یک برنامه‌نویس ساده و تجهیزات سخت‌افزاری شروع کنید.',
     startCost: 50_000, baseRevenue: 5_000, cycleDuration: 180, baseExpenses: 1_000,
-    maxPendingCycles: 50, maxEmployees: 7, maxProducts: 2, maxLevel: 20,
+    maxPendingCycles: 100, maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'لپتاپ و میز کار',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
   },
@@ -394,7 +370,7 @@ export const businessTemplates: BusinessTemplate[] = [
     type: 'farming', defaultName: 'مزرعه سبز', icon: '🌾',
     description: 'کشت محصول و پرورش دام. پایه زنجیره تأمین.',
     startCost: 30_000, baseRevenue: 3_000, cycleDuration: 120, baseExpenses: 800,
-    maxPendingCycles: 50, maxEmployees: 7, maxProducts: 2, maxLevel: 20,
+    maxPendingCycles: 100, maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'زمین کشاورزی و ابزار دستی',
     availableEmployees: farmingEmployees, availableProducts: farmingProducts,
   },
@@ -402,7 +378,7 @@ export const businessTemplates: BusinessTemplate[] = [
     type: 'restaurant', defaultName: 'رستوران لذیذ', icon: '🍽️',
     description: 'تبدیل مواد اولیه به غذا. حاشیه سود بالا با مدیریت خوب.',
     startCost: 80_000, baseRevenue: 8_000, cycleDuration: 150, baseExpenses: 2_000,
-    maxPendingCycles: 50, maxEmployees: 7, maxProducts: 2, maxLevel: 20,
+    maxPendingCycles: 100, maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'آشپزخانه صنعتی و سالن غذاخوری',
     availableEmployees: restaurantEmployees, availableProducts: restaurantProducts,
   },
@@ -410,7 +386,7 @@ export const businessTemplates: BusinessTemplate[] = [
     type: 'factory', defaultName: 'کارخانه تولیدی', icon: '🏭',
     description: 'فرآوری مواد خام به کالاهای نهایی با سود بیشتر.',
     startCost: 120_000, baseRevenue: 10_000, cycleDuration: 240, baseExpenses: 3_000,
-    maxPendingCycles: 50, maxEmployees: 7, maxProducts: 2, maxLevel: 20,
+    maxPendingCycles: 100, maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'خط تولید اولیه',
     availableEmployees: factoryEmployees, availableProducts: factoryProducts,
   },
@@ -418,7 +394,7 @@ export const businessTemplates: BusinessTemplate[] = [
     type: 'supermarket', defaultName: 'هایپرمارکت', icon: '🏪',
     description: 'فروش مستقیم محصولات. حجم بالا، درآمد پایدار.',
     startCost: 70_000, baseRevenue: 6_000, cycleDuration: 90, baseExpenses: 1_500,
-    maxPendingCycles: 50, maxEmployees: 7, maxProducts: 2, maxLevel: 20,
+    maxPendingCycles: 100, maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'قفسه‌ها و صندوق فروش',
     availableEmployees: supermarketEmployees, availableProducts: supermarketProducts,
   },
@@ -426,7 +402,7 @@ export const businessTemplates: BusinessTemplate[] = [
     type: 'transport', defaultName: 'حمل‌ونقل سریع', icon: '🚛',
     description: 'جابجایی کالا بین کسب‌وکارها. ضروری برای زنجیره تأمین.',
     startCost: 150_000, baseRevenue: 12_000, cycleDuration: 300, baseExpenses: 4_000,
-    maxPendingCycles: 50, maxEmployees: 7, maxProducts: 2, maxLevel: 20,
+    maxPendingCycles: 100, maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'یک کامیون و راننده',
     availableEmployees: transportEmployees, availableProducts: transportProducts,
   },
@@ -438,7 +414,7 @@ export const mockBusinesses: Business[] = [
   {
     id: 'biz-1', ownerId: 'player-1', name: 'داده‌پردازان نوین', type: 'app_startup', level: 2, icon: '📱',
     baseRevenue: 5_000, cycleDuration: 180, lastCycleAt: Date.now() - 100_000, pendingRevenue: 5_000,
-    maxPendingCycles: 50, expenses: 1_000, upgradeCost: 75_000,
+    maxPendingCycles: 100, expenses: 1_000, upgradeCost: 75_000,
     officeLevel: 1, maxEmployees: 3, maxProducts: 1, maxLevel: 20,
     employees: [{
       id: 'he-1', templateId: 'emp-as-1', name: 'برنامه‌نویس', role: 'base', roleName: 'برنامه‌نویس',
@@ -547,3 +523,23 @@ export const mockNews: NewsArticle[] = [
     category: 'crypto', icon: 'Ξ', timestamp: now - HOUR * 18,
   },
 ];
+
+// ==================== DAILY BONUS ====================
+
+export const DAILY_BONUS_REWARDS = [
+  { day: 1, amount: 5_000,   icon: '🎁', label: 'روز ۱' },
+  { day: 2, amount: 10_000,  icon: '🎁', label: 'روز ۲' },
+  { day: 3, amount: 20_000,  icon: '🎁', label: 'روز ۳' },
+  { day: 4, amount: 40_000,  icon: '🎁', label: 'روز ۴' },
+  { day: 5, amount: 70_000,  icon: '💎', label: 'روز ۵' },
+  { day: 6, amount: 100_000, icon: '💎', label: 'روز ۶' },
+  { day: 7, amount: 200_000, icon: '🏆', label: 'روز ۷' },
+];
+
+// ==================== RUSH HOUR ====================
+
+export const RUSH_HOUR = {
+  durationMs: 15 * 60 * 1000,    // 15 دقیقه
+  intervalMs: 3 * 60 * 60 * 1000, // هر 3 ساعت
+  multiplier: 2,                   // ×2 تولید
+};

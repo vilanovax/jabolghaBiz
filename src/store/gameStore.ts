@@ -11,6 +11,9 @@ import {
   PlayerStats,
   EmployeeTemplate,
   NewsArticle,
+  OfficeTier,
+  DailyBonusState,
+  RushHourState,
 } from '@/types';
 import {
   mockPlayer,
@@ -23,6 +26,8 @@ import {
   mockNews,
   getOfficeTier,
   OFFICE_TIERS,
+  DAILY_BONUS_REWARDS,
+  RUSH_HOUR,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -35,10 +40,13 @@ export function calcEffectiveRevenue(biz: Business): number {
     return sum + e.revenueBoost * levelMultiplier;
   }, 0);
   const staffMultiplier = Math.min(1 + staffBoostSum, 3.5); // حداکثر ۲۵۰٪ بوست
+  // محصولات با سطح شرکت رشد می‌کنند: baseBoost × (1 + level × 0.1)
   const productBoost = biz.products
     .filter((p) => p.unlocked)
-    .reduce((sum, p) => sum + p.revenueBoost, 0);
-  return Math.round(biz.baseRevenue * staffMultiplier) + productBoost;
+    .reduce((sum, p) => sum + Math.round(p.revenueBoost * (1 + biz.level * 0.1)), 0);
+  // بونوس سطح سازمانی (Enterprise) — سطح ۲۰: +۲۰٪ تولید
+  const enterpriseMultiplier = biz.level >= 20 ? 1.2 : 1.0;
+  return Math.round(biz.baseRevenue * staffMultiplier * enterpriseMultiplier) + productBoost;
 }
 
 // محاسبه هزینه‌های کل (حقوق + هزینه پایه + اجاره دفتر)
@@ -57,6 +65,86 @@ export function hasAccountant(biz: Business): boolean {
 export function calcEmpireValue(player: PlayerProfile, businesses: Business[]): number {
   const businessesValue = businesses.reduce((sum, b) => sum + b.baseRevenue * b.level * 10, 0);
   return player.balance + businessesValue;
+}
+
+// ==================== Next Unlock Helper ====================
+
+export type UnlockType = 'employee' | 'product' | 'office' | 'enterprise';
+
+export interface NextUnlock {
+  type: UnlockType;
+  level: number;         // سطح مورد نیاز
+  name: string;          // نام آیتم
+  icon: string;
+  description: string;
+}
+
+/**
+ * پیدا کردن آنلاک بعدی شرکت بر اساس سطح فعلی
+ * بررسی نیروها، محصولات، دفتر و سطح enterprise
+ */
+export function getNextUnlock(biz: Business, template: BusinessTemplate): NextUnlock | null {
+  const currentLevel = biz.level;
+  const candidates: NextUnlock[] = [];
+
+  // نیروهای قابل آنلاک (استخدام نشده + سطح بالاتر از فعلی)
+  for (const emp of template.availableEmployees) {
+    const alreadyHired = biz.employees.some((e) => e.templateId === emp.id);
+    if (!alreadyHired && emp.unlockLevel > currentLevel) {
+      candidates.push({
+        type: 'employee',
+        level: emp.unlockLevel,
+        name: emp.name,
+        icon: emp.icon,
+        description: emp.description,
+      });
+    }
+  }
+
+  // محصولات قابل آنلاک
+  for (const prod of biz.products) {
+    if (!prod.unlocked && prod.requirements?.businessLevel && prod.requirements.businessLevel > currentLevel) {
+      candidates.push({
+        type: 'product',
+        level: prod.requirements.businessLevel,
+        name: prod.name,
+        icon: prod.icon,
+        description: prod.description,
+      });
+    }
+  }
+
+  // ارتقا دفتر
+  const officeLevel = biz.officeLevel ?? 1;
+  if (officeLevel < OFFICE_TIERS.length) {
+    const nextTier = OFFICE_TIERS[officeLevel]; // next tier (0-indexed: officeLevel=1 → index 1 = tier 2)
+    if (nextTier.requiredBusinessLevel > currentLevel) {
+      candidates.push({
+        type: 'office',
+        level: nextTier.requiredBusinessLevel,
+        name: nextTier.name,
+        icon: nextTier.icon,
+        description: `ظرفیت ${nextTier.maxEmployees} نیرو، ${nextTier.maxProducts} محصول`,
+      });
+    }
+  }
+
+  // Enterprise bonus at level 20
+  if (currentLevel < 20) {
+    candidates.push({
+      type: 'enterprise',
+      level: 20,
+      name: 'سطح سازمانی',
+      icon: '🏆',
+      description: 'بونوس ۲۰٪ تولید',
+    });
+  }
+
+  if (candidates.length === 0) return null;
+
+  // نزدیک‌ترین آنلاک
+  candidates.sort((a, b) => a.level - b.level);
+  return candidates[0];
 }
 
 interface GameState {
@@ -97,6 +185,15 @@ interface GameState {
   buyListing: (listingId: string, quantity: number) => void;
   buyFridayItem: (itemId: string) => void;
   updateMarketPrices: () => void;
+
+  // Hooks & Rewards
+  dailyBonus: DailyBonusState;
+  rushHour: RushHourState;
+  claimDailyBonus: () => number | null;  // returns amount or null if already claimed
+  canClaimDailyBonus: () => boolean;
+  isRushHourActive: () => boolean;
+  getRushHourTimeLeft: () => number;     // ms until rush hour ends (0 if inactive)
+  getNextRushHour: () => number;         // ms until next rush hour starts
 
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -178,8 +275,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           ? {
               ...b,
               level: b.level + 1,
-              baseRevenue: Math.round(b.baseRevenue * 1.25),
-              upgradeCost: Math.round(b.upgradeCost * 1.6),
+              baseRevenue: Math.round(b.baseRevenue * 1.22),
+              upgradeCost: Math.round(b.upgradeCost * 1.5),
             }
           : b
       ),
@@ -200,10 +297,17 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
         const effectiveRevenue = calcEffectiveRevenue(biz);
         const totalExpenses = calcTotalExpenses(biz);
-        const netPerCycle = Math.max(0, effectiveRevenue - totalExpenses);
-        const cappedCycles = Math.min(completedCycles, biz.maxPendingCycles);
-        const newPending = biz.pendingRevenue + netPerCycle * cappedCycles;
-        const maxPending = netPerCycle * biz.maxPendingCycles;
+        // Rush Hour ×2 multiplier
+        const rushMultiplier = get().isRushHourActive() ? RUSH_HOUR.multiplier : 1;
+        const netPerCycle = Math.max(0, Math.round((effectiveRevenue - totalExpenses) * rushMultiplier));
+
+        // سیکل‌های عادی (تا سقف) + بازده کاهشی (۲۰٪ بعد از سقف)
+        const normalCycles = Math.min(completedCycles, biz.maxPendingCycles);
+        const overflowCycles = Math.max(0, completedCycles - biz.maxPendingCycles);
+        const normalRevenue = netPerCycle * normalCycles;
+        const overflowRevenue = Math.round(netPerCycle * 0.2 * overflowCycles);
+        const newPending = biz.pendingRevenue + normalRevenue + overflowRevenue;
+        const maxPending = netPerCycle * biz.maxPendingCycles + overflowRevenue;
 
         const isAuto = hasAccountant(biz);
         const actualPending = Math.min(newPending, maxPending);
@@ -260,6 +364,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     if (currentLevel >= OFFICE_TIERS.length) return;
     const nextTier = getOfficeTier(currentLevel + 1);
     if (player.balance < nextTier.upgradeCost) return;
+    if (biz.level < nextTier.requiredBusinessLevel) return;
 
     set((state) => ({
       businesses: state.businesses.map((b) =>
@@ -451,6 +556,73 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     }));
   },
 
+  // ==================== Hooks & Rewards ====================
+
+  dailyBonus: { lastClaimDate: null, streak: 0 },
+  rushHour: { lastStartedAt: 0 },
+
+  canClaimDailyBonus: () => {
+    const { dailyBonus } = get();
+    const today = new Date().toISOString().slice(0, 10);
+    return dailyBonus.lastClaimDate !== today;
+  },
+
+  claimDailyBonus: () => {
+    const { dailyBonus, player } = get();
+    const today = new Date().toISOString().slice(0, 10);
+    if (dailyBonus.lastClaimDate === today) return null;
+
+    // بررسی streak — آیا دیروز claim شده؟
+    let newStreak = 1;
+    if (dailyBonus.lastClaimDate) {
+      const lastDate = new Date(dailyBonus.lastClaimDate);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        // streak ادامه دارد
+        newStreak = (dailyBonus.streak % 7) + 1;
+      }
+      // اگر بیش از 1 روز → ریست
+    }
+
+    const rewardIndex = Math.min(newStreak - 1, DAILY_BONUS_REWARDS.length - 1);
+    const amount = DAILY_BONUS_REWARDS[rewardIndex].amount;
+
+    set({
+      dailyBonus: { lastClaimDate: today, streak: newStreak },
+      player: { ...player, balance: player.balance + amount },
+    });
+
+    return amount;
+  },
+
+  isRushHourActive: () => {
+    const { rushHour } = get();
+    const now = Date.now();
+    const elapsed = now - rushHour.lastStartedAt;
+    // آیا در بازه فعال هستیم؟
+    if (elapsed < RUSH_HOUR.durationMs) return true;
+    // بررسی شروع جدید بر اساس interval
+    const cyclePosition = now % RUSH_HOUR.intervalMs;
+    return cyclePosition < RUSH_HOUR.durationMs;
+  },
+
+  getRushHourTimeLeft: () => {
+    const now = Date.now();
+    const cyclePosition = now % RUSH_HOUR.intervalMs;
+    if (cyclePosition < RUSH_HOUR.durationMs) {
+      return RUSH_HOUR.durationMs - cyclePosition;
+    }
+    return 0;
+  },
+
+  getNextRushHour: () => {
+    const now = Date.now();
+    const cyclePosition = now % RUSH_HOUR.intervalMs;
+    if (cyclePosition < RUSH_HOUR.durationMs) return 0; // الان فعاله
+    return RUSH_HOUR.intervalMs - cyclePosition;
+  },
+
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
@@ -462,5 +634,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     listings: state.listings,
     theme: state.theme,
     currency: state.currency,
+    dailyBonus: state.dailyBonus,
+    rushHour: state.rushHour,
   }),
 }));

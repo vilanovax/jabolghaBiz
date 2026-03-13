@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Card from '@/components/ui/Card';
-import { Business } from '@/types';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant } from '@/store/gameStore';
+import { useState, useEffect, useCallback } from 'react';
+import { Business, BusinessTemplate } from '@/types';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant, getNextUnlock } from '@/store/gameStore';
+import { businessTemplates } from '@/data/mock';
 import Link from 'next/link';
 
 interface BusinessCardProps {
@@ -14,15 +14,15 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const collectRevenue = useGameStore((s) => s.collectRevenue);
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [collectAnim, setCollectAnim] = useState<number | null>(null);
 
   const effectiveRevenue = calcEffectiveRevenue(business);
   const totalExpenses = calcTotalExpenses(business);
   const netProfit = effectiveRevenue - totalExpenses;
   const isAuto = hasAccountant(business);
   const hasPending = business.pendingRevenue > 0;
-
-  // ارزش شرکت = درآمد پایه × سطح × ۱۰
-  const companyValue = business.baseRevenue * business.level * 10;
+  const template = businessTemplates.find((t) => t.type === business.type);
+  const nextUnlock = template ? getNextUnlock(business, template) : null;
 
   useEffect(() => {
     const update = () => {
@@ -36,6 +36,16 @@ export default function BusinessCard({ business }: BusinessCardProps) {
     return () => clearInterval(interval);
   }, [business.lastCycleAt, business.cycleDuration]);
 
+  const handleCollect = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!hasPending) return;
+    const amount = business.pendingRevenue;
+    collectRevenue(business.id);
+    setCollectAnim(amount);
+    setTimeout(() => setCollectAnim(null), 1500);
+  }, [business.id, business.pendingRevenue, hasPending, collectRevenue]);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -43,32 +53,29 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   };
 
   return (
-    <Card
-      className={`overflow-hidden ${hasPending ? 'animate-pulse-glow' : ''}`}
-      glow={hasPending ? '#10b981' : undefined}
+    <div
+      className={`relative rounded-[18px] bg-surface-card/60 border p-4 transition-all duration-300 overflow-hidden ${
+        hasPending
+          ? 'border-[#22C55E]/30 shadow-[0_0_18px_rgba(34,197,94,0.25)]'
+          : 'border-line-subtle shadow-[var(--shadow-card)]'
+      }`}
     >
-      {/* progress bar + زمان باقیمانده */}
-      <div className="relative h-1.5 bg-surface-card -mx-4 -mt-4 mb-3 group">
-        <div
-          className="h-full transition-all duration-1000 rounded-l-full"
-          style={{
-            width: `${progress}%`,
-            backgroundColor: hasPending ? '#10b981' : '#6366f1',
-          }}
-        />
-        {/* زمان باقیمانده روی progress bar */}
-        <span className="absolute left-1/2 -translate-x-1/2 -bottom-4 text-[9px] text-fg-muted font-fa">
-          {hasPending ? '✅ آماده جمع‌آوری' : `⏱ ${formatTime(timeLeft)} تا تولید بعدی`}
-        </span>
-      </div>
+      {/* floating collect animation */}
+      {collectAnim !== null && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <span className="text-[#22C55E] font-black text-2xl font-fa animate-collect">
+            +{collectAnim.toLocaleString('fa-IR')}
+          </span>
+        </div>
+      )}
 
-      <Link href={`/business/${business.id}`} className="block mt-3">
-        {/* ردیف ۱: آیکون + نام + سطح */}
+      <Link href={`/business/${business.id}`} className="block">
+        {/* row 1: icon + name + level + auto badge */}
         <div className="flex items-center gap-2.5">
           <span className="text-2xl">{business.icon}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-fg text-sm truncate">{business.name}</h3>
+              <h3 className="font-black text-fg text-sm truncate">{business.name}</h3>
               <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/15 px-1.5 py-0.5 rounded">
                 LV {business.level}
               </span>
@@ -79,40 +86,77 @@ export default function BusinessCard({ business }: BusinessCardProps) {
           )}
         </div>
 
-        {/* ردیف ۲: درآمد / هزینه / سود */}
+        {/* row 2: REVENUE big + cycle time */}
+        <div className="flex items-baseline gap-3 mt-2.5">
+          <div className="flex items-baseline gap-1">
+            <span className="text-[#22C55E] text-lg font-black font-fa">+{effectiveRevenue.toLocaleString('fa-IR')}</span>
+            <span className="text-[9px] text-fg-muted">/سیکل</span>
+          </div>
+          <span className="text-[10px] text-fg-faint font-fa">⏱ {formatTime(business.cycleDuration)}</span>
+        </div>
+
+        {/* row 3: production progress bar */}
+        <div className="mt-2.5">
+          <div className="h-1.5 bg-surface-inset/50 rounded-[999px] overflow-hidden">
+            <div
+              className="h-full rounded-[999px] transition-all duration-1000"
+              style={{
+                width: `${progress}%`,
+                background: hasPending
+                  ? 'linear-gradient(90deg, #22C55E, #16A34A)'
+                  : 'linear-gradient(90deg, #6366F1, #8B5CF6)',
+                boxShadow: hasPending ? '0 0 8px rgba(34,197,94,0.5)' : '0 0 6px rgba(99,102,241,0.3)',
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-1 text-[9px]">
+            <span className="text-fg-faint">
+              {hasPending ? '✅ آماده جمع‌آوری' : `⏱ ${formatTime(timeLeft)} تا تولید`}
+            </span>
+          </div>
+        </div>
+
+        {/* row 4: stats — employees, expenses, profit */}
         <div className="flex items-center gap-3 mt-2 text-[10px]">
-          <span className="text-fg-muted">
-            درآمد <span className="text-accent-positive font-fa font-bold">{effectiveRevenue.toLocaleString('fa-IR')}</span>
+          <span className="flex items-center gap-1 text-fg-muted">
+            👥 <span className="font-fa font-bold text-fg-secondary">{business.employees.length}/{business.maxEmployees}</span>
           </span>
-          <span className="text-fg-faint">|</span>
-          <span className="text-fg-muted">
-            هزینه <span className="text-accent-negative font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
+          <span className="flex items-center gap-1 text-fg-muted">
+            💸 <span className="font-fa font-bold text-[#EF4444]">{totalExpenses.toLocaleString('fa-IR')}</span>
           </span>
-          <span className="text-fg-faint">|</span>
-          <span className="text-fg-muted">
-            سود{' '}
-            <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-accent-positive' : 'text-accent-negative'}`}>
+          <span className="flex items-center gap-1 text-fg-muted">
+            📈 <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
               {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
             </span>
           </span>
         </div>
 
-        {/* ردیف ۳: کارکنان + ارزش شرکت */}
-        <div className="flex items-center justify-between mt-1.5 text-[10px] text-fg-muted">
-          <span>👥 کارکنان {business.employees.length} از {business.maxEmployees}</span>
-          <span>💎 ارزش: <span className="text-accent-money font-fa font-bold">{companyValue.toLocaleString('fa-IR')}</span></span>
-        </div>
+        {/* Next Unlock teaser */}
+        {nextUnlock && (
+          <div className="mt-2.5 flex items-center gap-2 bg-[#FBBF24]/5 border border-[#FBBF24]/15 rounded-[12px] px-2.5 py-1.5">
+            <span className="text-sm">{nextUnlock.icon}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] text-[#FBBF24] font-bold truncate">{nextUnlock.name}</p>
+            </div>
+            <span className="text-[9px] text-[#FBBF24]/70 font-fa font-bold shrink-0">LV {nextUnlock.level}</span>
+          </div>
+        )}
       </Link>
 
-      {/* دکمه جمع‌آوری — فشرده */}
+      {/* Collect button — big, rewarding */}
       {hasPending && (
         <button
-          onClick={() => collectRevenue(business.id)}
-          className="w-full mt-2.5 bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded-lg font-bold text-[11px] active:scale-[0.98] transition-all flex items-center justify-center gap-1"
+          onClick={handleCollect}
+          className="w-full mt-3 py-3 rounded-[999px] font-black text-sm text-white active:scale-[0.96] transition-all flex flex-col items-center justify-center gap-0.5"
+          style={{
+            background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+            boxShadow: '0 4px 20px rgba(34,197,94,0.45)',
+          }}
         >
-          💰 جمع‌آوری <span className="font-fa">{business.pendingRevenue.toLocaleString('fa-IR')}</span>
+          <span>💰 جمع‌آوری</span>
+          <span className="font-fa text-base">+{business.pendingRevenue.toLocaleString('fa-IR')}</span>
         </button>
       )}
-    </Card>
+    </div>
   );
 }

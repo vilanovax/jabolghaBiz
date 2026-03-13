@@ -86,6 +86,7 @@ export interface OfficeTier {
   maxProducts: number;
   rent: number;           // اجاره هر سیکل
   upgradeCost: number;    // هزینه ارتقا به این سطح
+  requiredBusinessLevel: number; // حداقل سطح شرکت برای ارتقا
 }
 
 // پیش‌نیاز محصولات
@@ -243,6 +244,17 @@ export interface NewsArticle {
   timestamp: number;
   isBreaking?: boolean;
   relatedBusinessType?: BusinessType;
+}
+
+// ==================== HOOKS & REWARDS ====================
+
+export interface DailyBonusState {
+  lastClaimDate: string | null;  // ISO date string (YYYY-MM-DD)
+  streak: number;                // 0-7
+}
+
+export interface RushHourState {
+  lastStartedAt: number;         // timestamp آخرین شروع
 }
 
 // ==================== NAVIGATION ====================

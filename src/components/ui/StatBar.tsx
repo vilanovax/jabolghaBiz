@@ -29,6 +29,7 @@ export default function StatBar({ label, value, max = 100, icon, color, onClick 
             style={{
               width: `${percentage}%`,
               backgroundColor: color,
+              boxShadow: `0 0 8px ${color}60`,
             }}
           />
         </div>

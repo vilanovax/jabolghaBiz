@@ -29,8 +29,8 @@ export default function ProfilePage() {
         <div className="text-5xl mb-3">{player.avatar}</div>
         <h1 className="text-xl font-black">{player.username}</h1>
         <div className="flex items-center justify-center gap-2 mt-1">
-          <Badge text={`سطح ${player.level}`} color="#6366f1" />
-          <Badge text={`اعتبار: ${player.reputation}`} color="#f59e0b" />
+          <Badge text={`سطح ${player.level}`} variant="primary" />
+          <Badge text={`اعتبار: ${player.reputation}`} variant="gold" />
         </div>
         <div className="mt-3">
           <MoneyDisplay amount={player.balance} size="lg" />

@@ -25,11 +25,14 @@
   --nav: #ffffff;
   --nav-line: #e4e4e7;
 
-  /* Accent (text on surface) */
+  /* Game accents */
   --accent-money: #b45309;
   --accent-positive: #059669;
   --accent-negative: #dc2626;
   --accent-info: #4f46e5;
+  --accent-primary: #4f46e5;
+  --accent-gold: #d97706;
+  --accent-xp: #7c3aed;
 
   /* Misc */
   --progress-bg: #d4d4d8;
@@ -39,38 +42,52 @@
 
   --background: #ffffff;
   --foreground: #18181b;
+
+  /* Game shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 16px rgba(99, 102, 241, 0.08);
+  --shadow-collect: 0 0 24px rgba(16, 185, 129, 0.15);
+  --shadow-gold: 0 0 16px rgba(217, 119, 6, 0.1);
 }
 
 .dark {
-  --surface: #09090b;
-  --surface-elevated: #18181b;
-  --surface-card: #27272a;
-  --surface-inset: #3f3f46;
+  --surface: #0F172A;
+  --surface-elevated: #1E293B;
+  --surface-card: #1E293B;
+  --surface-inset: #334155;
 
-  --fg: #fafafa;
-  --fg-secondary: #a1a1aa;
-  --fg-muted: #71717a;
-  --fg-faint: #52525b;
+  --fg: #F8FAFC;
+  --fg-secondary: #CBD5E1;
+  --fg-muted: #94A3B8;
+  --fg-faint: #64748B;
 
-  --line: #3f3f46;
-  --line-subtle: rgba(63, 63, 70, 0.5);
-  --line-hover: #52525b;
+  --line: #334155;
+  --line-subtle: rgba(51, 65, 85, 0.6);
+  --line-hover: #475569;
 
-  --nav: #18181b;
-  --nav-line: #27272a;
+  --nav: #0F172A;
+  --nav-line: #1E293B;
 
-  --accent-money: #fbbf24;
-  --accent-positive: #34d399;
-  --accent-negative: #f87171;
+  --accent-money: #F59E0B;
+  --accent-positive: #22C55E;
+  --accent-negative: #EF4444;
   --accent-info: #818cf8;
+  --accent-primary: #818cf8;
+  --accent-gold: #FBBF24;
+  --accent-xp: #a78bfa;
 
-  --progress-bg: #3f3f46;
-  --chart-bar: #52525b;
-  --scrollbar-thumb: #3f3f46;
-  --ring-bg: #27272a;
+  --progress-bg: #334155;
+  --chart-bar: #475569;
+  --scrollbar-thumb: #334155;
+  --ring-bg: #1E293B;
 
-  --background: #09090b;
-  --foreground: #fafafa;
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+
+  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.25);
+  --shadow-collect: 0 0 24px rgba(34, 197, 94, 0.4);
+  --shadow-gold: 0 0 20px rgba(251, 191, 36, 0.3);
 }
 
 /* ==================== Tailwind Theme ==================== */
@@ -97,6 +114,9 @@
   --color-accent-positive: var(--accent-positive);
   --color-accent-negative: var(--accent-negative);
   --color-accent-info: var(--accent-info);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-xp: var(--accent-xp);
 
   --color-progress-bg: var(--progress-bg);
   --color-chart-bar: var(--chart-bar);
@@ -147,24 +167,24 @@ input, textarea {
   border-radius: 999px;
 }
 
-/* Glow animations */
+/* ==================== Game Animations ==================== */
+
+/* Glow pulse */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
-
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Collect money animation */
+/* Collect money float */
 @keyframes collect-float {
   0% { opacity: 0; transform: translateY(0) scale(0.8); }
-  20% { opacity: 1; transform: translateY(-10px) scale(1); }
-  80% { opacity: 1; transform: translateY(-30px) scale(1); }
+  20% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+  60% { opacity: 1; transform: translateY(-30px) scale(1); }
   100% { opacity: 0; transform: translateY(-50px) scale(0.9); }
 }
-
 .animate-collect {
   animation: collect-float 1.5s ease-out forwards;
 }
@@ -174,7 +194,37 @@ input, textarea {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Coin burst — rewarding collect */
+@keyframes coin-burst {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-coin-burst {
+  animation: coin-burst 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Shimmer — for pending revenue glow */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(52,211,153,0.08) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* Level up flash */
+@keyframes level-flash {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 12px 4px rgba(99, 102, 241, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+.animate-level-flash {
+  animation: level-flash 0.8s ease-out;
 }

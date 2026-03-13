@@ -16,15 +16,15 @@ export default function MoneyDisplay({ amount, size = 'md', showSign = false }: 
   const sizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
-    lg: 'text-2xl font-bold',
+    lg: 'text-2xl',
   };
 
+  const colorClass = showSign
+    ? isPositive ? 'text-[#22C55E]' : 'text-[#EF4444]'
+    : 'text-accent-money';
+
   return (
-    <span
-      className={`${sizeClasses[size]} ${
-        showSign ? (isPositive ? 'text-accent-positive' : 'text-accent-negative') : 'text-accent-money'
-      } font-fa font-bold`}
-    >
+    <span className={`${sizeClasses[size]} ${colorClass} font-fa font-black`}>
       {showSign && (isPositive ? '+' : '-')}{formatted} {currency}
     </span>
   );
