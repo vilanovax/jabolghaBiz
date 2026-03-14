@@ -8,6 +8,7 @@ import { useGameStore } from '@/store/gameStore';
 import { X, CheckCircle2, Circle } from 'lucide-react';
 import DailyBonusModal from '@/components/hooks/DailyBonusModal';
 import EventModal from '@/components/hooks/EventModal';
+import AchievementToast from '@/components/achievements/AchievementToast';
 
 const dailyTasks = [
   { text: 'یک کارمند جدید استخدام کن', done: false },
@@ -62,6 +63,9 @@ export default function GameShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <BottomNav />
+
+      {/* Achievement Toast */}
+      <AchievementToast />
 
       {/* Daily Bonus Modal */}
       {showDailyBonus && <DailyBonusModal onClose={() => setShowDailyBonus(false)} />}

@@ -990,34 +990,48 @@ export const ONE_TIME_MISSIONS: MissionTemplate[] = [
 // ==================== ACHIEVEMENTS ====================
 
 export const ACHIEVEMENTS_TEMPLATES: Achievement[] = [
-  // ===== کسب‌وکار =====
-  { id: 'ach-first-biz', title: 'کارآفرین', description: 'اولین شرکت رو بساز', icon: '🏢', tier: 'bronze', condition: 'create_business', target: 1, unlockedAt: null, badge: '🥉' },
-  { id: 'ach-3-biz', title: 'سرمایه‌گذار', description: '۳ شرکت همزمان داشته باش', icon: '🏗️', tier: 'silver', condition: 'own_businesses', target: 3, unlockedAt: null, badge: '🥈' },
-  { id: 'ach-5-biz', title: 'امپراتور', description: '۵ شرکت همزمان داشته باش', icon: '👑', tier: 'gold', condition: 'own_businesses', target: 5, unlockedAt: null, badge: '🥇' },
+  // ===== کسب‌وکار (milestone) =====
+  { id: 'ach-first-biz', title: 'کارآفرین', description: 'اولین شرکت رو بساز', icon: '🏢', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'create_business', target: 1, progress: 0, unlockedAt: null, badge: '🥉', reward: { money: 5_000 } },
+  { id: 'ach-3-biz', title: 'سرمایه‌گذار', description: '۳ شرکت همزمان داشته باش', icon: '🏗️', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'own_businesses', target: 3, progress: 0, unlockedAt: null, badge: '🥈', reward: { money: 30_000 } },
+  { id: 'ach-5-biz', title: 'امپراتور', description: '۵ شرکت همزمان داشته باش', icon: '👑', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'own_businesses', target: 5, progress: 0, unlockedAt: null, badge: '🥇', reward: { money: 100_000 } },
 
-  // ===== سطح =====
-  { id: 'ach-level-5', title: 'تازه‌کار حرفه‌ای', description: 'یک شرکت رو به سطح ۵ برسون', icon: '⭐', tier: 'bronze', condition: 'reach_business_level', target: 5, unlockedAt: null, badge: '⭐' },
-  { id: 'ach-level-10', title: 'باتجربه', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '🌟', tier: 'silver', condition: 'reach_business_level', target: 10, unlockedAt: null, badge: '🌟' },
-  { id: 'ach-level-20', title: 'سازمانی', description: 'یک شرکت رو به سطح ۲۰ برسون', icon: '💫', tier: 'diamond', condition: 'reach_business_level', target: 20, unlockedAt: null, badge: '💫' },
+  // ===== سطح (milestone) =====
+  { id: 'ach-level-5', title: 'تازه‌کار حرفه‌ای', description: 'یک شرکت رو به سطح ۵ برسون', icon: '⭐', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'reach_business_level', target: 5, progress: 0, unlockedAt: null, badge: '⭐', reward: { money: 10_000 } },
+  { id: 'ach-level-10', title: 'باتجربه', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '🌟', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'reach_business_level', target: 10, progress: 0, unlockedAt: null, badge: '🌟', reward: { money: 50_000 } },
+  { id: 'ach-level-20', title: 'سازمانی', description: 'یک شرکت رو به سطح ۲۰ برسون', icon: '💫', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_business_level', target: 20, progress: 0, unlockedAt: null, badge: '💫', reward: { money: 200_000 } },
 
-  // ===== ثروت =====
-  { id: 'ach-100k', title: 'صدهزاری', description: 'موجودی ۱۰۰ هزار تومان', icon: '💰', tier: 'bronze', condition: 'reach_balance', target: 100_000, unlockedAt: null, badge: '💰' },
-  { id: 'ach-500k', title: 'نیم میلیونر', description: 'موجودی ۵۰۰ هزار تومان', icon: '💵', tier: 'silver', condition: 'reach_balance', target: 500_000, unlockedAt: null, badge: '💵' },
-  { id: 'ach-1m', title: 'میلیونر', description: 'موجودی ۱ میلیون تومان', icon: '🤑', tier: 'gold', condition: 'reach_balance', target: 1_000_000, unlockedAt: null, badge: '🤑' },
-  { id: 'ach-5m', title: 'مولتی‌میلیونر', description: 'موجودی ۵ میلیون تومان', icon: '💎', tier: 'diamond', condition: 'reach_balance', target: 5_000_000, unlockedAt: null, badge: '💎' },
+  // ===== ثروت (milestone) =====
+  { id: 'ach-100k', title: 'صدهزاری', description: 'موجودی ۱۰۰ هزار تومان', icon: '💰', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'reach_balance', target: 100_000, progress: 0, unlockedAt: null, badge: '💰', reward: { money: 10_000 } },
+  { id: 'ach-500k', title: 'نیم میلیونر', description: 'موجودی ۵۰۰ هزار تومان', icon: '💵', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'reach_balance', target: 500_000, progress: 0, unlockedAt: null, badge: '💵', reward: { money: 50_000 } },
+  { id: 'ach-1m', title: 'میلیونر', description: 'موجودی ۱ میلیون تومان', icon: '🤑', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'reach_balance', target: 1_000_000, progress: 0, unlockedAt: null, badge: '🤑', reward: { money: 100_000 } },
+  { id: 'ach-5m', title: 'مولتی‌میلیونر', description: 'موجودی ۵ میلیون تومان', icon: '💎', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_balance', target: 5_000_000, progress: 0, unlockedAt: null, badge: '💎', reward: { money: 500_000 } },
+  { id: 'ach-10m', title: 'ده‌میلیونر', description: 'موجودی ۱۰ میلیون تومان', icon: '👑', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_balance', target: 10_000_000, progress: 0, unlockedAt: null, badge: '💎', reward: { money: 1_000_000 } },
 
-  // ===== نیرو =====
-  { id: 'ach-hire-1', title: 'رئیس', description: 'اولین نیرو رو استخدام کن', icon: '🤝', tier: 'bronze', condition: 'hire_employee', target: 1, unlockedAt: null, badge: '🤝' },
-  { id: 'ach-hire-5', title: 'مدیر', description: '۵ نیروی کار داشته باش', icon: '👥', tier: 'silver', condition: 'total_employees', target: 5, unlockedAt: null, badge: '👥' },
-  { id: 'ach-hire-15', title: 'رهبر', description: '۱۵ نیرو داشته باش', icon: '🏛️', tier: 'gold', condition: 'total_employees', target: 15, unlockedAt: null, badge: '🏛️' },
+  // ===== نیرو (milestone) =====
+  { id: 'ach-hire-1', title: 'رئیس', description: 'اولین نیرو رو استخدام کن', icon: '🤝', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'hire_employee', target: 1, progress: 0, unlockedAt: null, badge: '🤝', reward: { money: 5_000 } },
+  { id: 'ach-hire-5', title: 'مدیر', description: '۵ نیروی کار داشته باش', icon: '👥', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'total_employees', target: 5, progress: 0, unlockedAt: null, badge: '👥', reward: { money: 25_000 } },
+  { id: 'ach-hire-15', title: 'رهبر', description: '۱۵ نیرو داشته باش', icon: '🏛️', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'total_employees', target: 15, progress: 0, unlockedAt: null, badge: '🏛️', reward: { money: 75_000 } },
 
-  // ===== دفتر =====
-  { id: 'ach-office-2', title: 'دفتردار', description: 'دفتر رو ارتقا بده', icon: '🏠', tier: 'bronze', condition: 'upgrade_office', target: 1, unlockedAt: null, badge: '🏠' },
-  { id: 'ach-office-4', title: 'ساختمان‌ساز', description: 'به ساختمان تجاری برس', icon: '🏛️', tier: 'gold', condition: 'upgrade_office', target: 3, unlockedAt: null, badge: '🏢' },
+  // ===== دفتر (milestone) =====
+  { id: 'ach-office-2', title: 'دفتردار', description: 'دفتر رو ارتقا بده', icon: '🏠', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'upgrade_office', target: 1, progress: 0, unlockedAt: null, badge: '🏠', reward: { money: 10_000 } },
+  { id: 'ach-office-4', title: 'ساختمان‌ساز', description: 'به ساختمان تجاری برس', icon: '🏛️', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'upgrade_office', target: 3, progress: 0, unlockedAt: null, badge: '🏢', reward: { money: 80_000 } },
 
-  // ===== ماموریت =====
-  { id: 'ach-mission-10', title: 'ماموریت‌باز', description: '۱۰ ماموریت تکمیل کن', icon: '📋', tier: 'bronze', condition: 'collect_revenue', target: 10, unlockedAt: null, badge: '📋' },
-  { id: 'ach-mission-50', title: 'حرفه‌ای ماموریت', description: '۵۰ ماموریت تکمیل کن', icon: '🎖️', tier: 'gold', condition: 'collect_revenue', target: 50, unlockedAt: null, badge: '🎖️' },
+  // ===== مجموعه (collection) =====
+  { id: 'ach-all-types', title: 'تاجر جهانی', description: 'از هر نوع کسب‌وکار یکی داشته باش', icon: '🌍', tier: 'diamond', rarity: 'legendary', category: 'collection', condition: 'own_all_business_types', target: 6, progress: 0, unlockedAt: null, badge: '🌍', reward: { money: 300_000, statBoost: { experience: 15 } } },
+
+  // ===== آمار (stat) =====
+  { id: 'ach-int-100', title: 'نابغه', description: 'هوش رو به ۱۰۰ برسون', icon: '🧠', tier: 'gold', rarity: 'epic', category: 'stat', condition: 'reach_stat_intelligence', target: 100, progress: 0, unlockedAt: null, badge: '🧠', reward: { money: 100_000, statBoost: { experience: 20 } } },
+  { id: 'ach-happy-100', title: 'شادمان', description: 'شادی رو به ۱۰۰ برسون', icon: '😄', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_stat_happiness', target: 100, progress: 0, unlockedAt: null, badge: '😄', reward: { money: 50_000 } },
+  { id: 'ach-energy-100', title: 'پرانرژی', description: 'انرژی رو به ۱۰۰ برسون', icon: '⚡', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_stat_energy', target: 100, progress: 0, unlockedAt: null, badge: '⚡', reward: { money: 50_000 } },
+  { id: 'ach-player-level-10', title: 'حرفه‌ای', description: 'به سطح ۱۰ بازیکن برس', icon: '🎯', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_player_level', target: 10, progress: 0, unlockedAt: null, badge: '🎯', reward: { money: 75_000 } },
+  { id: 'ach-player-level-20', title: 'افسانه‌ای', description: 'به سطح ۲۰ بازیکن برس', icon: '🏆', tier: 'diamond', rarity: 'legendary', category: 'stat', condition: 'reach_player_level', target: 20, progress: 0, unlockedAt: null, badge: '🏆', reward: { money: 200_000, statBoost: { experience: 25 } } },
+
+  // ===== عملکرد (action) =====
+  { id: 'ach-upgrade-5', title: 'ارتقاچی', description: '۵ بار ارتقا انجام بده', icon: '🔧', tier: 'bronze', rarity: 'common', category: 'action', condition: 'total_upgrades', target: 5, progress: 0, unlockedAt: null, badge: '🔧', reward: { money: 20_000 } },
+  { id: 'ach-upgrade-20', title: 'معمار', description: '۲۰ بار ارتقا انجام بده', icon: '🏗️', tier: 'silver', rarity: 'rare', category: 'action', condition: 'total_upgrades', target: 20, progress: 0, unlockedAt: null, badge: '🏗️', reward: { money: 80_000 } },
+  { id: 'ach-upgrade-50', title: 'مهندس ارشد', description: '۵۰ بار ارتقا انجام بده', icon: '⚙️', tier: 'gold', rarity: 'epic', category: 'action', condition: 'total_upgrades', target: 50, progress: 0, unlockedAt: null, badge: '⚙️', reward: { money: 200_000 } },
+  { id: 'ach-mission-10', title: 'ماموریت‌باز', description: '۱۰ ماموریت تکمیل کن', icon: '📋', tier: 'bronze', rarity: 'common', category: 'action', condition: 'complete_missions', target: 10, progress: 0, unlockedAt: null, badge: '📋', reward: { money: 15_000 } },
+  { id: 'ach-mission-50', title: 'حرفه‌ای ماموریت', description: '۵۰ ماموریت تکمیل کن', icon: '🎖️', tier: 'gold', rarity: 'epic', category: 'action', condition: 'complete_missions', target: 50, progress: 0, unlockedAt: null, badge: '🎖️', reward: { money: 100_000 } },
 ];
 
 export const EVENT_TEMPLATES: EventTemplate[] = [

@@ -253,6 +253,10 @@ interface GameState {
   claimMissionReward: (missionId: string) => void;
   checkAchievements: () => void;
 
+  // Achievement Toast
+  achievementToastQueue: Achievement[];
+  dismissAchievementToast: () => void;
+
   activeTab: string;
   setActiveTab: (tab: string) => void;
 }
@@ -369,6 +373,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
             }
           : b
       ),
+    }));
+
+    // Increment total upgrades counter
+    set((state) => ({
+      missions: { ...state.missions, totalUpgrades: (state.missions.totalUpgrades ?? 0) + 1 },
     }));
 
     get().progressMission('upgrade_business', 1);
@@ -681,6 +690,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     set((state) => ({
       player: { ...state.player, balance: state.player.balance - item.price, stats: newStats },
     }));
+    get().checkAchievements();
   },
 
   // ==================== Life System ====================
@@ -724,6 +734,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       },
     }));
 
+    get().checkAchievements();
     return true;
   },
 
@@ -1046,6 +1057,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     lastWeeklyRefresh: null,
     achievements: ACHIEVEMENTS_TEMPLATES.map((a) => ({ ...a })),
     totalMissionsCompleted: 0,
+    totalUpgrades: 0,
   },
 
   refreshMissions: () => {
@@ -1239,7 +1251,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   checkAchievements: () => {
     const { missions, businesses, player } = get();
     const now = Date.now();
-    let changed = false;
+    const newlyUnlocked: Achievement[] = [];
 
     const updatedAch = missions.achievements.map((ach) => {
       if (ach.unlockedAt) return ach; // already unlocked
@@ -1263,30 +1275,101 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         case 'upgrade_office':
           currentValue = Math.max(0, ...businesses.map((b) => (b.officeLevel ?? 1) - 1));
           break;
-        case 'collect_revenue':
-          // special: missions completed count
-          if (ach.id.startsWith('ach-mission')) {
-            currentValue = missions.totalMissionsCompleted;
-          }
+        case 'own_all_business_types': {
+          const uniqueTypes = new Set(businesses.map((b) => b.type));
+          currentValue = uniqueTypes.size;
+          break;
+        }
+        case 'reach_stat_intelligence':
+          currentValue = player.stats.intelligence;
+          break;
+        case 'reach_stat_happiness':
+          currentValue = player.stats.happiness;
+          break;
+        case 'reach_stat_energy':
+          currentValue = player.stats.energy;
+          break;
+        case 'reach_player_level':
+          currentValue = player.level;
+          break;
+        case 'total_upgrades':
+          currentValue = missions.totalUpgrades ?? 0;
+          break;
+        case 'complete_missions':
+          currentValue = missions.totalMissionsCompleted;
           break;
       }
 
+      const updated = { ...ach, progress: Math.min(currentValue, ach.target) };
+
       if (currentValue >= ach.target) {
-        changed = true;
-        return { ...ach, unlockedAt: now };
+        updated.unlockedAt = now;
+        newlyUnlocked.push(updated);
       }
-      return ach;
+      return updated;
     });
 
-    if (changed) {
-      set({ missions: { ...missions, achievements: updatedAch } });
+    if (newlyUnlocked.length > 0) {
+      // Grant rewards
+      let bonusMoney = 0;
+      const statBoosts: Partial<PlayerStats> = {};
+      for (const ach of newlyUnlocked) {
+        if (ach.reward?.money) bonusMoney += ach.reward.money;
+        if (ach.reward?.statBoost) {
+          for (const [k, v] of Object.entries(ach.reward.statBoost)) {
+            const key = k as keyof PlayerStats;
+            statBoosts[key] = Math.min(100, (statBoosts[key] ?? player.stats[key]) + (v as number));
+          }
+        }
+      }
+
+      const newStats = { ...player.stats, ...statBoosts };
+
+      set({
+        missions: { ...missions, achievements: updatedAch },
+        player: { ...player, balance: player.balance + bonusMoney, stats: newStats },
+        achievementToastQueue: [...get().achievementToastQueue, ...newlyUnlocked],
+      });
+    } else {
+      // Still update progress even if nothing unlocked
+      const hasProgressChange = updatedAch.some((a, i) => a.progress !== missions.achievements[i].progress);
+      if (hasProgressChange) {
+        set({ missions: { ...missions, achievements: updatedAch } });
+      }
     }
+  },
+
+  achievementToastQueue: [],
+  dismissAchievementToast: () => {
+    set((state) => ({
+      achievementToastQueue: state.achievementToastQueue.slice(1),
+    }));
   },
 
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
+  version: 2,
+  migrate: (persisted: unknown, version: number) => {
+    const state = persisted as Record<string, unknown>;
+    if (version < 2 && state.missions) {
+      const missions = state.missions as Record<string, unknown>;
+      if (!('totalUpgrades' in missions)) {
+        missions.totalUpgrades = 0;
+      }
+      if (Array.isArray(missions.achievements)) {
+        missions.achievements = missions.achievements.map((a: Record<string, unknown>) => ({
+          ...a,
+          progress: a.unlockedAt ? (a.target as number) : 0,
+          rarity: a.rarity ?? (a.tier === 'diamond' ? 'legendary' : a.tier === 'gold' ? 'epic' : a.tier === 'silver' ? 'rare' : 'common'),
+          category: a.category ?? 'milestone',
+          reward: a.reward ?? { money: 0 },
+        }));
+      }
+    }
+    return state;
+  },
   partialize: (state) => ({
     player: state.player,
     businesses: state.businesses,

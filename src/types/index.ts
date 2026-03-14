@@ -382,7 +382,14 @@ export type MissionCondition =
   | 'own_businesses'         // داشتن N شرکت همزمان
   | 'total_employees'        // داشتن N نیرو مجموعا
   | 'respond_to_event'       // پاسخ به N رویداد
-  | 'claim_daily_bonus';     // دریافت N بونوس روزانه
+  | 'claim_daily_bonus'      // دریافت N بونوس روزانه
+  | 'own_all_business_types' // داشتن همه انواع کسب‌وکار
+  | 'reach_stat_intelligence'// رسیدن به N هوش
+  | 'reach_stat_happiness'   // رسیدن به N شادی
+  | 'reach_stat_energy'      // رسیدن به N انرژی
+  | 'reach_player_level'     // رسیدن به سطح N بازیکن
+  | 'total_upgrades'         // انجام N ارتقا مجموعا
+  | 'complete_missions';     // تکمیل N ماموریت
 
 export interface MissionTemplate {
   id: string;
@@ -415,6 +422,13 @@ export interface ActiveMission {
 }
 
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'diamond';
+export type AchievementCategory = 'milestone' | 'collection' | 'stat' | 'action';
+export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export interface AchievementReward {
+  money?: number;
+  statBoost?: Partial<PlayerStats>;
+}
 
 export interface Achievement {
   id: string;
@@ -422,10 +436,14 @@ export interface Achievement {
   description: string;
   icon: string;
   tier: AchievementTier;
+  rarity: AchievementRarity;
+  category: AchievementCategory;
   condition: MissionCondition;
   target: number;
-  unlockedAt: number | null;  // timestamp یا null=قفل
-  badge: string;              // ایموجی نشان
+  progress: number;             // پیشرفت فعلی
+  unlockedAt: number | null;    // timestamp یا null=قفل
+  badge: string;                // ایموجی نشان
+  reward: AchievementReward;    // جایزه آنلاک
 }
 
 export interface MissionsState {
@@ -435,6 +453,7 @@ export interface MissionsState {
   lastWeeklyRefresh: string | null;
   achievements: Achievement[];
   totalMissionsCompleted: number;
+  totalUpgrades: number;           // شمارنده کل ارتقاها
 }
 
 // ==================== NAVIGATION ====================
