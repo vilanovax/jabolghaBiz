@@ -80,7 +80,7 @@ export default function EventBanner({ event, showFull = false }: EventBannerProp
 
       {/* Response button */}
       {hasResponse && template.responseOptions && (
-        <div className="mt-2 pt-2 border-t border-white/5">
+        <div className="mt-2 pt-2 border-t border-line-subtle">
           {template.responseOptions.map((opt) => {
             const canAfford = balance >= opt.cost;
             return (
@@ -88,7 +88,7 @@ export default function EventBanner({ event, showFull = false }: EventBannerProp
                 key={opt.id}
                 onClick={() => respondToEvent(event.id, opt.id)}
                 disabled={!canAfford}
-                className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 disabled:opacity-40 rounded-[10px] px-2.5 py-1.5 transition-all active:scale-[0.97]"
+                className="w-full flex items-center justify-between bg-surface-card/40 hover:bg-surface-card/60 disabled:opacity-40 rounded-[10px] px-2.5 py-1.5 transition-all active:scale-[0.97]"
               >
                 <span className="flex items-center gap-1.5 text-[10px] font-bold text-fg-secondary">
                   {opt.icon} {opt.label}

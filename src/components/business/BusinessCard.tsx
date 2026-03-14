@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Business, BusinessTemplate } from '@/types';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant, getNextUnlock } from '@/store/gameStore';
-import { businessTemplates } from '@/data/mock';
+import { businessTemplates, getNeighborhood, getCityByNeighborhood } from '@/data/mock';
 import EventBanner from '@/components/hooks/EventBanner';
 import Link from 'next/link';
 
@@ -28,18 +28,22 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const hasPending = business.pendingRevenue > 0;
   const template = businessTemplates.find((t) => t.type === business.type);
   const nextUnlock = template ? getNextUnlock(business, template) : null;
+  const neighborhood = business.neighborhoodId ? getNeighborhood(business.neighborhoodId) : undefined;
+  const city = business.neighborhoodId ? getCityByNeighborhood(business.neighborhoodId) : undefined;
+  const trafficMult = neighborhood ? neighborhood.customerTraffic : 1.0;
+  const effectiveCycleDuration = Math.max(10, Math.round(business.cycleDuration / trafficMult));
 
   useEffect(() => {
     const update = () => {
       const elapsed = (Date.now() - business.lastCycleAt) / 1000;
-      const remaining = Math.max(0, business.cycleDuration - (elapsed % business.cycleDuration));
+      const remaining = Math.max(0, effectiveCycleDuration - (elapsed % effectiveCycleDuration));
       setTimeLeft(Math.ceil(remaining));
-      setProgress(((business.cycleDuration - remaining) / business.cycleDuration) * 100);
+      setProgress(((effectiveCycleDuration - remaining) / effectiveCycleDuration) * 100);
     };
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [business.lastCycleAt, business.cycleDuration]);
+  }, [business.lastCycleAt, effectiveCycleDuration]);
 
   const handleCollect = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,6 +89,11 @@ export default function BusinessCard({ business }: BusinessCardProps) {
                 LV {business.level}
               </span>
             </div>
+            {neighborhood && city && (
+              <p className="text-[9px] text-fg-muted mt-0.5">
+                📍 {city.icon} {neighborhood.name}
+              </p>
+            )}
           </div>
           {isAuto && (
             <span className="text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded">🧮 خودکار</span>
@@ -97,7 +106,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
             <span className="text-[#22C55E] text-lg font-black font-fa">+{effectiveRevenue.toLocaleString('fa-IR')}</span>
             <span className="text-[9px] text-fg-muted">/سیکل</span>
           </div>
-          <span className="text-[10px] text-fg-faint font-fa">⏱ {formatTime(business.cycleDuration)}</span>
+          <span className="text-[10px] text-fg-faint font-fa">⏱ {formatTime(effectiveCycleDuration)}</span>
         </div>
 
         {/* row 3: production progress bar */}

@@ -50,7 +50,7 @@ export default function MarketListingCard({ listing }: MarketListingCardProps) {
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-[14px] flex items-center justify-center text-2xl shrink-0"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: 'var(--surface-card)', border: '1px solid var(--line-subtle)' }}
           >
             {product?.icon || '📦'}
           </div>

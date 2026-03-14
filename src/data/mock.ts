@@ -11,6 +11,12 @@ import {
   BusinessProduct,
   OfficeTier,
   EventTemplate,
+  City,
+  Neighborhood,
+  MissionTemplate,
+  Achievement,
+  LifeAction,
+  PlayerStats,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -278,9 +284,154 @@ export const OFFICE_TIERS: OfficeTier[] = [
   { level: 4, name: 'ساختمان تجاری', icon: '🏛️', area: 250, maxEmployees: 10, maxProducts: 5, rent: 7_000, upgradeCost: 150_000, requiredBusinessLevel: 18 },
 ];
 
+// نام‌های سطوح دفتر/مکان متناسب با نوع کسب‌وکار
+import type { BusinessType } from '@/types';
+export const OFFICE_NAMES_BY_TYPE: Record<BusinessType, { name: string; icon: string }[]> = {
+  app_startup: [
+    { name: 'اتاق کار', icon: '🏠' },
+    { name: 'دفتر استارتاپ', icon: '🏢' },
+    { name: 'دفتر بزرگ', icon: '🏗️' },
+    { name: 'ساختمان شرکت', icon: '🏛️' },
+  ],
+  restaurant: [
+    { name: 'کافه کوچک', icon: '☕' },
+    { name: 'رستوران متوسط', icon: '🍽️' },
+    { name: 'رستوران بزرگ', icon: '🏪' },
+    { name: 'مجتمع غذایی', icon: '🏬' },
+  ],
+  supermarket: [
+    { name: 'بقالی', icon: '🏪' },
+    { name: 'مغازه', icon: '🛒' },
+    { name: 'سوپرمارکت', icon: '🏬' },
+    { name: 'هایپرمارکت', icon: '🏛️' },
+  ],
+  factory: [
+    { name: 'کارگاه کوچک', icon: '🔧' },
+    { name: 'کارخونه', icon: '🏭' },
+    { name: 'کارخونه بزرگ', icon: '🏗️' },
+    { name: 'مجتمع صنعتی', icon: '🏛️' },
+  ],
+  farming: [
+    { name: 'زمین کوچک', icon: '🌱' },
+    { name: 'مزرعه', icon: '🌾' },
+    { name: 'مزرعه بزرگ', icon: '🚜' },
+    { name: 'مجتمع کشاورزی', icon: '🏛️' },
+  ],
+  transport: [
+    { name: 'گاراژ', icon: '🚐' },
+    { name: 'پایانه کوچک', icon: '🚛' },
+    { name: 'شرکت حمل‌ونقل', icon: '🏢' },
+    { name: 'ناوگان بزرگ', icon: '🏛️' },
+  ],
+};
+
 export function getOfficeTier(level: number): OfficeTier {
   return OFFICE_TIERS[Math.min(Math.max(level, 1), OFFICE_TIERS.length) - 1];
 }
+
+// دریافت نام و آیکون متناسب با نوع کسب‌وکار
+export function getOfficeName(level: number, businessType: BusinessType): { name: string; icon: string } {
+  const names = OFFICE_NAMES_BY_TYPE[businessType];
+  const idx = Math.min(Math.max(level, 1), names.length) - 1;
+  return names[idx];
+}
+
+// ==================== واژه‌نامه اختصاصی هر کسب‌وکار ====================
+
+export interface BusinessVocabulary {
+  revenue: string;         // "درآمد" → "فروش غذا" / "درآمد پروژه"
+  expenses: string;        // "هزینه" → "هزینه مواد اولیه" / "هزینه سرور"
+  cycle: string;           // "سیکل" → "سرو" / "اسپرینت"
+  production: string;      // "تولید" → "سرو غذا" / "توسعه نرم‌افزار"
+  collect: string;         // "جمع‌آوری" → "دریافت فروش" / "تسویه پروژه"
+  upgrade: string;         // "ارتقا" → "توسعه رستوران" / "رشد استارتاپ"
+  workers: string;         // "نیرو" → "تیم" / "پرسنل"
+  pending: string;         // "آماده" → "فروش آماده" / "پروژه تکمیل‌شده"
+  autoCollect: string;     // "جمع‌آوری خودکار" → "تسویه خودکار"
+  waitingProd: string;     // "در انتظار تولید" → "در حال پخت" / "در حال توسعه"
+  levelUpBenefit: string;  // "سود بیشتر" → "کیفیت بالاتر" / "پروژه‌های بزرگتر"
+}
+
+export const BUSINESS_VOCABULARY: Record<BusinessType, BusinessVocabulary> = {
+  app_startup: {
+    revenue: 'درآمد پروژه',
+    expenses: 'هزینه سرور و نیرو',
+    cycle: 'اسپرینت',
+    production: 'توسعه نرم‌افزار',
+    collect: 'تسویه پروژه',
+    upgrade: 'رشد استارتاپ',
+    workers: 'تیم',
+    pending: 'پروژه تکمیل‌شده',
+    autoCollect: 'تسویه خودکار',
+    waitingProd: 'در حال توسعه...',
+    levelUpBenefit: 'پروژه‌های بزرگتر',
+  },
+  restaurant: {
+    revenue: 'فروش غذا',
+    expenses: 'هزینه مواد اولیه',
+    cycle: 'سرو',
+    production: 'پخت و سرو',
+    collect: 'دریافت فروش',
+    upgrade: 'توسعه رستوران',
+    workers: 'پرسنل',
+    pending: 'فروش آماده',
+    autoCollect: 'صندوق خودکار',
+    waitingProd: 'در حال پخت...',
+    levelUpBenefit: 'منوی بهتر',
+  },
+  supermarket: {
+    revenue: 'فروش روزانه',
+    expenses: 'هزینه تأمین کالا',
+    cycle: 'شیفت فروش',
+    production: 'فروش محصولات',
+    collect: 'تخلیه صندوق',
+    upgrade: 'گسترش فروشگاه',
+    workers: 'کارکنان',
+    pending: 'صندوق پر',
+    autoCollect: 'صندوق خودکار',
+    waitingProd: 'در حال فروش...',
+    levelUpBenefit: 'تنوع بیشتر',
+  },
+  factory: {
+    revenue: 'فروش تولیدات',
+    expenses: 'هزینه تولید',
+    cycle: 'خط تولید',
+    production: 'تولید کالا',
+    collect: 'فروش محصولات',
+    upgrade: 'توسعه کارخانه',
+    workers: 'کارگران',
+    pending: 'کالای آماده فروش',
+    autoCollect: 'فروش خودکار',
+    waitingProd: 'در حال تولید...',
+    levelUpBenefit: 'ظرفیت بالاتر',
+  },
+  farming: {
+    revenue: 'فروش محصول',
+    expenses: 'هزینه کشت',
+    cycle: 'فصل برداشت',
+    production: 'کشت و برداشت',
+    collect: 'فروش برداشت',
+    upgrade: 'توسعه مزرعه',
+    workers: 'کشاورزان',
+    pending: 'محصول آماده فروش',
+    autoCollect: 'فروش خودکار',
+    waitingProd: 'در حال رشد...',
+    levelUpBenefit: 'زمین بیشتر',
+  },
+  transport: {
+    revenue: 'کرایه حمل',
+    expenses: 'هزینه سوخت و تعمیر',
+    cycle: 'سفر',
+    production: 'حمل بار',
+    collect: 'دریافت کرایه',
+    upgrade: 'توسعه ناوگان',
+    workers: 'رانندگان',
+    pending: 'کرایه آماده',
+    autoCollect: 'واریز خودکار',
+    waitingProd: 'در مسیر...',
+    levelUpBenefit: 'مسیرهای بیشتر',
+  },
+};
 
 // ==================== BUSINESS PRODUCT TEMPLATES ====================
 
@@ -356,6 +507,135 @@ const transportProducts: BusinessProduct[] = [
   },
 ];
 
+// ==================== CITIES & NEIGHBORHOODS ====================
+
+export const CITIES: City[] = [
+  {
+    id: 'city-tehran',
+    name: 'تهران',
+    icon: '🏙️',
+    description: 'پایتخت و بزرگ‌ترین شهر. بازار بزرگ، رقابت بالا.',
+    neighborhoods: [
+      {
+        id: 'nb-tehran-center', name: 'مرکز شهر', icon: '🏛️',
+        description: 'تردد بالا، اجاره گرون، مناسب فروشگاه و رستوران',
+        revenueMultiplier: 1.4, expenseMultiplier: 1.3, customerTraffic: 1.3,
+        rentMultiplier: 1.5, bestFor: ['supermarket', 'restaurant'], unlockLevel: 1,
+      },
+      {
+        id: 'nb-tehran-north', name: 'شمال تهران', icon: '🌲',
+        description: 'محله لوکس، مشتری‌های ثروتمند، هزینه بالا',
+        revenueMultiplier: 1.6, expenseMultiplier: 1.5, customerTraffic: 1.1,
+        rentMultiplier: 1.8, bestFor: ['restaurant', 'app_startup'], unlockLevel: 5,
+      },
+      {
+        id: 'nb-tehran-south', name: 'جنوب تهران', icon: '🏘️',
+        description: 'اجاره ارزون، حجم بالا، حاشیه سود کمتر',
+        revenueMultiplier: 0.9, expenseMultiplier: 0.7, customerTraffic: 1.2,
+        rentMultiplier: 0.6, bestFor: ['supermarket', 'factory', 'transport'], unlockLevel: 1,
+      },
+      {
+        id: 'nb-tehran-pardis', name: 'پردیس فناوری', icon: '💻',
+        description: 'مرکز فناوری، بهترین جا برای استارتاپ‌ها',
+        revenueMultiplier: 1.5, expenseMultiplier: 1.2, customerTraffic: 1.0,
+        rentMultiplier: 1.3, bestFor: ['app_startup'], unlockLevel: 3,
+      },
+      {
+        id: 'nb-tehran-industrial', name: 'شهرک صنعتی', icon: '🏭',
+        description: 'زمین ارزون، مناسب کارخانه و حمل‌ونقل',
+        revenueMultiplier: 1.1, expenseMultiplier: 0.8, customerTraffic: 0.7,
+        rentMultiplier: 0.5, bestFor: ['factory', 'transport'], unlockLevel: 2,
+      },
+    ],
+  },
+  {
+    id: 'city-isfahan',
+    name: 'اصفهان',
+    icon: '🕌',
+    description: 'نصف جهان. شهر صنعت و گردشگری.',
+    neighborhoods: [
+      {
+        id: 'nb-isfahan-bazaar', name: 'بازار بزرگ', icon: '🏪',
+        description: 'بازار تاریخی، تردد گردشگری بالا',
+        revenueMultiplier: 1.3, expenseMultiplier: 1.1, customerTraffic: 1.4,
+        rentMultiplier: 1.2, bestFor: ['supermarket', 'restaurant'], unlockLevel: 3,
+      },
+      {
+        id: 'nb-isfahan-industrial', name: 'شهرک صنعتی ذوب‌آهن', icon: '⚙️',
+        description: 'قطب صنعتی، هزینه کم، ظرفیت بالا',
+        revenueMultiplier: 1.2, expenseMultiplier: 0.7, customerTraffic: 0.8,
+        rentMultiplier: 0.5, bestFor: ['factory', 'transport'], unlockLevel: 4,
+      },
+      {
+        id: 'nb-isfahan-farm', name: 'حاشیه زاینده‌رود', icon: '🌊',
+        description: 'زمین حاصلخیز، مناسب کشاورزی',
+        revenueMultiplier: 1.3, expenseMultiplier: 0.8, customerTraffic: 0.9,
+        rentMultiplier: 0.4, bestFor: ['farming'], unlockLevel: 3,
+      },
+    ],
+  },
+  {
+    id: 'city-shiraz',
+    name: 'شیراز',
+    icon: '🌹',
+    description: 'شهر باغ و شعر. گردشگری و کشاورزی قوی.',
+    neighborhoods: [
+      {
+        id: 'nb-shiraz-center', name: 'بلوار زند', icon: '🛍️',
+        description: 'مرکز تجاری شیراز، مشتری متوسط به بالا',
+        revenueMultiplier: 1.2, expenseMultiplier: 1.1, customerTraffic: 1.2,
+        rentMultiplier: 1.1, bestFor: ['supermarket', 'restaurant', 'app_startup'], unlockLevel: 2,
+      },
+      {
+        id: 'nb-shiraz-garden', name: 'باغ‌های شیراز', icon: '🌿',
+        description: 'بهترین زمین کشاورزی، درآمد کشاورزی بالا',
+        revenueMultiplier: 1.5, expenseMultiplier: 0.7, customerTraffic: 0.8,
+        rentMultiplier: 0.3, bestFor: ['farming'], unlockLevel: 1,
+      },
+      {
+        id: 'nb-shiraz-sadra', name: 'شهر جدید صدرا', icon: '🏗️',
+        description: 'شهر جدید، اجاره پایین، رشد آینده',
+        revenueMultiplier: 0.9, expenseMultiplier: 0.6, customerTraffic: 0.9,
+        rentMultiplier: 0.4, bestFor: ['factory', 'transport'], unlockLevel: 2,
+      },
+    ],
+  },
+  {
+    id: 'city-tabriz',
+    name: 'تبریز',
+    icon: '⛰️',
+    description: 'مرکز تجارت با ترکیه و قفقاز. صادرات قوی.',
+    neighborhoods: [
+      {
+        id: 'nb-tabriz-bazaar', name: 'بازار تبریز', icon: '🏬',
+        description: 'بزرگ‌ترین بازار سرپوشیده جهان، تجارت فعال',
+        revenueMultiplier: 1.4, expenseMultiplier: 1.2, customerTraffic: 1.3,
+        rentMultiplier: 1.3, bestFor: ['supermarket', 'transport'], unlockLevel: 5,
+      },
+      {
+        id: 'nb-tabriz-border', name: 'منطقه آزاد تجاری', icon: '🚢',
+        description: 'واردات و صادرات، حمل‌ونقل بین‌المللی',
+        revenueMultiplier: 1.5, expenseMultiplier: 1.0, customerTraffic: 1.1,
+        rentMultiplier: 0.8, bestFor: ['transport', 'factory'], unlockLevel: 7,
+      },
+    ],
+  },
+];
+
+// هلپر: پیدا کردن محله با آیدی
+export function getNeighborhood(neighborhoodId: string): Neighborhood | undefined {
+  for (const city of CITIES) {
+    const nb = city.neighborhoods.find((n) => n.id === neighborhoodId);
+    if (nb) return nb;
+  }
+  return undefined;
+}
+
+// هلپر: پیدا کردن شهر یک محله
+export function getCityByNeighborhood(neighborhoodId: string): City | undefined {
+  return CITIES.find((c) => c.neighborhoods.some((n) => n.id === neighborhoodId));
+}
+
 // ==================== BUSINESS TEMPLATES ====================
 
 export const businessTemplates: BusinessTemplate[] = [
@@ -421,6 +701,7 @@ export const mockBusinesses: Business[] = [
       id: 'he-1', templateId: 'emp-as-1', name: 'برنامه‌نویس', role: 'base', roleName: 'برنامه‌نویس',
       icon: '👨‍💻', salary: 1_500, revenueBoost: 0.2, autoCollect: false, hiredAt: Date.now() - 86400000,
       employeeLevel: 1, maxUpgradeLevel: 3, baseHireCost: 12_000,
+      upgradeStartedAt: null, upgradeEndsAt: null,
     }],
     products: [
       { ...appStartupProducts[0], unlocked: true },
@@ -428,6 +709,8 @@ export const mockBusinesses: Business[] = [
       { ...appStartupProducts[2] },
     ],
     initialEquipment: 'لپتاپ و میز کار',
+    upgradeStartedAt: null,
+    upgradeEndsAt: null,
   },
 ];
 
@@ -464,6 +747,110 @@ export const mockLeaderboard: LeaderboardEntry[] = [
   { rank: 6, playerId: 'player-1', username: 'تاجرباشی', avatar: '👤', wealth: 150_000, level: 5, businessCount: 1 },
   { rank: 7, playerId: 'player-4', username: 'ملکه‌لبنیات', avatar: '🥛', wealth: 120_000, level: 4, businessCount: 2 },
   { rank: 8, playerId: 'player-5', username: 'جادوگرفناوری', avatar: '📱', wealth: 85_000, level: 3, businessCount: 1 },
+];
+
+// ==================== LIFE ACTIONS ====================
+
+// کاهش خودکار stat‌ها هر ۵ دقیقه
+export const STAT_DECAY_INTERVAL = 5 * 60 * 1000; // 5 min
+export const STAT_DECAY_AMOUNTS: Partial<Record<keyof PlayerStats, number>> = {
+  energy: -3,
+  hunger: 4,       // گرسنگی بالا میره (بد)
+  happiness: -2,
+};
+
+// ضریب‌های stat روی گیم‌پلی
+export const STAT_GAMEPLAY_EFFECTS = {
+  // energy < 20 → سیکل ۲۵٪ کندتر | energy > 80 → سیکل ۱۰٪ سریعتر
+  energyCycleMultiplier: (energy: number) =>
+    energy < 20 ? 0.75 : energy > 80 ? 1.1 : 1.0,
+  // happiness > 70 → +۱۰٪ درآمد | happiness < 30 → -۱۵٪ درآمد
+  happinessRevenueMultiplier: (happiness: number) =>
+    happiness > 70 ? 1.1 : happiness < 30 ? 0.85 : 1.0,
+  // hunger > 80 → -۱۰٪ درآمد (خیلی گرسنه)
+  hungerRevenueMultiplier: (hunger: number) =>
+    hunger > 80 ? 0.9 : 1.0,
+  // intelligence > 70 → -۵٪ هزینه ارتقا
+  intelligenceUpgradeDiscount: (intelligence: number) =>
+    intelligence > 70 ? 0.95 : 1.0,
+};
+
+export const LIFE_ACTIONS: LifeAction[] = [
+  // غذا
+  {
+    id: 'eat-sandwich', name: 'ساندویچ', icon: '🥪', description: 'یه ساندویچ ساده',
+    category: 'food', cost: 200, cooldownMs: 10 * 60 * 1000,
+    effect: { hunger: -20, energy: 5 },
+  },
+  {
+    id: 'eat-kebab', name: 'چلوکباب', icon: '🍖', description: 'یه پرس چلوکباب مفصل',
+    category: 'food', cost: 800, cooldownMs: 30 * 60 * 1000,
+    effect: { hunger: -50, happiness: 10, energy: 10 },
+  },
+  {
+    id: 'eat-pizza', name: 'پیتزا', icon: '🍕', description: 'پیتزا مخصوص',
+    category: 'food', cost: 500, cooldownMs: 20 * 60 * 1000,
+    effect: { hunger: -35, happiness: 8 },
+  },
+  // استراحت
+  {
+    id: 'rest-nap', name: 'چرت کوتاه', icon: '😴', description: '۲۰ دقیقه استراحت',
+    category: 'rest', cost: 0, cooldownMs: 15 * 60 * 1000,
+    effect: { energy: 15 },
+  },
+  {
+    id: 'rest-sleep', name: 'خواب کامل', icon: '🛏️', description: 'یه خواب حسابی',
+    category: 'rest', cost: 0, cooldownMs: 60 * 60 * 1000,
+    effect: { energy: 40, happiness: 5 },
+  },
+  {
+    id: 'rest-cafe', name: 'کافه', icon: '☕', description: 'یه قهوه توی کافه',
+    category: 'rest', cost: 300, cooldownMs: 15 * 60 * 1000,
+    effect: { energy: 12, happiness: 8 },
+  },
+  // آموزش
+  {
+    id: 'edu-book', name: 'مطالعه کتاب', icon: '📖', description: 'یه ساعت مطالعه',
+    category: 'education', cost: 0, cooldownMs: 30 * 60 * 1000,
+    effect: { intelligence: 8, energy: -10 },
+  },
+  {
+    id: 'edu-course', name: 'دوره آنلاین', icon: '💻', description: 'شرکت در دوره آموزشی',
+    category: 'education', cost: 2_000, cooldownMs: 60 * 60 * 1000,
+    effect: { intelligence: 20, experience: 10, energy: -15 },
+  },
+  {
+    id: 'edu-podcast', name: 'پادکست', icon: '🎧', description: 'گوش دادن به پادکست کسب‌وکار',
+    category: 'education', cost: 0, cooldownMs: 20 * 60 * 1000,
+    effect: { intelligence: 5, experience: 3 },
+  },
+  // ورزش
+  {
+    id: 'fit-walk', name: 'پیاده‌روی', icon: '🚶', description: 'نیم ساعت قدم زدن',
+    category: 'fitness', cost: 0, cooldownMs: 20 * 60 * 1000,
+    effect: { energy: 10, happiness: 5, hunger: 10 },
+  },
+  {
+    id: 'fit-gym', name: 'باشگاه', icon: '💪', description: 'یه ساعت ورزش',
+    category: 'fitness', cost: 500, cooldownMs: 45 * 60 * 1000,
+    effect: { energy: -10, happiness: 15, hunger: 15 },
+  },
+  // سرگرمی
+  {
+    id: 'fun-movie', name: 'سینما', icon: '🎬', description: 'رفتن سینما',
+    category: 'entertainment', cost: 600, cooldownMs: 60 * 60 * 1000,
+    effect: { happiness: 25, energy: -5 },
+  },
+  {
+    id: 'fun-game', name: 'بازی ویدیویی', icon: '🎮', description: 'یه ساعت بازی',
+    category: 'entertainment', cost: 0, cooldownMs: 30 * 60 * 1000,
+    effect: { happiness: 15, energy: -8 },
+  },
+  {
+    id: 'fun-park', name: 'پارک', icon: '🌳', description: 'گردش در پارک',
+    category: 'entertainment', cost: 0, cooldownMs: 25 * 60 * 1000,
+    effect: { happiness: 12, energy: 5 },
+  },
 ];
 
 // ==================== FRIDAY MARKET ====================
@@ -553,6 +940,85 @@ export const EVENT_CONFIG = {
   triggerChance: 0.35,                // 35% شانس هر چک
   maxActiveEvents: 2,
 };
+
+// ==================== EMPLOYEE UPGRADE ====================
+
+// مدت زمان ارتقای نیرو (بر حسب میلی‌ثانیه)
+// L1→L2: 15 دقیقه, L2→L3: 30 دقیقه
+export function getEmployeeUpgradeDuration(currentLevel: number): number {
+  return currentLevel * 15 * 60 * 1000; // 15min × سطح فعلی
+}
+
+// مدت زمان ارتقای شرکت (بر حسب میلی‌ثانیه)
+// هر سطح ۱۰ دقیقه بیشتر: LV1→2: 10min, LV2→3: 20min, LV5→6: 50min
+export function getBusinessUpgradeDuration(currentLevel: number): number {
+  return currentLevel * 10 * 60 * 1000; // 10min × سطح فعلی
+}
+
+// ==================== MISSIONS ====================
+
+export const DAILY_MISSIONS: MissionTemplate[] = [
+  { id: 'dm-collect-3', title: 'جمع‌آوری درآمد', description: '۳ بار درآمد شرکت‌ها رو جمع کن', icon: '💰', type: 'daily', condition: 'collect_revenue', target: 3, reward: 5_000 },
+  { id: 'dm-collect-5', title: 'جمع‌آوری حرفه‌ای', description: '۵ بار درآمد جمع کن', icon: '💵', type: 'daily', condition: 'collect_revenue', target: 5, reward: 10_000 },
+  { id: 'dm-earn-20k', title: 'درآمدزایی', description: '۲۰,۰۰۰ تومان کسب کن', icon: '📈', type: 'daily', condition: 'earn_total', target: 20_000, reward: 8_000 },
+  { id: 'dm-earn-50k', title: 'سودآوری', description: '۵۰,۰۰۰ تومان کسب کن', icon: '🤑', type: 'daily', condition: 'earn_total', target: 50_000, reward: 15_000 },
+  { id: 'dm-daily-bonus', title: 'حضور روزانه', description: 'بونوس روزانه رو دریافت کن', icon: '🎁', type: 'daily', condition: 'claim_daily_bonus', target: 1, reward: 3_000 },
+  { id: 'dm-upgrade-1', title: 'ارتقاگر', description: 'یک شرکت رو ارتقا بده', icon: '⬆️', type: 'daily', condition: 'upgrade_business', target: 1, reward: 7_000 },
+  { id: 'dm-event-1', title: 'واکنش سریع', description: 'به یک رویداد پاسخ بده', icon: '⚡', type: 'daily', condition: 'respond_to_event', target: 1, reward: 6_000 },
+];
+
+export const WEEKLY_MISSIONS: MissionTemplate[] = [
+  { id: 'wm-collect-20', title: 'جمع‌آوری هفتگی', description: '۲۰ بار درآمد جمع کن', icon: '💎', type: 'weekly', condition: 'collect_revenue', target: 20, reward: 30_000 },
+  { id: 'wm-earn-200k', title: 'کارآفرین هفته', description: '۲۰۰,۰۰۰ تومان کسب کن', icon: '🏆', type: 'weekly', condition: 'earn_total', target: 200_000, reward: 50_000 },
+  { id: 'wm-hire-2', title: 'تیم‌ساز', description: '۲ نیرو استخدام کن', icon: '👥', type: 'weekly', condition: 'hire_employee', target: 2, reward: 25_000 },
+  { id: 'wm-upgrade-3', title: 'رشد مداوم', description: '۳ بار شرکت رو ارتقا بده', icon: '📊', type: 'weekly', condition: 'upgrade_business', target: 3, reward: 35_000 },
+  { id: 'wm-product-1', title: 'محصول جدید', description: 'یک محصول آنلاک کن', icon: '🔓', type: 'weekly', condition: 'unlock_product', target: 1, reward: 20_000 },
+];
+
+export const ONE_TIME_MISSIONS: MissionTemplate[] = [
+  { id: 'otm-first-biz', title: 'اولین قدم', description: 'اولین شرکتت رو بساز', icon: '🎯', type: 'one_time', condition: 'create_business', target: 1, reward: 10_000, xpReward: 10 },
+  { id: 'otm-hire-first', title: 'اولین استخدام', description: 'اولین نیرو رو استخدام کن', icon: '🤝', type: 'one_time', condition: 'hire_employee', target: 1, reward: 8_000, xpReward: 5 },
+  { id: 'otm-upgrade-5', title: 'رشد پایدار', description: 'یک شرکت رو به سطح ۵ برسون', icon: '📈', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, xpReward: 15 },
+  { id: 'otm-upgrade-10', title: 'شرکت قدرتمند', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '💪', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 60_000, xpReward: 30 },
+  { id: 'otm-3-biz', title: 'امپراتوری کوچک', description: '۳ شرکت همزمان داشته باش', icon: '🏢', type: 'one_time', condition: 'own_businesses', target: 3, reward: 50_000, xpReward: 25 },
+  { id: 'otm-office-2', title: 'دفتر بزرگتر', description: 'دفتر یک شرکت رو ارتقا بده', icon: '🏗️', type: 'one_time', condition: 'upgrade_office', target: 1, reward: 15_000, xpReward: 10 },
+  { id: 'otm-100k', title: 'صد هزاری', description: 'به ۱۰۰,۰۰۰ تومان موجودی برس', icon: '💰', type: 'one_time', condition: 'reach_balance', target: 100_000, reward: 20_000, xpReward: 10 },
+  { id: 'otm-500k', title: 'نیم میلیونر', description: 'به ۵۰۰,۰۰۰ تومان موجودی برس', icon: '💵', type: 'one_time', condition: 'reach_balance', target: 500_000, reward: 50_000, xpReward: 20 },
+  { id: 'otm-1m', title: 'میلیونر', description: 'به ۱,۰۰۰,۰۰۰ تومان موجودی برس', icon: '🤑', type: 'one_time', condition: 'reach_balance', target: 1_000_000, reward: 100_000, xpReward: 50 },
+];
+
+// ==================== ACHIEVEMENTS ====================
+
+export const ACHIEVEMENTS_TEMPLATES: Achievement[] = [
+  // ===== کسب‌وکار =====
+  { id: 'ach-first-biz', title: 'کارآفرین', description: 'اولین شرکت رو بساز', icon: '🏢', tier: 'bronze', condition: 'create_business', target: 1, unlockedAt: null, badge: '🥉' },
+  { id: 'ach-3-biz', title: 'سرمایه‌گذار', description: '۳ شرکت همزمان داشته باش', icon: '🏗️', tier: 'silver', condition: 'own_businesses', target: 3, unlockedAt: null, badge: '🥈' },
+  { id: 'ach-5-biz', title: 'امپراتور', description: '۵ شرکت همزمان داشته باش', icon: '👑', tier: 'gold', condition: 'own_businesses', target: 5, unlockedAt: null, badge: '🥇' },
+
+  // ===== سطح =====
+  { id: 'ach-level-5', title: 'تازه‌کار حرفه‌ای', description: 'یک شرکت رو به سطح ۵ برسون', icon: '⭐', tier: 'bronze', condition: 'reach_business_level', target: 5, unlockedAt: null, badge: '⭐' },
+  { id: 'ach-level-10', title: 'باتجربه', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '🌟', tier: 'silver', condition: 'reach_business_level', target: 10, unlockedAt: null, badge: '🌟' },
+  { id: 'ach-level-20', title: 'سازمانی', description: 'یک شرکت رو به سطح ۲۰ برسون', icon: '💫', tier: 'diamond', condition: 'reach_business_level', target: 20, unlockedAt: null, badge: '💫' },
+
+  // ===== ثروت =====
+  { id: 'ach-100k', title: 'صدهزاری', description: 'موجودی ۱۰۰ هزار تومان', icon: '💰', tier: 'bronze', condition: 'reach_balance', target: 100_000, unlockedAt: null, badge: '💰' },
+  { id: 'ach-500k', title: 'نیم میلیونر', description: 'موجودی ۵۰۰ هزار تومان', icon: '💵', tier: 'silver', condition: 'reach_balance', target: 500_000, unlockedAt: null, badge: '💵' },
+  { id: 'ach-1m', title: 'میلیونر', description: 'موجودی ۱ میلیون تومان', icon: '🤑', tier: 'gold', condition: 'reach_balance', target: 1_000_000, unlockedAt: null, badge: '🤑' },
+  { id: 'ach-5m', title: 'مولتی‌میلیونر', description: 'موجودی ۵ میلیون تومان', icon: '💎', tier: 'diamond', condition: 'reach_balance', target: 5_000_000, unlockedAt: null, badge: '💎' },
+
+  // ===== نیرو =====
+  { id: 'ach-hire-1', title: 'رئیس', description: 'اولین نیرو رو استخدام کن', icon: '🤝', tier: 'bronze', condition: 'hire_employee', target: 1, unlockedAt: null, badge: '🤝' },
+  { id: 'ach-hire-5', title: 'مدیر', description: '۵ نیروی کار داشته باش', icon: '👥', tier: 'silver', condition: 'total_employees', target: 5, unlockedAt: null, badge: '👥' },
+  { id: 'ach-hire-15', title: 'رهبر', description: '۱۵ نیرو داشته باش', icon: '🏛️', tier: 'gold', condition: 'total_employees', target: 15, unlockedAt: null, badge: '🏛️' },
+
+  // ===== دفتر =====
+  { id: 'ach-office-2', title: 'دفتردار', description: 'دفتر رو ارتقا بده', icon: '🏠', tier: 'bronze', condition: 'upgrade_office', target: 1, unlockedAt: null, badge: '🏠' },
+  { id: 'ach-office-4', title: 'ساختمان‌ساز', description: 'به ساختمان تجاری برس', icon: '🏛️', tier: 'gold', condition: 'upgrade_office', target: 3, unlockedAt: null, badge: '🏢' },
+
+  // ===== ماموریت =====
+  { id: 'ach-mission-10', title: 'ماموریت‌باز', description: '۱۰ ماموریت تکمیل کن', icon: '📋', tier: 'bronze', condition: 'collect_revenue', target: 10, unlockedAt: null, badge: '📋' },
+  { id: 'ach-mission-50', title: 'حرفه‌ای ماموریت', description: '۵۰ ماموریت تکمیل کن', icon: '🎖️', tier: 'gold', condition: 'collect_revenue', target: 50, unlockedAt: null, badge: '🎖️' },
+];
 
 export const EVENT_TEMPLATES: EventTemplate[] = [
   // ===== GLOBAL =====

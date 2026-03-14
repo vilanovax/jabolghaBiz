@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Briefcase, ShoppingCart, Newspaper, User } from 'lucide-react';
+import { Home, Briefcase, ShoppingCart, Heart, User } from 'lucide-react';
 
 const navItems = [
   { label: 'خانه', href: '/', icon: Home },
   { label: 'کسب‌وکار', href: '/business', icon: Briefcase },
   { label: 'بازار', href: '/market', icon: ShoppingCart },
-  { label: 'اخبار', href: '/news', icon: Newspaper },
+  { label: 'زندگی', href: '/life', icon: Heart },
   { label: 'پروفایل', href: '/profile', icon: User },
 ];
 

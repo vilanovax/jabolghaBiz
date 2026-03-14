@@ -6,14 +6,17 @@ import { useGameStore } from '@/store/gameStore';
 const TICK_INTERVAL = 1000;             // هر ۱ ثانیه
 const MARKET_INTERVAL = 5 * 60 * 1000;  // هر ۵ دقیقه
 const EVENT_CHECK_INTERVAL = 60 * 1000; // هر ۶۰ ثانیه
+const STAT_DECAY_CHECK = 30 * 1000;     // چک کاهش stat هر ۳۰ ثانیه
 
 export function useGameTick() {
   const tickBusinesses = useGameStore((s) => s.tickBusinesses);
   const updateMarketPrices = useGameStore((s) => s.updateMarketPrices);
   const triggerRandomEvent = useGameStore((s) => s.triggerRandomEvent);
   const expireEvents = useGameStore((s) => s.expireEvents);
+  const decayStats = useGameStore((s) => s.decayStats);
   const lastMarketUpdate = useRef(Date.now());
   const lastEventCheck = useRef(Date.now());
+  const lastDecayCheck = useRef(Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,8 +36,14 @@ export function useGameTick() {
         triggerRandomEvent();
         lastEventCheck.current = now;
       }
+
+      // کاهش خودکار stat‌ها
+      if (now - lastDecayCheck.current >= STAT_DECAY_CHECK) {
+        decayStats();
+        lastDecayCheck.current = now;
+      }
     }, TICK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents]);
+  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats]);
 }

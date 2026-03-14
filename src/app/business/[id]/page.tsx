@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ProgressBar from '@/components/ui/ProgressBar';
 import ProgressRing from '@/components/ui/ProgressRing';
-import { businessTemplates, getOfficeTier, OFFICE_TIERS } from '@/data/mock';
+import { businessTemplates, getOfficeTier, getOfficeName, OFFICE_TIERS, getEmployeeUpgradeDuration, getBusinessUpgradeDuration, BUSINESS_VOCABULARY } from '@/data/mock';
 import {
   ArrowUpCircle, Users, Package, ChevronRight,
   Lock, Unlock, Coins, Building2, X, ChevronUp,
@@ -51,9 +51,11 @@ export default function BusinessDetailPage() {
   const balance = useGameStore((s) => s.player.balance);
   const collectRevenue = useGameStore((s) => s.collectRevenue);
   const upgradeBusiness = useGameStore((s) => s.upgradeBusiness);
+  const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
   const upgradeOffice = useGameStore((s) => s.upgradeOffice);
   const hireEmployee = useGameStore((s) => s.hireEmployee);
   const upgradeEmployee = useGameStore((s) => s.upgradeEmployee);
+  const completeEmployeeUpgrade = useGameStore((s) => s.completeEmployeeUpgrade);
   const unlockProduct = useGameStore((s) => s.unlockProduct);
 
   const [tab, setTab] = useState<Tab>('overview');
@@ -92,6 +94,7 @@ export default function BusinessDetailPage() {
   }
 
   const template = businessTemplates.find((t) => t.type === biz.type);
+  const vocab = BUSINESS_VOCABULARY[biz.type];
   const effectiveRevenue = calcEffectiveRevenue(biz);
   const totalExpenses = calcTotalExpenses(biz);
   const netProfit = effectiveRevenue - totalExpenses;
@@ -111,7 +114,7 @@ export default function BusinessDetailPage() {
 
   const tabs: { key: Tab; label: string; icon: typeof Users }[] = [
     { key: 'overview', label: 'کلی', icon: Coins },
-    { key: 'employees', label: 'نیروها', icon: Users },
+    { key: 'employees', label: vocab.workers, icon: Users },
     { key: 'products', label: 'محصولات', icon: Package },
   ];
 
@@ -133,9 +136,9 @@ export default function BusinessDetailPage() {
           <div className="flex items-center gap-3 text-[10px] mt-0.5">
             <span className="text-[#22C55E] font-bold font-fa">+{netProfit.toLocaleString('fa-IR')}</span>
             <span className="text-fg-faint">|</span>
-            <span className="text-fg-muted font-fa">{effectiveRevenue.toLocaleString('fa-IR')} درآمد</span>
+            <span className="text-fg-muted font-fa">{effectiveRevenue.toLocaleString('fa-IR')} {vocab.revenue}</span>
             <span className="text-fg-faint">|</span>
-            <span className="text-fg-muted font-fa">{totalExpenses.toLocaleString('fa-IR')} هزینه</span>
+            <span className="text-fg-muted font-fa">{totalExpenses.toLocaleString('fa-IR')} {vocab.expenses}</span>
           </div>
         </div>
       </div>
@@ -160,7 +163,7 @@ export default function BusinessDetailPage() {
             color={hasPending ? '#22C55E' : '#6366F1'}
           >
             <span className="text-sm font-black font-fa">{formatTime(timeLeft)}</span>
-            <span className="text-[7px] text-fg-muted">سیکل</span>
+            <span className="text-[7px] text-fg-muted">{vocab.cycle}</span>
           </ProgressRing>
 
           <div className="flex flex-col items-start gap-2">
@@ -169,11 +172,11 @@ export default function BusinessDetailPage() {
                 onClick={handleCollect}
                 className="bg-[#22C55E] hover:bg-emerald-400 text-white px-5 py-2 rounded-[999px] font-black text-[12px] active:scale-95 transition-all shadow-[var(--shadow-collect)]"
               >
-                💰 جمع‌آوری <span className="font-fa">{biz.pendingRevenue.toLocaleString('fa-IR')}</span>
+                💰 {vocab.collect} <span className="font-fa">{biz.pendingRevenue.toLocaleString('fa-IR')}</span>
               </button>
             ) : (
               <p className="text-[11px] text-fg-muted">
-                {isAuto ? '🧮 جمع‌آوری خودکار' : 'در انتظار تولید...'}
+                {isAuto ? `🧮 ${vocab.autoCollect}` : vocab.waitingProd}
               </p>
             )}
             {isAuto && hasPending && (
@@ -206,6 +209,7 @@ export default function BusinessDetailPage() {
       {tab === 'overview' && (() => {
         const officeLevel = biz.officeLevel ?? 1;
         const currentOffice = getOfficeTier(officeLevel);
+        const currentOfficeName = getOfficeName(officeLevel, biz.type);
         const isMaxOffice = officeLevel >= OFFICE_TIERS.length;
         const nextOffice = !isMaxOffice ? getOfficeTier(officeLevel + 1) : null;
         return (
@@ -215,11 +219,11 @@ export default function BusinessDetailPage() {
             <div className="rounded-[18px] border border-line-subtle bg-surface-card/40 p-3 space-y-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-[12px] bg-surface-inset/50 flex items-center justify-center text-xl">
-                  {currentOffice.icon}
+                  {currentOfficeName.icon}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-black">{currentOffice.name}</p>
+                    <p className="text-xs font-black">{currentOfficeName.name}</p>
                     <span className="text-[9px] text-fg-muted font-fa">LV {officeLevel}</span>
                   </div>
                   <p className="text-[9px] text-fg-muted font-fa">{currentOffice.area}m² · {currentOffice.rent.toLocaleString('fa-IR')}/سیکل</p>
@@ -241,8 +245,8 @@ export default function BusinessDetailPage() {
           {/* آمار */}
           <div className="space-y-1 text-[11px] px-1">
             {[
-              { icon: '⏱', label: 'سیکل', value: `${Math.floor(biz.cycleDuration / 60)}:${(biz.cycleDuration % 60).toString().padStart(2, '0')}` },
-              { icon: '📦', label: 'انباشت', value: `${biz.maxPendingCycles} سیکل` },
+              { icon: '⏱', label: vocab.cycle, value: `${Math.floor(biz.cycleDuration / 60)}:${(biz.cycleDuration % 60).toString().padStart(2, '0')}` },
+              { icon: '📦', label: 'انباشت', value: `${biz.maxPendingCycles} ${vocab.cycle}` },
               { icon: '💎', label: 'ارزش', value: (biz.baseRevenue * biz.level * 10).toLocaleString('fa-IR') },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between py-1 border-b border-line-subtle/50 last:border-0">
@@ -287,79 +291,157 @@ export default function BusinessDetailPage() {
       {/* ==================== باتن‌شیت دفتر ==================== */}
       {showOfficeSheet && (() => {
         const officeLevel = biz.officeLevel ?? 1;
+        const tierColors = [
+          { bg: 'from-zinc-600/20 to-zinc-800/10', border: 'border-zinc-500/30', glow: '', icon: 'bg-zinc-700/30' },
+          { bg: 'from-blue-600/20 to-blue-900/10', border: 'border-blue-500/30', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.15)]', icon: 'bg-blue-600/20' },
+          { bg: 'from-purple-600/20 to-purple-900/10', border: 'border-purple-500/30', glow: 'shadow-[0_0_20px_rgba(139,92,246,0.15)]', icon: 'bg-purple-600/20' },
+          { bg: 'from-amber-500/20 to-amber-900/10', border: 'border-amber-500/30', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.2)]', icon: 'bg-amber-500/20' },
+        ];
         return (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setShowOfficeSheet(false)} />
           <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
-            <div className="max-w-lg mx-auto bg-surface-elevated rounded-t-[24px] border-t border-x border-line overflow-hidden">
-              <div className="flex flex-col items-center pt-3 pb-2 px-4 border-b border-line/50">
+            <div className="max-w-lg mx-auto bg-surface-elevated rounded-t-[28px] border-t border-x border-line overflow-hidden">
+              {/* هدر */}
+              <div className="flex flex-col items-center pt-3 pb-3 px-5">
                 <div className="w-10 h-1 rounded-[999px] bg-fg-faint/30 mb-3" />
                 <div className="flex items-center justify-between w-full">
-                  <h2 className="text-sm font-black">ارتقا دفتر</h2>
-                  <button onClick={() => setShowOfficeSheet(false)} className="p-1.5 rounded-full hover:bg-surface-card text-fg-muted"><X size={18} /></button>
+                  <div>
+                    <h2 className="text-base font-black">🏢 ارتقا دفتر</h2>
+                    <p className="text-[10px] text-fg-muted mt-0.5">دفتر بزرگتر = نیرو و محصول بیشتر</p>
+                  </div>
+                  <button onClick={() => setShowOfficeSheet(false)} className="p-2 rounded-xl hover:bg-surface-card text-fg-muted transition-colors"><X size={18} /></button>
                 </div>
               </div>
 
-              <div className="px-4 py-3 space-y-2 max-h-[65vh] overflow-y-auto">
-                {OFFICE_TIERS.map((tier, index) => {
-                  const isCurrent = tier.level === officeLevel;
-                  const isOwned = tier.level < officeLevel;
-                  const isNext = tier.level === officeLevel + 1;
-                  const isLocked = tier.level > officeLevel + 1;
-                  const canAfford = balance >= tier.upgradeCost;
-                  const prevTier = index > 0 ? OFFICE_TIERS[index - 1] : null;
-                  return (
-                    <div key={tier.level} className="relative">
-                      {index > 0 && <div className={`absolute -top-2 right-[22px] w-0.5 h-2 ${isOwned || isCurrent ? 'bg-fg-muted' : 'bg-fg-faint/20'}`} />}
-                      <div className={`rounded-[18px] border overflow-hidden transition-all ${
-                        isCurrent ? 'border-fg-muted bg-surface-card/80' : isNext ? 'border-line bg-surface-card/60' : isOwned ? 'border-line/30 bg-surface-card/40 opacity-60' : 'border-line/30 bg-surface-card/30 opacity-40'
-                      }`}>
-                        <div className="p-3">
-                          <div className="flex items-start gap-3">
-                            <div className="w-12 h-12 rounded-[12px] flex items-center justify-center text-2xl shrink-0 bg-surface-inset/50 border border-line/30">
-                              {isLocked ? <Lock size={20} className="text-fg-faint" /> : tier.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-sm font-black">{tier.name}</p>
-                                {isCurrent && <span className="text-[8px] bg-fg-muted/20 text-fg-secondary px-1.5 py-0.5 rounded-[999px] font-bold">فعلی</span>}
-                              </div>
-                              <p className="text-[10px] text-fg-muted font-fa">{tier.area}m²</p>
-                              <div className="grid grid-cols-3 gap-x-2 mt-1.5 text-center">
-                                <div><p className="text-base font-black font-fa">{tier.maxEmployees}</p><p className="text-[7px] text-fg-muted">نیرو</p></div>
-                                <div><p className="text-base font-black font-fa">{tier.maxProducts}</p><p className="text-[7px] text-fg-muted">محصول</p></div>
-                                <div><p className="text-base font-black font-fa">{tier.rent.toLocaleString('fa-IR')}</p><p className="text-[7px] text-fg-muted">اجاره</p></div>
-                              </div>
-                              {prevTier && !isOwned && (
-                                <div className="flex gap-1.5 mt-1.5">
-                                  <span className="text-[8px] bg-surface-inset/50 text-fg-secondary px-1.5 py-0.5 rounded-[999px] font-bold">+{tier.maxEmployees - prevTier.maxEmployees} نیرو</span>
-                                  <span className="text-[8px] bg-surface-inset/50 text-fg-secondary px-1.5 py-0.5 rounded-[999px] font-bold">+{tier.maxProducts - prevTier.maxProducts} محصول</span>
-                                </div>
+              {/* مسیر پیشرفت */}
+              <div className="px-5 py-3 max-h-[60vh] overflow-y-auto">
+                <div className="relative">
+                  {/* خط اتصال عمودی */}
+                  <div className="absolute right-[23px] top-6 bottom-6 w-[3px] rounded-full bg-surface-inset/30" />
+                  <div
+                    className="absolute right-[23px] top-6 w-[3px] rounded-full bg-gradient-to-b from-emerald-500 to-indigo-500 transition-all duration-500"
+                    style={{ height: `${Math.max(0, ((officeLevel - 1) / (OFFICE_TIERS.length - 1)) * 100)}%` }}
+                  />
+
+                  <div className="space-y-4 relative">
+                    {OFFICE_TIERS.map((tier, index) => {
+                      const isCurrent = tier.level === officeLevel;
+                      const isOwned = tier.level < officeLevel;
+                      const isNext = tier.level === officeLevel + 1;
+                      const isLocked = tier.level > officeLevel + 1;
+                      const canAfford = balance >= tier.upgradeCost;
+                      const meetsLevel = biz.level >= tier.requiredBusinessLevel;
+                      const prevTier = index > 0 ? OFFICE_TIERS[index - 1] : null;
+                      const color = tierColors[index];
+
+                      return (
+                        <div key={tier.level} className="flex gap-4">
+                          {/* نشانگر دایره‌ای */}
+                          <div className="relative z-10 flex-shrink-0">
+                            <div className={`w-[18px] h-[18px] rounded-full border-[3px] mt-4 transition-all ${
+                              isOwned ? 'bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
+                              isCurrent ? 'bg-indigo-500 border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)] animate-pulse' :
+                              isNext ? 'bg-surface-card border-indigo-400/50' :
+                              'bg-surface-card border-fg-faint/20'
+                            }`}>
+                              {isOwned && (
+                                <svg className="w-full h-full text-white p-[1px]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                               )}
                             </div>
                           </div>
-                          {isNext && (
-                            <button
-                              onClick={() => { upgradeOffice(biz.id); if (canAfford) setShowOfficeSheet(false); }}
-                              disabled={!canAfford}
-                              className="w-full mt-3 bg-[#8B5CF6] hover:bg-violet-400 disabled:opacity-40 disabled:bg-surface-inset text-white py-2.5 rounded-[999px] text-xs font-black active:scale-[0.97] transition-all flex items-center justify-center gap-2"
-                            >
-                              <ArrowUpCircle size={16} />
-                              ارتقا — <span className="font-fa">{tier.upgradeCost.toLocaleString('fa-IR')}</span>
-                            </button>
-                          )}
-                          {isLocked && <p className="text-[9px] text-fg-faint text-center mt-2 flex items-center justify-center gap-1"><Lock size={10} /> ابتدا سطح قبل</p>}
+
+                          {/* کارت تایر */}
+                          <div className={`flex-1 rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
+                            isCurrent ? `${color.border} bg-gradient-to-l ${color.bg} ${color.glow}` :
+                            isNext ? `border-indigo-500/40 bg-gradient-to-l ${color.bg} shadow-[0_0_25px_rgba(99,102,241,0.1)]` :
+                            isOwned ? `border-line/20 bg-surface-card/30` :
+                            'border-line/10 bg-surface-card/20'
+                          }`}>
+                            <div className={`p-3.5 ${isLocked ? 'opacity-40' : ''}`}>
+                              {/* ردیف اول: آیکون + نام */}
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl shrink-0 ${
+                                  isLocked ? 'bg-surface-inset/30' : color.icon
+                                }`}>
+                                  {isLocked ? <Lock size={18} className="text-fg-faint" /> : getOfficeName(tier.level, biz.type).icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-black">{getOfficeName(tier.level, biz.type).name}</p>
+                                    {isCurrent && (
+                                      <span className="text-[7px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-black tracking-wide">فعلی</span>
+                                    )}
+                                    {isOwned && (
+                                      <span className="text-[7px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">✓</span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-fg-muted font-fa">{tier.area}m²</p>
+                                </div>
+                              </div>
+
+                              {/* آمار — سه ستون */}
+                              <div className="grid grid-cols-3 gap-2">
+                                {[
+                                  { icon: '👥', val: tier.maxEmployees, label: 'نیرو', diff: prevTier ? tier.maxEmployees - prevTier.maxEmployees : 0 },
+                                  { icon: '🧪', val: tier.maxProducts, label: 'محصول', diff: prevTier ? tier.maxProducts - prevTier.maxProducts : 0 },
+                                  { icon: '💰', val: tier.rent, label: 'اجاره', diff: 0, isCost: true },
+                                ].map((stat) => (
+                                  <div key={stat.label} className={`rounded-xl p-2 text-center ${
+                                    isCurrent || isNext ? 'bg-black/10' : 'bg-surface-inset/20'
+                                  }`}>
+                                    <p className="text-[8px] text-fg-muted mb-0.5">{stat.icon} {stat.label}</p>
+                                    <p className="text-base font-black font-fa">{stat.isCost ? stat.val.toLocaleString('fa-IR') : stat.val}</p>
+                                    {stat.diff > 0 && !isOwned && (
+                                      <p className="text-[8px] text-emerald-400 font-bold font-fa">+{stat.diff}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* پیش‌نیاز سطح شرکت */}
+                              {isNext && !meetsLevel && (
+                                <div className="mt-3 flex items-center gap-1.5 text-[9px] text-amber-400 bg-amber-500/10 rounded-lg px-2.5 py-1.5">
+                                  <Lock size={10} />
+                                  <span>نیاز به سطح <span className="font-fa font-bold">{tier.requiredBusinessLevel}</span> شرکت</span>
+                                </div>
+                              )}
+
+                              {/* دکمه ارتقا */}
+                              {isNext && meetsLevel && (
+                                <button
+                                  onClick={() => { upgradeOffice(biz.id); if (canAfford) setShowOfficeSheet(false); }}
+                                  disabled={!canAfford}
+                                  className={`w-full mt-3 py-3 rounded-xl text-sm font-black active:scale-[0.97] transition-all flex items-center justify-center gap-2 ${
+                                    canAfford
+                                      ? 'bg-gradient-to-l from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-[0_4px_15px_rgba(99,102,241,0.3)]'
+                                      : 'bg-surface-inset/50 text-fg-faint'
+                                  }`}
+                                >
+                                  <ArrowUpCircle size={18} />
+                                  ارتقا — <span className="font-fa">{tier.upgradeCost.toLocaleString('fa-IR')}</span>
+                                </button>
+                              )}
+
+                              {isLocked && (
+                                <p className="text-[9px] text-fg-faint text-center mt-2 flex items-center justify-center gap-1">
+                                  <Lock size={10} /> ابتدا سطح قبل را ارتقا دهید
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
-              <div className="px-4 py-3 border-t border-line/50 bg-surface-card/30">
+              {/* فوتر */}
+              <div className="px-5 py-3 border-t border-line/50 bg-surface-card/20">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-fg-muted">موجودی:</span>
-                  <span className="text-accent-money font-fa font-bold">{balance.toLocaleString('fa-IR')}</span>
+                  <span className="text-fg-muted">💳 موجودی</span>
+                  <span className="text-accent-money font-fa font-black text-sm">{balance.toLocaleString('fa-IR')}</span>
                 </div>
               </div>
             </div>
@@ -377,19 +459,63 @@ export default function BusinessDetailPage() {
               <div className="space-y-1.5">
                 {biz.employees.map((emp) => {
                   const canUpgrade = emp.employeeLevel < emp.maxUpgradeLevel;
+                  const isUpgrading = emp.upgradeStartedAt !== null && emp.upgradeEndsAt !== null;
+                  const upgradeReady = isUpgrading && Date.now() >= (emp.upgradeEndsAt ?? 0);
                   const upgCost = canUpgrade ? emp.baseHireCost * Math.pow(2, emp.employeeLevel) : 0;
                   const canAffordUpg = balance >= upgCost;
                   const levelBoost = 1 + (emp.employeeLevel - 1) * 0.5;
                   const effectiveBoost = emp.revenueBoost * levelBoost;
+
+                  // محاسبه زمان باقی‌مانده ارتقا
+                  const upgradeTimeLeft = isUpgrading && !upgradeReady
+                    ? Math.max(0, (emp.upgradeEndsAt ?? 0) - Date.now())
+                    : 0;
+                  const upgradeTotalDuration = isUpgrading
+                    ? (emp.upgradeEndsAt ?? 0) - (emp.upgradeStartedAt ?? 0)
+                    : 1;
+                  const upgradeProgress = isUpgrading
+                    ? Math.min(100, ((upgradeTotalDuration - upgradeTimeLeft) / upgradeTotalDuration) * 100)
+                    : 0;
+                  const upgMinsLeft = Math.floor(upgradeTimeLeft / 60000);
+                  const upgSecsLeft = Math.floor((upgradeTimeLeft % 60000) / 1000);
+
+                  // مدت زمان ارتقا (برای نمایش قبل شروع)
+                  const upgradeDurationMs = canUpgrade ? getEmployeeUpgradeDuration(emp.employeeLevel) : 0;
+                  const upgradeDurationMins = Math.round(upgradeDurationMs / 60000);
+
                   return (
-                    <div key={emp.id} className="bg-surface-card/60 rounded-[18px] px-3 py-2.5 border border-line/30">
+                    <div key={emp.id} className={`rounded-[18px] px-3 py-2.5 border ${
+                      isUpgrading
+                        ? upgradeReady
+                          ? 'bg-[#22C55E]/10 border-[#22C55E]/30 shadow-[0_0_10px_rgba(34,197,94,0.15)]'
+                          : 'bg-[#8B5CF6]/10 border-[#8B5CF6]/30'
+                        : 'bg-surface-card/60 border-line/30'
+                    }`}>
                       <div className="flex items-center gap-2.5">
-                        <span className="text-lg">{emp.icon}</span>
+                        <div className="relative">
+                          <span className="text-lg">{emp.icon}</span>
+                          {isUpgrading && !upgradeReady && (
+                            <span className="absolute -bottom-1 -right-1 text-[10px] animate-spin">⏳</span>
+                          )}
+                          {upgradeReady && (
+                            <span className="absolute -bottom-1 -right-1 text-[10px] animate-bounce">✨</span>
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-xs font-bold truncate">{emp.name}</p>
                             {emp.maxUpgradeLevel > 1 && (
                               <span className="text-[8px] bg-accent-primary/15 text-accent-primary px-1.5 py-0.5 rounded-[999px] font-bold shrink-0">L{emp.employeeLevel}</span>
+                            )}
+                            {isUpgrading && !upgradeReady && (
+                              <span className="text-[8px] bg-[#8B5CF6]/15 text-[#8B5CF6] px-1.5 py-0.5 rounded-[999px] font-bold shrink-0 animate-pulse">
+                                در حال ارتقا
+                              </span>
+                            )}
+                            {upgradeReady && (
+                              <span className="text-[8px] bg-[#22C55E]/15 text-[#22C55E] px-1.5 py-0.5 rounded-[999px] font-bold shrink-0 animate-pulse">
+                                آماده!
+                              </span>
                             )}
                           </div>
                           <p className="text-[9px] text-fg-muted">
@@ -398,19 +524,53 @@ export default function BusinessDetailPage() {
                             <span className="font-fa text-fg-faint">{emp.salary.toLocaleString('fa-IR')}/سیکل</span>
                           </p>
                         </div>
-                        {canUpgrade ? (
+
+                        {/* دکمه‌ها */}
+                        {upgradeReady ? (
+                          <button
+                            onClick={() => completeEmployeeUpgrade(biz.id, emp.id)}
+                            className="shrink-0 bg-[#22C55E] hover:bg-emerald-400 text-white px-3 py-1.5 rounded-[999px] text-[9px] font-bold active:scale-95 transition-all shadow-[0_2px_8px_rgba(34,197,94,0.3)]"
+                          >
+                            ✨ تکمیل
+                          </button>
+                        ) : isUpgrading ? (
+                          <div className="shrink-0 text-center">
+                            <p className="text-[10px] font-bold text-[#8B5CF6] font-mono">
+                              {upgMinsLeft}:{upgSecsLeft.toString().padStart(2, '0')}
+                            </p>
+                          </div>
+                        ) : canUpgrade ? (
                           <button
                             onClick={() => upgradeEmployee(biz.id, emp.id)}
                             disabled={!canAffordUpg}
                             className="shrink-0 bg-[#8B5CF6] hover:bg-violet-400 disabled:opacity-40 text-white px-2.5 py-1.5 rounded-[999px] text-[9px] font-bold active:scale-95 transition-all"
                           >
-                            ⬆ L{emp.employeeLevel + 1}
+                            <span>⬆ L{emp.employeeLevel + 1}</span>
+                            <span className="block text-[7px] opacity-70 font-fa">{upgradeDurationMins} دقیقه</span>
                           </button>
                         ) : (
                           <span className="text-[#22C55E] text-xs shrink-0">✅</span>
                         )}
                       </div>
-                      {emp.maxUpgradeLevel > 1 && (
+
+                      {/* نوار پیشرفت ارتقا */}
+                      {isUpgrading && (
+                        <div className="mt-2">
+                          <div className="h-1.5 rounded-full bg-progress-bg overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-1000 ${
+                                upgradeReady
+                                  ? 'bg-[#22C55E] animate-pulse'
+                                  : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1]'
+                              }`}
+                              style={{ width: `${upgradeProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* نوار سطح (فقط وقتی ارتقا در حال انجام نیست) */}
+                      {!isUpgrading && emp.maxUpgradeLevel > 1 && (
                         <div className="mt-1.5"><ProgressBar value={emp.employeeLevel} max={emp.maxUpgradeLevel} color="upgrade" /></div>
                       )}
                     </div>
@@ -528,24 +688,85 @@ export default function BusinessDetailPage() {
       {/* ==================== CTA ارتقا ==================== */}
       <div className="fixed bottom-20 left-0 right-0 px-4 z-40">
         <div className="max-w-lg mx-auto space-y-1.5">
-          {biz.level < biz.maxLevel && (() => {
+          {(() => {
+            const isUpgrading = biz.upgradeStartedAt !== null && biz.upgradeEndsAt !== null;
+            const upgradeReady = isUpgrading && Date.now() >= (biz.upgradeEndsAt ?? 0);
+            const upgradeTimeLeft = isUpgrading && !upgradeReady
+              ? Math.max(0, (biz.upgradeEndsAt ?? 0) - Date.now())
+              : 0;
+            const upgradeTotalDuration = isUpgrading
+              ? (biz.upgradeEndsAt ?? 0) - (biz.upgradeStartedAt ?? 0)
+              : 0;
+            const upgradeProgress = upgradeTotalDuration > 0
+              ? Math.min(100, ((upgradeTotalDuration - upgradeTimeLeft) / upgradeTotalDuration) * 100)
+              : 0;
+            const upgradeMins = Math.floor(upgradeTimeLeft / 60000);
+            const upgradeSecs = Math.floor((upgradeTimeLeft % 60000) / 1000);
+            const nextDuration = getBusinessUpgradeDuration(biz.level);
+            const nextDurationMins = Math.round(nextDuration / 60000);
+
+            if (biz.level >= biz.maxLevel) {
+              return (
+                <Button disabled fullWidth variant="upgrade">
+                  <span className="flex items-center justify-center gap-1.5">
+                    <ArrowUpCircle size={16} />
+                    حداکثر سطح
+                  </span>
+                </Button>
+              );
+            }
+
+            if (upgradeReady) {
+              return (
+                <Button onClick={() => completeBusinessUpgrade(biz.id)} fullWidth variant="upgrade">
+                  <span className="flex items-center justify-center gap-1.5">
+                    ✨ تکمیل ارتقا به LV {biz.level + 1}
+                  </span>
+                </Button>
+              );
+            }
+
+            if (isUpgrading) {
+              return (
+                <div className="bg-nav/95 backdrop-blur-md rounded-[18px] px-4 py-3 border border-[#8B5CF6]/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-[#8B5CF6] font-bold flex items-center gap-1">
+                      ⏳ در حال {vocab.upgrade} به LV {biz.level + 1}
+                    </span>
+                    <span className="text-[12px] font-mono font-black text-[#8B5CF6]">
+                      {upgradeMins}:{upgradeSecs.toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-progress-bg overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] transition-all duration-1000"
+                      style={{ width: `${upgradeProgress}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            // Normal state — show preview + upgrade button
             const profitDiff = nextNetProfit - netProfit;
             const profitPercent = netProfit > 0 ? Math.round((profitDiff / netProfit) * 100) : profitDiff > 0 ? 100 : 0;
             return (
-              <div className="bg-nav/95 backdrop-blur-md rounded-[18px] px-3 py-2 border border-line-subtle">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-fg-secondary font-bold">LV {biz.level + 1}</span>
-                  <span className="text-[#22C55E] font-fa font-bold">+{profitPercent}% سود (+{profitDiff.toLocaleString('fa-IR')})</span>
+              <>
+                <div className="bg-nav/95 backdrop-blur-md rounded-[18px] px-3 py-2 border border-line-subtle">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-fg-secondary font-bold">LV {biz.level + 1}</span>
+                    <span className="text-[#22C55E] font-fa font-bold">+{profitPercent}% {vocab.levelUpBenefit} (+{profitDiff.toLocaleString('fa-IR')})</span>
+                  </div>
                 </div>
-              </div>
+                <Button onClick={() => upgradeBusiness(biz.id)} disabled={balance < biz.upgradeCost} fullWidth variant="upgrade">
+                  <span className="flex items-center justify-center gap-1.5">
+                    <ArrowUpCircle size={16} />
+                    {vocab.upgrade} — {biz.upgradeCost.toLocaleString('fa-IR')} ({nextDurationMins} دقیقه)
+                  </span>
+                </Button>
+              </>
             );
           })()}
-          <Button onClick={() => upgradeBusiness(biz.id)} disabled={balance < biz.upgradeCost || biz.level >= biz.maxLevel} fullWidth variant="upgrade">
-            <span className="flex items-center justify-center gap-1.5">
-              <ArrowUpCircle size={16} />
-              {biz.level >= biz.maxLevel ? 'حداکثر سطح' : `ارتقا — ${biz.upgradeCost.toLocaleString('fa-IR')}`}
-            </span>
-          </Button>
         </div>
       </div>
     </div>

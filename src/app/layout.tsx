@@ -18,7 +18,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#09090b",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0F172A" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+  ],
 };
 
 export default function RootLayout({
@@ -27,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl">
+    <html lang="fa" dir="rtl" className="dark">
       <body className={`${geistMono.variable} antialiased`}>
         <GameShell>{children}</GameShell>
       </body>

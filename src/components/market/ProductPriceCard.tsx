@@ -78,7 +78,7 @@ export default function ProductPriceCard({ product }: ProductPriceCardProps) {
           ? isUp
             ? 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02))'
             : 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.02))'
-          : 'rgba(255,255,255,0.03)',
+          : 'var(--surface-card)',
         boxShadow: isHot
           ? isUp
             ? '0 0 12px rgba(34,197,94,0.1)'

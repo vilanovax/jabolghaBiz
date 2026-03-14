@@ -19,7 +19,7 @@ export interface PlayerProfile {
   createdAt: string;
 }
 
-// ==================== BUSINESS ====================
+// ==================== LOCATION ====================
 
 export type BusinessType =
   | 'supermarket'
@@ -28,6 +28,29 @@ export type BusinessType =
   | 'app_startup'
   | 'transport'
   | 'farming';
+
+export interface Neighborhood {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  revenueMultiplier: number;     // ضریب درآمد (1.0 = عادی)
+  expenseMultiplier: number;     // ضریب هزینه‌ها (1.0 = عادی)
+  customerTraffic: number;       // تردد مشتری — ضریب سرعت سیکل (1.0 = عادی, >1 = سریعتر)
+  rentMultiplier: number;        // ضریب اجاره دفتر
+  bestFor: BusinessType[];       // نوع کسب‌وکارهای مناسب این محله
+  unlockLevel: number;           // حداقل سطح بازیکن برای دسترسی
+}
+
+export interface City {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  neighborhoods: Neighborhood[];
+}
+
+// ==================== BUSINESS ====================
 
 // نقش‌های کارمندان
 export type EmployeeRole =
@@ -74,6 +97,9 @@ export interface HiredEmployee {
   employeeLevel: number;  // سطح فعلی نیرو (1-3)
   maxUpgradeLevel: number;
   baseHireCost: number;   // هزینه اولیه — برای محاسبه هزینه ارتقا
+  // ارتقا زمان‌دار
+  upgradeStartedAt: number | null;  // timestamp شروع ارتقا (null = در حال ارتقا نیست)
+  upgradeEndsAt: number | null;     // timestamp پایان ارتقا
 }
 
 // سطوح دفتر کار
@@ -116,6 +142,9 @@ export interface Business {
   level: number;
   icon: string;
 
+  // موقعیت مکانی
+  neighborhoodId?: string;       // آیدی محله
+
   // سیستم درآمد تایمری
   baseRevenue: number;        // درآمد پایه هر سیکل
   cycleDuration: number;      // مدت هر سیکل (ثانیه)
@@ -141,6 +170,10 @@ export interface Business {
 
   // تجهیزات اولیه
   initialEquipment: string;
+
+  // ارتقا زمان‌دار
+  upgradeStartedAt: number | null;
+  upgradeEndsAt: number | null;
 }
 
 export interface BusinessTemplate {
@@ -214,6 +247,25 @@ export interface LeaderboardEntry {
 }
 
 // ==================== LIFE ====================
+
+export type LifeActionCategory = 'food' | 'rest' | 'education' | 'fitness' | 'entertainment';
+
+export interface LifeAction {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  category: LifeActionCategory;
+  cost: number;
+  cooldownMs: number;          // زمان انتظار تا استفاده بعدی (ms)
+  effect: Partial<PlayerStats>;
+  requiredLevel?: number;
+}
+
+export interface LifeState {
+  lastActionAt: Record<string, number>;   // actionId → timestamp آخرین استفاده
+  lastStatDecayAt: number;                // timestamp آخرین کاهش خودکار
+}
 
 export interface HomeItem {
   id: string;
@@ -311,6 +363,78 @@ export interface RandomEventState {
   activeEvents: ActiveEvent[];
   lastEventCheckAt: number;
   pendingEventId: string | null;  // instance id for modal
+}
+
+// ==================== MISSIONS & ACHIEVEMENTS ====================
+
+export type MissionType = 'daily' | 'weekly' | 'one_time';
+
+export type MissionCondition =
+  | 'collect_revenue'        // جمع‌آوری درآمد N بار
+  | 'earn_total'             // کسب N تومان (مجموع)
+  | 'hire_employee'          // استخدام N نیرو
+  | 'upgrade_business'       // ارتقای شرکت N بار
+  | 'create_business'        // ساخت N شرکت
+  | 'upgrade_office'         // ارتقای دفتر N بار
+  | 'unlock_product'         // آنلاک N محصول
+  | 'reach_business_level'   // رسیدن به سطح N شرکت
+  | 'reach_balance'          // رسیدن به N تومان موجودی
+  | 'own_businesses'         // داشتن N شرکت همزمان
+  | 'total_employees'        // داشتن N نیرو مجموعا
+  | 'respond_to_event'       // پاسخ به N رویداد
+  | 'claim_daily_bonus';     // دریافت N بونوس روزانه
+
+export interface MissionTemplate {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  type: MissionType;
+  condition: MissionCondition;
+  target: number;            // هدف (مثلاً ۳ بار جمع‌آوری)
+  reward: number;            // جایزه تومانی
+  xpReward?: number;         // جایزه تجربه
+}
+
+export interface ActiveMission {
+  id: string;                // instance id
+  templateId: string;
+  title: string;
+  description: string;
+  icon: string;
+  type: MissionType;
+  condition: MissionCondition;
+  target: number;
+  progress: number;          // پیشرفت فعلی
+  reward: number;
+  xpReward: number;
+  completed: boolean;
+  claimed: boolean;          // آیا جایزه دریافت شده؟
+  assignedAt: number;        // timestamp اختصاص
+  expiresAt: number;         // daily=24h, weekly=7d, one_time=never
+}
+
+export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'diamond';
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  tier: AchievementTier;
+  condition: MissionCondition;
+  target: number;
+  unlockedAt: number | null;  // timestamp یا null=قفل
+  badge: string;              // ایموجی نشان
+}
+
+export interface MissionsState {
+  activeMissions: ActiveMission[];
+  completedMissionIds: string[];   // template ids done (for one_time)
+  lastDailyRefresh: string | null; // ISO date
+  lastWeeklyRefresh: string | null;
+  achievements: Achievement[];
+  totalMissionsCompleted: number;
 }
 
 // ==================== NAVIGATION ====================
