@@ -50,7 +50,7 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
     const revMult = nb ? nb.revenueMultiplier * (nb.bestFor.includes(t.type) ? 1.1 : 1.0) : 1.0;
     const expMult = nb ? nb.expenseMultiplier : 1.0;
     const trafficMult = nb ? nb.customerTraffic : 1.0;
-    const effectiveRevenue = Math.round(t.baseRevenue * revMult);
+    const effectiveRevenue = Math.round(t.baseProductionRate * revMult);
     const effectiveExpense = Math.round(t.baseExpenses * expMult);
     const netProfit = effectiveRevenue - effectiveExpense;
     const effectiveCycle = Math.max(10, Math.round(t.cycleDuration / trafficMult));
@@ -165,7 +165,7 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
                 const canAfford = balance >= t.startCost;
                 const alreadyOwned = businesses.some((b) => b.type === t.type);
                 const isSelected = selected === t.type;
-                const netProfit = t.baseRevenue - t.baseExpenses;
+                const netProfit = t.baseProductionRate - t.baseExpenses;
                 const isBest = bestAffordable?.type === t.type;
                 const ppm = profitPerMinute(t);
 
@@ -389,7 +389,7 @@ export default function NewBusinessModal({ onClose }: { onClose: () => void }) {
                     <div className="bg-surface-inset/20 rounded-lg p-2 text-center">
                       <p className="text-fg-faint text-[9px]">درآمد/سیکل</p>
                       <p className="text-accent-positive font-fa font-black text-sm mt-0.5">
-                        {Math.round(selectedTemplate.baseRevenue * (activeNeighborhood?.revenueMultiplier ?? 1) * (activeNeighborhood?.bestFor.includes(selectedTemplate.type) ? 1.1 : 1)).toLocaleString('fa-IR')}
+                        {Math.round(selectedTemplate.baseProductionRate * (activeNeighborhood?.revenueMultiplier ?? 1) * (activeNeighborhood?.bestFor.includes(selectedTemplate.type) ? 1.1 : 1)).toLocaleString('fa-IR')}
                       </p>
                     </div>
                     <div className="bg-surface-inset/20 rounded-lg p-2 text-center">

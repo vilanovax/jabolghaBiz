@@ -23,6 +23,8 @@ import {
   MissionCondition,
   Achievement,
   LifeState,
+  SpecialOrder,
+  OrderBoardState,
 } from '@/types';
 import {
   mockPlayer,
@@ -51,30 +53,27 @@ import {
   STAT_DECAY_AMOUNTS,
   LIFE_ACTIONS,
   STAT_GAMEPLAY_EFFECTS,
+  FICTIONAL_COMPANIES,
+  ORDER_CONFIG,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
 
-// محاسبه درآمد واقعی — ضریب کارمندان (با سطح نیرو) با سقف 3.5x + بوست مطلق محصولات + ضریب محله
+// محاسبه نرخ تولید واقعی (واحد در هر سیکل) — بوست کارمندان تولید + محصولات
 export function calcEffectiveRevenue(biz: Business): number {
-  // بوست هر نیرو بر اساس سطح: L1=base, L2=+50%, L3=+100%
-  const staffBoostSum = biz.employees.reduce((sum, e) => {
-    const levelMultiplier = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
-    return sum + e.revenueBoost * levelMultiplier;
-  }, 0);
-  const staffMultiplier = Math.min(1 + staffBoostSum, 3.5); // حداکثر ۲۵۰٪ بوست
-  // محصولات با سطح شرکت رشد می‌کنند: baseBoost × (1 + level × 0.1)
+  const base = biz.baseProductionRate;
+  // بوست کارمندان تولید بر اساس سطح: L1=base, L2=+50%, L3=+100%
+  const employeeBoost = biz.employees
+    .filter((e) => e.role === 'production')
+    .reduce((sum, e) => {
+      const levelMultiplier = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+      return sum + e.productionBoost * levelMultiplier;
+    }, 0);
+  // بوست محصولات آنلاک‌شده
   const productBoost = biz.products
     .filter((p) => p.unlocked)
-    .reduce((sum, p) => sum + Math.round(p.revenueBoost * (1 + biz.level * 0.1)), 0);
-  // بونوس سطح سازمانی (Enterprise) — سطح ۲۰: +۲۰٪ تولید
-  const enterpriseMultiplier = biz.level >= 20 ? 1.2 : 1.0;
-  // ضریب محله
-  const nb = biz.neighborhoodId ? getNeighborhood(biz.neighborhoodId) : undefined;
-  const neighborhoodRevMult = nb ? nb.revenueMultiplier : 1.0;
-  // بونوس محله مناسب (+10% اگر نوع شرکت در bestFor محله باشد)
-  const bestForBonus = nb?.bestFor.includes(biz.type) ? 1.1 : 1.0;
-  return Math.round(biz.baseRevenue * staffMultiplier * enterpriseMultiplier * neighborhoodRevMult * bestForBonus) + productBoost;
+    .reduce((sum, p) => sum + p.productionBoost, 0);
+  return base + employeeBoost + productBoost;
 }
 
 // محاسبه هزینه‌های کل (حقوق + هزینه پایه + اجاره دفتر × ضریب محله)
@@ -88,14 +87,9 @@ export function calcTotalExpenses(biz: Business): number {
   return Math.round(biz.expenses * expenseMult) + salaries + Math.round(officeTier.rent * rentMult);
 }
 
-// آیا شرکت حسابدار دارد؟
-export function hasAccountant(biz: Business): boolean {
-  return biz.employees.some((e) => e.autoCollect);
-}
-
-// ارزش امپراتوری = موجودی + مجموع (درآمد پایه × سطح × ۱۰)
+// ارزش امپراتوری = موجودی + مجموع (نرخ تولید پایه × سطح × ۱۰)
 export function calcEmpireValue(player: PlayerProfile, businesses: Business[]): number {
-  const businessesValue = businesses.reduce((sum, b) => sum + b.baseRevenue * b.level * 10, 0);
+  const businessesValue = businesses.reduce((sum, b) => sum + b.baseProductionRate * b.level * 10, 0);
   return player.balance + businessesValue;
 }
 
@@ -253,6 +247,13 @@ interface GameState {
   claimMissionReward: (missionId: string) => void;
   checkAchievements: () => void;
 
+  // Special Orders
+  orderBoard: OrderBoardState;
+  acceptOrder: (orderId: string, businessId: string) => void;
+  deliverOrder: (orderId: string) => void;
+  generateOrders: () => void;
+  expireOrders: () => void;
+
   // Achievement Toast
   achievementToastQueue: Achievement[];
   dismissAchievementToast: () => void;
@@ -305,11 +306,17 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       level: 1,
       icon: template.icon,
       neighborhoodId,
-      baseRevenue: template.baseRevenue,
+      baseProductionRate: template.baseProductionRate,
+      baseSaleRate: template.baseSaleRate,
       cycleDuration: template.cycleDuration,
       lastCycleAt: Date.now(),
-      pendingRevenue: 0,
-      maxPendingCycles: template.maxPendingCycles,
+      inventory: {
+        productId: template.productId,
+        quantity: 0,
+        maxCapacity: template.baseInventoryCapacity,
+      },
+      fractionalProduced: 0,
+      fractionalSold: 0,
       expenses: template.baseExpenses,
       upgradeCost: Math.round(template.startCost * 1.5),
       officeLevel: 1,
@@ -366,7 +373,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           ? {
               ...b,
               level: b.level + 1,
-              baseRevenue: Math.round(b.baseRevenue * 1.22),
+              baseProductionRate: Math.round(b.baseProductionRate * 1.22),
               upgradeCost: Math.round(b.upgradeCost * 1.5),
               upgradeStartedAt: null,
               upgradeEndsAt: null,
@@ -392,7 +399,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     const now = Date.now();
     set((state) => {
       let balanceAdd = 0;
-      // ضریب‌های stat بازیکن
+      let totalProduced = 0;
+      let totalSold = 0;
       const { stats } = state.player;
       const energyCycleMult = STAT_GAMEPLAY_EFFECTS.energyCycleMultiplier(stats.energy);
       const happinessRevMult = STAT_GAMEPLAY_EFFECTS.happinessRevenueMultiplier(stats.happiness);
@@ -401,51 +409,83 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
       const updatedBiz = state.businesses.map((biz) => {
         const elapsed = (now - biz.lastCycleAt) / 1000;
-        // ضریب تردد محله — سیکل سریعتر
         const nb = biz.neighborhoodId ? getNeighborhood(biz.neighborhoodId) : undefined;
         const trafficMult = nb ? nb.customerTraffic : 1.0;
-        // ضریب انرژی بازیکن روی سرعت سیکل
         const effectiveCycleDuration = Math.max(10, Math.round(biz.cycleDuration / (trafficMult * energyCycleMult)));
         const completedCycles = Math.floor(elapsed / effectiveCycleDuration);
-        if (completedCycles <= 0) return biz;
 
-        const effectiveRevenue = calcEffectiveRevenue(biz);
-        const totalExpenses = calcTotalExpenses(biz);
-        // Event multipliers
-        const eventMult = get().getEventMultiplier(biz.type);
-        // ضریب stat‌ها روی درآمد
-        const adjustedRevenue = Math.round(effectiveRevenue * eventMult.revenueMultiplier * statRevenueMult);
-        const adjustedExpenses = Math.round(totalExpenses * eventMult.expenseMultiplier);
-        // Rush Hour ×2 multiplier
-        const rushMultiplier = get().isRushHourActive() ? RUSH_HOUR.multiplier : 1;
-        const netPerCycle = Math.max(0, Math.round((adjustedRevenue - adjustedExpenses) * rushMultiplier));
+        // --- Production (only on cycle completion) ---
+        let newQuantity = biz.inventory.quantity;
+        let newFracProd = biz.fractionalProduced;
+        let newLastCycleAt = biz.lastCycleAt;
+        // Capacity with warehouse employee boost
+        const warehouseBoost = biz.employees
+          .filter((e) => e.role === 'warehouse')
+          .reduce((sum, e) => {
+            const levelMult = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+            return sum + e.capacityBoost * levelMult;
+          }, 0);
+        const productCapBoost = biz.products
+          .filter((p) => p.unlocked)
+          .reduce((sum, p) => sum + p.capacityBoost, 0);
+        const maxCap = biz.inventory.maxCapacity + warehouseBoost + productCapBoost;
 
-        // سیکل‌های عادی (تا سقف) + بازده کاهشی (۲۰٪ بعد از سقف)
-        const normalCycles = Math.min(completedCycles, biz.maxPendingCycles);
-        const overflowCycles = Math.max(0, completedCycles - biz.maxPendingCycles);
-        const normalRevenue = netPerCycle * normalCycles;
-        const overflowRevenue = Math.round(netPerCycle * 0.2 * overflowCycles);
-        const newPending = biz.pendingRevenue + normalRevenue + overflowRevenue;
-        const maxPending = netPerCycle * biz.maxPendingCycles + overflowRevenue;
+        if (completedCycles > 0) {
+          const productionRate = calcEffectiveRevenue(biz); // units per cycle
+          const rawProduced = productionRate * completedCycles + newFracProd;
+          const wholeProduced = Math.floor(rawProduced);
+          newFracProd = rawProduced - wholeProduced;
+          newQuantity = Math.min(maxCap, newQuantity + wholeProduced);
+          totalProduced += wholeProduced;
+          newLastCycleAt = biz.lastCycleAt + completedCycles * effectiveCycleDuration * 1000;
+        }
 
-        const isAuto = hasAccountant(biz);
-        const actualPending = Math.min(newPending, maxPending);
+        // --- Auto-sales (continuous) ---
+        const salesBoost = biz.employees
+          .filter((e) => e.role === 'sales')
+          .reduce((sum, e) => {
+            const levelMult = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+            return sum + e.salesBoost * levelMult;
+          }, 0);
+        const totalSaleRate = biz.baseSaleRate + salesBoost; // units per minute
+        const elapsedMin = elapsed / 60;
+        const rawSold = totalSaleRate * elapsedMin + biz.fractionalSold;
+        const wholeSold = Math.floor(rawSold);
+        const actualSold = Math.min(wholeSold, newQuantity);
+        const newFracSold = actualSold < wholeSold ? 0 : rawSold - wholeSold;
 
-        if (isAuto) {
-          balanceAdd += actualPending;
-          return {
-            ...biz,
-            lastCycleAt: biz.lastCycleAt + completedCycles * effectiveCycleDuration * 1000,
-            pendingRevenue: 0,
-          };
+        if (actualSold > 0) {
+          newQuantity -= actualSold;
+          totalSold += actualSold;
+          // Calculate income
+          const marketProduct = state.products.find((p) => p.id === biz.inventory.productId);
+          const unitPrice = marketProduct ? marketProduct.currentPrice : 1000;
+          const eventMult = get().getEventMultiplier(biz.type);
+          const rushMultiplier = get().isRushHourActive() ? RUSH_HOUR.multiplier : 1;
+          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier);
+          // Subtract expenses proportional to elapsed time
+          const totalExpenses = calcTotalExpenses(biz);
+          const expensePerSec = totalExpenses / biz.cycleDuration;
+          const expenseCost = Math.round(expensePerSec * elapsed * eventMult.expenseMultiplier);
+          balanceAdd += Math.max(0, income - expenseCost);
         }
 
         return {
           ...biz,
-          lastCycleAt: biz.lastCycleAt + completedCycles * effectiveCycleDuration * 1000,
-          pendingRevenue: actualPending,
+          lastCycleAt: completedCycles > 0 ? newLastCycleAt : biz.lastCycleAt,
+          inventory: { ...biz.inventory, quantity: newQuantity, maxCapacity: maxCap },
+          fractionalProduced: newFracProd,
+          fractionalSold: newFracSold,
         };
       });
+
+      // Progress missions
+      if (totalProduced > 0) {
+        setTimeout(() => get().progressMission('produce_units', totalProduced), 0);
+      }
+      if (totalSold > 0) {
+        setTimeout(() => get().progressMission('sell_units', totalSold), 0);
+      }
 
       return {
         businesses: updatedBiz,
@@ -456,26 +496,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     });
   },
 
-  collectRevenue: (businessId) => {
-    const biz = get().businesses.find((b) => b.id === businessId);
-    if (!biz || biz.pendingRevenue <= 0) return;
-    const amount = biz.pendingRevenue;
-
-    set((state) => ({
-      businesses: state.businesses.map((b) =>
-        b.id === businessId ? { ...b, pendingRevenue: 0 } : b
-      ),
-      player: {
-        ...state.player,
-        balance: state.player.balance + amount,
-      },
-    }));
-
-    // Mission progress
-    get().progressMission('collect_revenue', 1);
-    get().progressMission('earn_total', amount);
-    get().progressMission('reach_balance', get().player.balance);
-    get().checkAchievements();
+  collectRevenue: () => {
+    // No longer needed — auto-sales handle income
   },
 
   // ==================== Business — دفتر کار ====================
@@ -537,8 +559,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
               roleName: template.roleName,
               icon: template.icon,
               salary: template.salary,
-              revenueBoost: template.revenueBoost,
-              autoCollect: template.autoCollect,
+              productionBoost: template.productionBoost ?? 0,
+              salesBoost: template.salesBoost ?? 0,
+              capacityBoost: template.capacityBoost ?? 0,
               hiredAt: Date.now(),
               employeeLevel: 1,
               maxUpgradeLevel: template.maxUpgradeLevel,
@@ -799,6 +822,162 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         };
       }),
     }));
+  },
+
+  // ==================== Special Orders ====================
+
+  orderBoard: {
+    availableOrders: [],
+    acceptedOrders: [],
+    completedOrderIds: [],
+    failedOrderIds: [],
+    lastOrderGenerationAt: 0,
+  } as OrderBoardState,
+
+  acceptOrder: (orderId, businessId) => {
+    const { orderBoard, businesses } = get();
+    const order = orderBoard.availableOrders.find((o) => o.id === orderId);
+    if (!order) return;
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz) return;
+    if (biz.inventory.productId !== order.productId) return;
+    if (orderBoard.acceptedOrders.length >= ORDER_CONFIG.maxAcceptedOrders) return;
+
+    set({
+      orderBoard: {
+        ...orderBoard,
+        availableOrders: orderBoard.availableOrders.filter((o) => o.id !== orderId),
+        acceptedOrders: [...orderBoard.acceptedOrders, { ...order, status: 'accepted', acceptedAt: Date.now(), businessId }],
+      },
+    });
+  },
+
+  deliverOrder: (orderId) => {
+    const { orderBoard, businesses, player } = get();
+    const order = orderBoard.acceptedOrders.find((o) => o.id === orderId);
+    if (!order || !order.businessId) return;
+    const biz = businesses.find((b) => b.id === order.businessId);
+    if (!biz) return;
+
+    const available = biz.inventory.quantity;
+    const toDeliver = Math.min(available, order.quantity - order.deliveredQuantity);
+    if (toDeliver <= 0) return;
+
+    const newDelivered = order.deliveredQuantity + toDeliver;
+    const isComplete = newDelivered >= order.quantity;
+    const payment = isComplete ? order.totalPayment : Math.round(toDeliver * order.pricePerUnit);
+
+    set((state) => ({
+      businesses: state.businesses.map((b) =>
+        b.id === order.businessId
+          ? { ...b, inventory: { ...b.inventory, quantity: b.inventory.quantity - toDeliver } }
+          : b
+      ),
+      player: { ...state.player, balance: state.player.balance + payment },
+      orderBoard: {
+        ...state.orderBoard,
+        acceptedOrders: isComplete
+          ? state.orderBoard.acceptedOrders.filter((o) => o.id !== orderId)
+          : state.orderBoard.acceptedOrders.map((o) =>
+              o.id === orderId ? { ...o, deliveredQuantity: newDelivered } : o
+            ),
+        completedOrderIds: isComplete
+          ? [...state.orderBoard.completedOrderIds, orderId]
+          : state.orderBoard.completedOrderIds,
+      },
+    }));
+
+    if (isComplete) {
+      get().progressMission('complete_special_order', 1);
+      get().progressMission('earn_total', payment);
+      get().progressMission('reach_balance', get().player.balance);
+      get().checkAchievements();
+    }
+  },
+
+  generateOrders: () => {
+    const { orderBoard, businesses, products } = get();
+    const now = Date.now();
+    if (now - orderBoard.lastOrderGenerationAt < ORDER_CONFIG.generationIntervalMs) return;
+    if (orderBoard.availableOrders.length >= ORDER_CONFIG.maxAvailableOrders) return;
+    if (businesses.length === 0) return;
+
+    const count = 1 + Math.floor(Math.random() * 3); // 1-3 orders
+    const newOrders: SpecialOrder[] = [];
+
+    for (let i = 0; i < count; i++) {
+      if (orderBoard.availableOrders.length + newOrders.length >= ORDER_CONFIG.maxAvailableOrders) break;
+      const biz = businesses[Math.floor(Math.random() * businesses.length)];
+      const product = products.find((p) => p.id === biz.inventory.productId);
+      if (!product) continue;
+
+      const company = FICTIONAL_COMPANIES[Math.floor(Math.random() * FICTIONAL_COMPANIES.length)];
+      const quantity = 5 + Math.floor(Math.random() * 20);
+      const priceMult = ORDER_CONFIG.priceMultiplierMin + Math.random() * (ORDER_CONFIG.priceMultiplierMax - ORDER_CONFIG.priceMultiplierMin);
+      const pricePerUnit = Math.round(product.currentPrice * priceMult);
+      const deadlineMs = (ORDER_CONFIG.deadlineMinMs + Math.random() * (ORDER_CONFIG.deadlineMaxMs - ORDER_CONFIG.deadlineMinMs));
+
+      newOrders.push({
+        id: `order-${now}-${i}`,
+        companyName: company.name,
+        companyIcon: company.icon,
+        productId: biz.inventory.productId,
+        productName: product.name,
+        quantity,
+        pricePerUnit,
+        totalPayment: pricePerUnit * quantity,
+        deadline: now + deadlineMs,
+        createdAt: now,
+        status: 'available',
+        deliveredQuantity: 0,
+        penaltyRate: ORDER_CONFIG.penaltyRate,
+      });
+    }
+
+    set({
+      orderBoard: {
+        ...orderBoard,
+        availableOrders: [...orderBoard.availableOrders, ...newOrders],
+        lastOrderGenerationAt: now,
+      },
+    });
+  },
+
+  expireOrders: () => {
+    const { orderBoard, player } = get();
+    const now = Date.now();
+    let penalty = 0;
+    const failedIds: string[] = [];
+
+    // Expire available orders past deadline
+    const validAvailable = orderBoard.availableOrders.filter((o) => o.deadline > now);
+
+    // Check accepted orders past deadline
+    const validAccepted: SpecialOrder[] = [];
+    for (const order of orderBoard.acceptedOrders) {
+      if (order.deadline <= now) {
+        // Penalty: penaltyRate × remaining undelivered value
+        const remaining = order.quantity - order.deliveredQuantity;
+        penalty += Math.round(remaining * order.pricePerUnit * order.penaltyRate);
+        failedIds.push(order.id);
+      } else {
+        validAccepted.push(order);
+      }
+    }
+
+    if (validAvailable.length !== orderBoard.availableOrders.length || failedIds.length > 0) {
+      set({
+        orderBoard: {
+          ...orderBoard,
+          availableOrders: validAvailable,
+          acceptedOrders: validAccepted,
+          failedOrderIds: [...orderBoard.failedOrderIds, ...failedIds],
+        },
+        player: penalty > 0
+          ? { ...player, balance: Math.max(0, player.balance - penalty) }
+          : player,
+      });
+    }
   },
 
   // ==================== Hooks & Rewards ====================
@@ -1350,7 +1529,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
-  version: 2,
+  version: 3,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -1368,6 +1547,66 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         }));
       }
     }
+    if (version < 3) {
+      // Migrate businesses
+      if (Array.isArray(state.businesses)) {
+        state.businesses = (state.businesses as Record<string, unknown>[]).map((biz) => {
+          // Add new fields
+          if (!('baseProductionRate' in biz)) biz.baseProductionRate = (biz.baseRevenue as number) ?? 3;
+          if (!('baseSaleRate' in biz)) biz.baseSaleRate = 2;
+          if (!('inventory' in biz)) {
+            biz.inventory = { productId: 'prod-generic', quantity: 0, maxCapacity: 30 };
+          }
+          if (!('fractionalProduced' in biz)) biz.fractionalProduced = 0;
+          if (!('fractionalSold' in biz)) biz.fractionalSold = 0;
+          // Remove old fields
+          delete biz.pendingRevenue;
+          delete biz.maxPendingCycles;
+          delete biz.baseRevenue;
+          // Migrate employees
+          if (Array.isArray(biz.employees)) {
+            biz.employees = (biz.employees as Record<string, unknown>[]).map((emp) => {
+              if (!('productionBoost' in emp)) {
+                const oldRole = emp.role as string;
+                // Map old roles to new
+                if (oldRole === 'base') emp.role = 'production';
+                else if (['manager', 'marketer', 'sales'].includes(oldRole)) emp.role = 'sales';
+                else if (oldRole === 'accountant') emp.role = 'warehouse';
+                // Map boosts
+                emp.productionBoost = emp.role === 'production' ? (emp.revenueBoost ?? 0) : 0;
+                emp.salesBoost = emp.role === 'sales' ? (emp.revenueBoost ?? 0) : 0;
+                emp.capacityBoost = emp.role === 'warehouse' ? 5 : 0;
+              }
+              delete emp.revenueBoost;
+              delete emp.autoCollect;
+              return emp;
+            });
+          }
+          // Migrate products
+          if (Array.isArray(biz.products)) {
+            biz.products = (biz.products as Record<string, unknown>[]).map((prod) => {
+              if (!('productionBoost' in prod)) {
+                prod.productionBoost = (prod.revenueBoost as number) ?? 0;
+                prod.capacityBoost = 0;
+              }
+              delete prod.revenueBoost;
+              return prod;
+            });
+          }
+          return biz;
+        });
+      }
+      // Initialize orderBoard
+      if (!state.orderBoard) {
+        state.orderBoard = {
+          availableOrders: [],
+          acceptedOrders: [],
+          completedOrderIds: [],
+          failedOrderIds: [],
+          lastOrderGenerationAt: 0,
+        };
+      }
+    }
     return state;
   },
   partialize: (state) => ({
@@ -1382,5 +1621,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     randomEvents: state.randomEvents,
     missions: state.missions,
     life: state.life,
+    orderBoard: state.orderBoard,
   }),
 }));

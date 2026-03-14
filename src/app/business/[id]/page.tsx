@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant, getNextUnlock } from '@/store/gameStore';
+import { useState, useEffect } from 'react';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ProgressBar from '@/components/ui/ProgressBar';
@@ -18,11 +18,9 @@ import { BusinessProduct, Business, EmployeeRole } from '@/types';
 type Tab = 'overview' | 'employees' | 'products';
 
 const roleLabels: Record<EmployeeRole, string> = {
-  base: 'نیروی پایه',
-  manager: 'مدیر',
-  accountant: 'حسابدار',
-  marketer: 'بازاریاب',
+  production: 'تولید',
   sales: 'فروش',
+  warehouse: 'انبار',
 };
 
 function checkProductReqs(biz: Business, prod: BusinessProduct): { label: string; met: boolean }[] {
@@ -49,7 +47,6 @@ export default function BusinessDetailPage() {
   const { id } = useParams<{ id: string }>();
   const biz = useGameStore((s) => s.businesses.find((b) => b.id === id));
   const balance = useGameStore((s) => s.player.balance);
-  const collectRevenue = useGameStore((s) => s.collectRevenue);
   const upgradeBusiness = useGameStore((s) => s.upgradeBusiness);
   const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
   const upgradeOffice = useGameStore((s) => s.upgradeOffice);
@@ -61,7 +58,6 @@ export default function BusinessDetailPage() {
   const [tab, setTab] = useState<Tab>('overview');
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [collectAnim, setCollectAnim] = useState<number | null>(null);
   const [showOfficeSheet, setShowOfficeSheet] = useState(false);
 
   useEffect(() => {
@@ -76,14 +72,6 @@ export default function BusinessDetailPage() {
     return () => clearInterval(interval);
   }, [biz]);
 
-  const handleCollect = useCallback(() => {
-    if (!biz || biz.pendingRevenue <= 0) return;
-    const amount = biz.pendingRevenue;
-    collectRevenue(biz.id);
-    setCollectAnim(amount);
-    setTimeout(() => setCollectAnim(null), 1500);
-  }, [biz, collectRevenue]);
-
   if (!biz) {
     return (
       <div className="py-20 text-center">
@@ -95,16 +83,33 @@ export default function BusinessDetailPage() {
 
   const template = businessTemplates.find((t) => t.type === biz.type);
   const vocab = BUSINESS_VOCABULARY[biz.type];
-  const effectiveRevenue = calcEffectiveRevenue(biz);
+  const effectiveProduction = calcEffectiveRevenue(biz);
   const totalExpenses = calcTotalExpenses(biz);
-  const netProfit = effectiveRevenue - totalExpenses;
-  const isAuto = hasAccountant(biz);
-  const hasPending = biz.pendingRevenue > 0;
 
-  const nextBaseRevenue = Math.round(biz.baseRevenue * 1.22);
+  // نرخ فروش خودکار: پایه + بوست کارمندان فروش
+  const effectiveSaleRate = biz.baseSaleRate + biz.employees
+    .filter((e) => e.role === 'sales')
+    .reduce((sum, e) => {
+      const levelMultiplier = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+      return sum + e.salesBoost * levelMultiplier;
+    }, 0);
+
+  // ظرفیت انبار: پایه + بوست کارمندان انبار + بوست محصولات
+  const effectiveCapacity = biz.inventory.maxCapacity + biz.employees
+    .filter((e) => e.role === 'warehouse')
+    .reduce((sum, e) => {
+      const levelMultiplier = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+      return sum + e.capacityBoost * levelMultiplier;
+    }, 0) + biz.products
+    .filter((p) => p.unlocked)
+    .reduce((sum, p) => sum + p.capacityBoost, 0);
+
+  const inventoryPercent = effectiveCapacity > 0 ? (biz.inventory.quantity / effectiveCapacity) * 100 : 0;
+  const inventoryColor = inventoryPercent > 90 ? '#EF4444' : inventoryPercent < 30 ? '#22C55E' : '#3B82F6';
+
+  const nextBaseProduction = Math.round(biz.baseProductionRate * 1.15);
   const nextUpgradeCost = Math.round(biz.upgradeCost * 1.5);
-  const nextEffectiveRevenue = calcEffectiveRevenue({ ...biz, baseRevenue: nextBaseRevenue });
-  const nextNetProfit = nextEffectiveRevenue - totalExpenses;
+  const nextEffectiveProduction = calcEffectiveRevenue({ ...biz, baseProductionRate: nextBaseProduction });
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -134,54 +139,52 @@ export default function BusinessDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-3 text-[10px] mt-0.5">
-            <span className="text-[#22C55E] font-bold font-fa">+{netProfit.toLocaleString('fa-IR')}</span>
+            <span className="text-[#3B82F6] font-bold font-fa">{effectiveProduction} {vocab.productUnit}/سیکل</span>
             <span className="text-fg-faint">|</span>
-            <span className="text-fg-muted font-fa">{effectiveRevenue.toLocaleString('fa-IR')} {vocab.revenue}</span>
+            <span className="text-fg-muted font-fa">{biz.inventory.quantity}/{effectiveCapacity} {vocab.inventoryName}</span>
             <span className="text-fg-faint">|</span>
             <span className="text-fg-muted font-fa">{totalExpenses.toLocaleString('fa-IR')} {vocab.expenses}</span>
           </div>
         </div>
       </div>
 
-      {/* ==================== تولید — تایمر + جمع‌آوری ==================== */}
-      <div className={`relative rounded-[18px] border border-line-subtle p-4 overflow-hidden transition-all ${
-        hasPending ? 'shadow-[var(--shadow-collect)] animate-shimmer' : 'shadow-[var(--shadow-card)]'
-      }`}>
-        {collectAnim !== null && (
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <span className="text-[#22C55E] font-black text-xl font-fa animate-collect">
-              +{collectAnim.toLocaleString('fa-IR')}
-            </span>
-          </div>
-        )}
-
+      {/* ==================== تولید — تایمر + انبار + فروش ==================== */}
+      <div className="relative rounded-[18px] border border-line-subtle p-4 overflow-hidden transition-all shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-center gap-5">
           <ProgressRing
             progress={progress}
             size={80}
             strokeWidth={7}
-            color={hasPending ? '#22C55E' : '#6366F1'}
+            color="#6366F1"
           >
             <span className="text-sm font-black font-fa">{formatTime(timeLeft)}</span>
-            <span className="text-[7px] text-fg-muted">{vocab.cycle}</span>
+            <span className="text-[7px] text-fg-muted">+{effectiveProduction} {vocab.productUnit}</span>
           </ProgressRing>
 
-          <div className="flex flex-col items-start gap-2">
-            {hasPending ? (
-              <button
-                onClick={handleCollect}
-                className="bg-[#22C55E] hover:bg-emerald-400 text-white px-5 py-2 rounded-[999px] font-black text-[12px] active:scale-95 transition-all shadow-[var(--shadow-collect)]"
-              >
-                💰 {vocab.collect} <span className="font-fa">{biz.pendingRevenue.toLocaleString('fa-IR')}</span>
-              </button>
-            ) : (
-              <p className="text-[11px] text-fg-muted">
-                {isAuto ? `🧮 ${vocab.autoCollect}` : vocab.waitingProd}
-              </p>
-            )}
-            {isAuto && hasPending && (
-              <p className="text-[9px] text-[#22C55E]">🧮 حسابدار فعال</p>
-            )}
+          <div className="flex flex-col items-start gap-2.5 flex-1 min-w-0">
+            {/* نوار انبار */}
+            <div className="w-full space-y-1">
+              <div className="flex items-center justify-between text-[9px]">
+                <span className="text-fg-muted">📦 {vocab.inventoryName}</span>
+                <span className="font-fa font-bold" style={{ color: inventoryColor }}>
+                  {biz.inventory.quantity}/{effectiveCapacity} {vocab.productUnit}
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-progress-bg overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, inventoryPercent)}%`, backgroundColor: inventoryColor }}
+                />
+              </div>
+            </div>
+            {/* نرخ تولید */}
+            <p className="text-[10px] text-fg-muted">
+              ⚙️ {vocab.production}: <span className="text-[#6366F1] font-bold font-fa">{effectiveProduction} {vocab.productUnit}/سیکل</span>
+            </p>
+            {/* نرخ فروش خودکار */}
+            <p className="text-[10px] text-fg-muted">
+              🛒 {vocab.autoSale}: <span className="text-[#22C55E] font-bold font-fa">{effectiveSaleRate} {vocab.productUnit}/دقیقه</span>
+            </p>
           </div>
         </div>
       </div>
@@ -246,8 +249,9 @@ export default function BusinessDetailPage() {
           <div className="space-y-1 text-[11px] px-1">
             {[
               { icon: '⏱', label: vocab.cycle, value: `${Math.floor(biz.cycleDuration / 60)}:${(biz.cycleDuration % 60).toString().padStart(2, '0')}` },
-              { icon: '📦', label: 'انباشت', value: `${biz.maxPendingCycles} ${vocab.cycle}` },
-              { icon: '💎', label: 'ارزش', value: (biz.baseRevenue * biz.level * 10).toLocaleString('fa-IR') },
+              { icon: '⚙️', label: 'تولید', value: `${effectiveProduction} ${vocab.productUnit}/سیکل` },
+              { icon: '🛒', label: 'فروش خودکار', value: `${effectiveSaleRate} ${vocab.productUnit}/دقیقه` },
+              { icon: '📦', label: `ظرفیت ${vocab.inventoryName}`, value: `${biz.inventory.quantity}/${effectiveCapacity}` },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between py-1 border-b border-line-subtle/50 last:border-0">
                 <span className="text-fg-muted">{row.icon} {row.label}</span>
@@ -464,7 +468,6 @@ export default function BusinessDetailPage() {
                   const upgCost = canUpgrade ? emp.baseHireCost * Math.pow(2, emp.employeeLevel) : 0;
                   const canAffordUpg = balance >= upgCost;
                   const levelBoost = 1 + (emp.employeeLevel - 1) * 0.5;
-                  const effectiveBoost = emp.revenueBoost * levelBoost;
 
                   // محاسبه زمان باقی‌مانده ارتقا
                   const upgradeTimeLeft = isUpgrading && !upgradeReady
@@ -519,8 +522,15 @@ export default function BusinessDetailPage() {
                             )}
                           </div>
                           <p className="text-[9px] text-fg-muted">
-                            {emp.revenueBoost > 0 && <span className="text-[#22C55E]">+{(effectiveBoost * 100).toFixed(0)}% </span>}
-                            {emp.autoCollect && <span className="text-[#22C55E]">🧮 خودکار </span>}
+                            {emp.role === 'production' && emp.productionBoost > 0 && (
+                              <span className="text-[#22C55E]">+{Math.round(emp.productionBoost * levelBoost)} واحد/سیکل </span>
+                            )}
+                            {emp.role === 'sales' && emp.salesBoost > 0 && (
+                              <span className="text-[#22C55E]">+{Math.round(emp.salesBoost * levelBoost)} واحد/دقیقه </span>
+                            )}
+                            {emp.role === 'warehouse' && emp.capacityBoost > 0 && (
+                              <span className="text-[#22C55E]">+{Math.round(emp.capacityBoost * levelBoost)} ظرفیت </span>
+                            )}
                             <span className="font-fa text-fg-faint">{emp.salary.toLocaleString('fa-IR')}/سیکل</span>
                           </p>
                         </div>
@@ -608,8 +618,9 @@ export default function BusinessDetailPage() {
                         <span className="text-fg-faint">🔒 LV {et.unlockLevel}</span>
                       ) : (
                         <>
-                          {et.revenueBoost > 0 && <span className="text-[#22C55E]">+{(et.revenueBoost * 100).toFixed(0)}% </span>}
-                          {et.autoCollect && <span className="text-[#22C55E]">خودکار </span>}
+                          {et.role === 'production' && et.productionBoost && <span className="text-[#22C55E]">+{et.productionBoost} واحد/سیکل </span>}
+                          {et.role === 'sales' && et.salesBoost && <span className="text-[#22C55E]">+{et.salesBoost} واحد/دقیقه </span>}
+                          {et.role === 'warehouse' && et.capacityBoost && <span className="text-[#22C55E]">+{et.capacityBoost} ظرفیت </span>}
                           {et.expenseReduction && <span className="text-accent-info">هزینه -{(et.expenseReduction * 100).toFixed(0)}% </span>}
                           <span className="font-fa text-fg-faint">{et.salary.toLocaleString('fa-IR')}/سیکل</span>
                         </>
@@ -656,8 +667,12 @@ export default function BusinessDetailPage() {
                     </div>
                     <p className="text-[9px] text-fg-muted">{prod.description}</p>
                     <p className="text-[10px] mt-0.5">
-                      <span className="text-[#22C55E] font-bold font-fa">+{prod.revenueBoost.toLocaleString('fa-IR')}</span>
-                      <span className="text-fg-muted"> /سیکل</span>
+                      {prod.productionBoost > 0 && (
+                        <span className="text-[#22C55E] font-bold font-fa">+{prod.productionBoost} تولید </span>
+                      )}
+                      {prod.capacityBoost > 0 && (
+                        <span className="text-[#3B82F6] font-bold font-fa">+{prod.capacityBoost} ظرفیت</span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -748,14 +763,14 @@ export default function BusinessDetailPage() {
             }
 
             // Normal state — show preview + upgrade button
-            const profitDiff = nextNetProfit - netProfit;
-            const profitPercent = netProfit > 0 ? Math.round((profitDiff / netProfit) * 100) : profitDiff > 0 ? 100 : 0;
+            const productionDiff = nextEffectiveProduction - effectiveProduction;
+            const productionPercent = effectiveProduction > 0 ? Math.round((productionDiff / effectiveProduction) * 100) : productionDiff > 0 ? 100 : 0;
             return (
               <>
                 <div className="bg-nav/95 backdrop-blur-md rounded-[18px] px-3 py-2 border border-line-subtle">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-fg-secondary font-bold">LV {biz.level + 1}</span>
-                    <span className="text-[#22C55E] font-fa font-bold">+{profitPercent}% {vocab.levelUpBenefit} (+{profitDiff.toLocaleString('fa-IR')})</span>
+                    <span className="text-[#22C55E] font-fa font-bold">تولید +{productionPercent}% (+{productionDiff} {vocab.productUnit})</span>
                   </div>
                 </div>
                 <Button onClick={() => upgradeBusiness(biz.id)} disabled={balance < biz.upgradeCost} fullWidth variant="upgrade">

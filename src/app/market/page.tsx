@@ -2,18 +2,19 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import MarketListingCard from '@/components/market/MarketListingCard';
 import ProductPriceCard from '@/components/market/ProductPriceCard';
-import { TrendingUp, ShoppingBag } from 'lucide-react';
+import SpecialOrderCard from '@/components/market/SpecialOrderCard';
+import AcceptedOrderCard from '@/components/market/AcceptedOrderCard';
+import { TrendingUp, ClipboardList, Package } from 'lucide-react';
 
-type Tab = 'prices' | 'listings';
+type Tab = 'orders' | 'my_orders' | 'prices';
 
 export default function MarketPage() {
   const products = useGameStore((s) => s.products);
-  const listings = useGameStore((s) => s.listings);
-  const [tab, setTab] = useState<Tab>('prices');
+  const orderBoard = useGameStore((s) => s.orderBoard);
+  const [tab, setTab] = useState<Tab>('orders');
 
-  // Sort products: hot (>20% change) first, then by absolute change
+  // Sort products: hot (>20% change) first
   const sortedProducts = [...products].sort((a, b) => {
     const aChange = Math.abs((a.currentPrice - a.basePrice) / a.basePrice);
     const bChange = Math.abs((b.currentPrice - b.basePrice) / b.basePrice);
@@ -23,6 +24,12 @@ export default function MarketPage() {
   const hotCount = sortedProducts.filter(
     (p) => Math.abs((p.currentPrice - p.basePrice) / p.basePrice) >= 0.2
   ).length;
+
+  const tabs: { key: Tab; label: string; icon: typeof TrendingUp; count: number }[] = [
+    { key: 'orders', label: 'تابلو سفارشات', icon: ClipboardList, count: orderBoard.availableOrders.length },
+    { key: 'my_orders', label: 'سفارشات من', icon: Package, count: orderBoard.acceptedOrders.length },
+    { key: 'prices', label: 'قیمت‌ها', icon: TrendingUp, count: products.length },
+  ];
 
   return (
     <div className="space-y-4 py-4 pb-24">
@@ -37,53 +44,91 @@ export default function MarketPage() {
 
       {/* تب‌ها */}
       <div className="flex bg-surface-card/50 rounded-[999px] p-1">
-        <button
-          onClick={() => setTab('prices')}
-          className={`flex-1 py-2 rounded-[999px] text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-            tab === 'prices' ? 'bg-[#4F46E5] text-white shadow-[var(--shadow-glow)]' : 'text-fg-muted hover:text-fg-secondary'
-          }`}
-        >
-          <TrendingUp size={14} />
-          قیمت‌ها ({products.length})
-        </button>
-        <button
-          onClick={() => setTab('listings')}
-          className={`flex-1 py-2 rounded-[999px] text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-            tab === 'listings' ? 'bg-[#4F46E5] text-white shadow-[var(--shadow-glow)]' : 'text-fg-muted hover:text-fg-secondary'
-          }`}
-        >
-          <ShoppingBag size={14} />
-          آگهی‌ها ({listings.length})
-        </button>
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-1 py-2 rounded-[999px] text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
+                tab === t.key ? 'bg-[#4F46E5] text-white shadow-[var(--shadow-glow)]' : 'text-fg-muted hover:text-fg-secondary'
+              }`}
+            >
+              <Icon size={13} />
+              {t.label}
+              {t.count > 0 && (
+                <span className={`text-[8px] px-1 py-0.5 rounded-full font-fa ${
+                  tab === t.key ? 'bg-white/20' : 'bg-surface-card/60'
+                }`}>
+                  {t.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* محتوا */}
+      {/* ==================== تابلو سفارشات ==================== */}
+      {tab === 'orders' && (
+        <div className="space-y-2.5">
+          {orderBoard.availableOrders.length === 0 ? (
+            <div className="text-center py-14">
+              <p className="text-4xl mb-3">📋</p>
+              <p className="text-sm font-bold text-fg-secondary">سفارشی نیست!</p>
+              <p className="text-[10px] text-fg-muted mt-1">سفارشات جدید به‌زودی اضافه می‌شن</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-[10px] text-fg-muted">
+                💡 سفارشات ویژه از شرکت‌ها — قبول کنید و از انبار تحویل دهید
+              </p>
+              {orderBoard.availableOrders.map((order) => (
+                <SpecialOrderCard key={order.id} order={order} />
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ==================== سفارشات من ==================== */}
+      {tab === 'my_orders' && (
+        <div className="space-y-2.5">
+          {orderBoard.acceptedOrders.length === 0 ? (
+            <div className="text-center py-14">
+              <p className="text-4xl mb-3">📦</p>
+              <p className="text-sm font-bold text-fg-secondary">سفارش فعالی ندارید</p>
+              <p className="text-[10px] text-fg-muted mt-1">از تابلو سفارشات، یک سفارش قبول کنید</p>
+            </div>
+          ) : (
+            <>
+              {orderBoard.acceptedOrders.map((order) => (
+                <AcceptedOrderCard key={order.id} order={order} />
+              ))}
+            </>
+          )}
+
+          {/* Completed count */}
+          {orderBoard.completedOrderIds.length > 0 && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <span className="text-[10px] text-fg-muted">
+                ✅ <span className="font-fa font-bold">{orderBoard.completedOrderIds.length}</span> سفارش تکمیل شده
+              </span>
+              {orderBoard.failedOrderIds.length > 0 && (
+                <span className="text-[10px] text-[#EF4444]">
+                  ❌ <span className="font-fa font-bold">{orderBoard.failedOrderIds.length}</span> ناموفق
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ==================== قیمت‌ها ==================== */}
       {tab === 'prices' && (
         <div className="grid grid-cols-2 gap-2">
           {sortedProducts.map((product) => (
             <ProductPriceCard key={product.id} product={product} />
           ))}
-        </div>
-      )}
-
-      {tab === 'listings' && (
-        <div className="space-y-2.5">
-          {listings.length === 0 ? (
-            <div className="text-center py-14">
-              <p className="text-4xl mb-3">🏪</p>
-              <p className="text-sm font-bold text-fg-secondary">بازار خالیه!</p>
-              <p className="text-[10px] text-fg-muted mt-1">هنوز کسی آگهی نذاشته</p>
-            </div>
-          ) : (
-            <>
-              <p className="text-[10px] text-fg-muted">
-                💡 آگهی‌هایی که زیر قیمت بازار هستن با <span className="text-[#22C55E] font-bold">پیشنهاد ویژه</span> مشخص شدن
-              </p>
-              {listings.map((listing) => (
-                <MarketListingCard key={listing.id} listing={listing} />
-              ))}
-            </>
-          )}
         </div>
       )}
     </div>

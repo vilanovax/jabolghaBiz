@@ -7,6 +7,7 @@ const TICK_INTERVAL = 1000;             // هر ۱ ثانیه
 const MARKET_INTERVAL = 5 * 60 * 1000;  // هر ۵ دقیقه
 const EVENT_CHECK_INTERVAL = 60 * 1000; // هر ۶۰ ثانیه
 const STAT_DECAY_CHECK = 30 * 1000;     // چک کاهش stat هر ۳۰ ثانیه
+const ORDER_CHECK_INTERVAL = 60 * 1000; // چک سفارشات هر ۶۰ ثانیه
 
 export function useGameTick() {
   const tickBusinesses = useGameStore((s) => s.tickBusinesses);
@@ -14,9 +15,12 @@ export function useGameTick() {
   const triggerRandomEvent = useGameStore((s) => s.triggerRandomEvent);
   const expireEvents = useGameStore((s) => s.expireEvents);
   const decayStats = useGameStore((s) => s.decayStats);
+  const generateOrders = useGameStore((s) => s.generateOrders);
+  const expireOrders = useGameStore((s) => s.expireOrders);
   const lastMarketUpdate = useRef(Date.now());
   const lastEventCheck = useRef(Date.now());
   const lastDecayCheck = useRef(Date.now());
+  const lastOrderCheck = useRef(Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,8 +46,15 @@ export function useGameTick() {
         decayStats();
         lastDecayCheck.current = now;
       }
+
+      // تولید و انقضای سفارشات ویژه هر ۶۰ ثانیه
+      if (now - lastOrderCheck.current >= ORDER_CHECK_INTERVAL) {
+        generateOrders();
+        expireOrders();
+        lastOrderCheck.current = now;
+      }
     }, TICK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats]);
+  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders]);
 }

@@ -53,15 +53,10 @@ export interface City {
 // ==================== BUSINESS ====================
 
 // نقش‌های کارمندان
-export type EmployeeRole =
-  | 'base'        // نیروی پایه (برنامه‌نویس، کشاورز، آشپز...)
-  | 'manager'     // مدیر — ضریب افزایش درآمد
-  | 'accountant'  // حسابدار — جمع‌آوری اتوماتیک درآمد
-  | 'marketer'    // بازاریاب — افزایش درآمد محصولات
-  | 'sales';      // فروش — افزایش سرعت فروش
+export type EmployeeRole = 'production' | 'sales' | 'warehouse';
 
 // تایر نیرو — سطح‌بندی
-export type EmployeeTier = 'worker' | 'senior' | 'manager' | 'accountant' | 'marketer' | 'legendary';
+export type EmployeeTier = 'worker' | 'senior' | 'expert' | 'legendary';
 
 export interface EmployeeTemplate {
   id: string;
@@ -70,16 +65,19 @@ export interface EmployeeTemplate {
   roleName: string;       // نام فارسی نقش
   icon: string;
   salary: number;         // حقوق در هر سیکل
-  revenueBoost: number;   // درصد افزایش درآمد (مثلاً 0.2 = 20%)
-  autoCollect: boolean;   // آیا جمع‌آوری اتوماتیک فعال میکنه؟
   hireCost: number;       // هزینه استخدام
   description: string;
   // سیستم درخت رشد
   unlockLevel: number;    // سطح شرکت برای آنلاک
   tier: EmployeeTier;     // تایر نیرو
   maxUpgradeLevel: number; // حداکثر سطح نیرو (1 یا 3)
-  expenseReduction?: number; // کاهش هزینه (برای مکانیک و مدیر زنجیره تأمین)
-  cycleDurationReduction?: number; // کاهش زمان سیکل (برای نیروهای legendary)
+  // بوست‌های تخصصی
+  productionBoost?: number;       // واحد اضافه تولید در هر سیکل (نقش تولید)
+  salesBoost?: number;            // واحد اضافه فروش در دقیقه (نقش فروش)
+  capacityBoost?: number;         // ظرفیت اضافه انبار (نقش انبار)
+  orderQualityBoost?: number;     // شانس بهتر سفارش ویژه (نقش فروش)
+  expenseReduction?: number;      // کاهش هزینه
+  cycleDurationReduction?: number; // کاهش زمان سیکل (legendary)
 }
 
 export interface HiredEmployee {
@@ -90,16 +88,18 @@ export interface HiredEmployee {
   roleName: string;
   icon: string;
   salary: number;
-  revenueBoost: number;
-  autoCollect: boolean;
   hiredAt: number;
+  // بوست‌های تخصصی
+  productionBoost: number;
+  salesBoost: number;
+  capacityBoost: number;
   // سیستم ارتقا
   employeeLevel: number;  // سطح فعلی نیرو (1-3)
   maxUpgradeLevel: number;
   baseHireCost: number;   // هزینه اولیه — برای محاسبه هزینه ارتقا
   // ارتقا زمان‌دار
-  upgradeStartedAt: number | null;  // timestamp شروع ارتقا (null = در حال ارتقا نیست)
-  upgradeEndsAt: number | null;     // timestamp پایان ارتقا
+  upgradeStartedAt: number | null;
+  upgradeEndsAt: number | null;
 }
 
 // سطوح دفتر کار
@@ -129,9 +129,16 @@ export interface BusinessProduct {
   icon: string;
   description: string;
   unlockCost: number;
-  revenueBoost: number;   // افزایش درآمد هر سیکل
+  productionBoost: number;  // واحد اضافه تولید در هر سیکل
+  capacityBoost: number;    // ظرفیت اضافه انبار
   unlocked: boolean;
   requirements?: ProductRequirements;
+}
+
+export interface BusinessInventory {
+  productId: string;     // نوع محصولی که تولید می‌شه
+  quantity: number;      // تعداد فعلی در انبار
+  maxCapacity: number;   // حداکثر ظرفیت
 }
 
 export interface Business {
@@ -143,17 +150,23 @@ export interface Business {
   icon: string;
 
   // موقعیت مکانی
-  neighborhoodId?: string;       // آیدی محله
+  neighborhoodId?: string;
 
-  // سیستم درآمد تایمری
-  baseRevenue: number;        // درآمد پایه هر سیکل
-  cycleDuration: number;      // مدت هر سیکل (ثانیه)
-  lastCycleAt: number;        // timestamp آخرین سیکل
-  pendingRevenue: number;     // درآمد جمع‌نشده
-  maxPendingCycles: number;   // حداکثر سیکل‌های انباشته
+  // سیستم تولید
+  baseProductionRate: number;  // واحد تولید پایه در هر سیکل
+  baseSaleRate: number;        // واحد فروش خودکار پایه در دقیقه
+  cycleDuration: number;       // مدت هر سیکل (ثانیه)
+  lastCycleAt: number;         // timestamp آخرین سیکل
+
+  // انبار
+  inventory: BusinessInventory;
+
+  // ردیاب کسری (برای جلوگیری از خطای گرد کردن)
+  fractionalProduced: number;
+  fractionalSold: number;
 
   // هزینه‌ها
-  expenses: number;           // هزینه‌های هر سیکل
+  expenses: number;
   upgradeCost: number;
 
   // نیروها و محصولات
@@ -161,9 +174,9 @@ export interface Business {
   products: BusinessProduct[];
 
   // دفتر کار
-  officeLevel: number;    // سطح دفتر (1-4)
+  officeLevel: number;
 
-  // ظرفیت‌ها (مشتق از سطح دفتر)
+  // ظرفیت‌ها
   maxEmployees: number;
   maxProducts: number;
   maxLevel: number;
@@ -182,10 +195,12 @@ export interface BusinessTemplate {
   icon: string;
   description: string;
   startCost: number;
-  baseRevenue: number;
-  cycleDuration: number;       // ثانیه
+  baseProductionRate: number;    // واحد تولید در هر سیکل
+  baseSaleRate: number;          // واحد فروش خودکار در دقیقه
+  baseInventoryCapacity: number; // ظرفیت پایه انبار
+  productId: string;             // آیدی محصول تولیدی
+  cycleDuration: number;         // ثانیه
   baseExpenses: number;
-  maxPendingCycles: number;
   maxEmployees: number;
   maxProducts: number;
   maxLevel: number;
@@ -365,6 +380,36 @@ export interface RandomEventState {
   pendingEventId: string | null;  // instance id for modal
 }
 
+// ==================== SPECIAL ORDERS ====================
+
+export type OrderStatus = 'available' | 'accepted' | 'delivered' | 'failed';
+
+export interface SpecialOrder {
+  id: string;
+  companyName: string;
+  companyIcon: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  pricePerUnit: number;
+  totalPayment: number;
+  deadline: number;           // timestamp انقضا
+  createdAt: number;
+  status: OrderStatus;
+  acceptedAt?: number;
+  deliveredQuantity: number;
+  businessId?: string;        // کدوم شرکت قبول کرده
+  penaltyRate: number;        // نرخ جریمه (مثلاً 0.2 = 20%)
+}
+
+export interface OrderBoardState {
+  availableOrders: SpecialOrder[];
+  acceptedOrders: SpecialOrder[];
+  completedOrderIds: string[];
+  failedOrderIds: string[];
+  lastOrderGenerationAt: number;
+}
+
 // ==================== MISSIONS & ACHIEVEMENTS ====================
 
 export type MissionType = 'daily' | 'weekly' | 'one_time';
@@ -389,7 +434,10 @@ export type MissionCondition =
   | 'reach_stat_energy'      // رسیدن به N انرژی
   | 'reach_player_level'     // رسیدن به سطح N بازیکن
   | 'total_upgrades'         // انجام N ارتقا مجموعا
-  | 'complete_missions';     // تکمیل N ماموریت
+  | 'complete_missions'      // تکمیل N ماموریت
+  | 'produce_units'          // تولید N واحد محصول
+  | 'sell_units'             // فروش N واحد
+  | 'complete_special_order'; // تکمیل N سفارش ویژه
 
 export interface MissionTemplate {
   id: string;

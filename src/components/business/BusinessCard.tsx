@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Business, BusinessTemplate } from '@/types';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, hasAccountant, getNextUnlock } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock } from '@/store/gameStore';
 import { businessTemplates, getNeighborhood, getCityByNeighborhood } from '@/data/mock';
 import EventBanner from '@/components/hooks/EventBanner';
 import Link from 'next/link';
@@ -12,7 +12,7 @@ interface BusinessCardProps {
 }
 
 export default function BusinessCard({ business }: BusinessCardProps) {
-  const collectRevenue = useGameStore((s) => s.collectRevenue);
+  // collectRevenue is now a no-op; auto-sales handle income
   const activeEvents = useGameStore((s) => s.randomEvents.activeEvents);
   const relevantEvents = activeEvents.filter(
     (e) => (e.scope === 'global' || e.targetBusinessType === business.type) && e.effect !== 'instant_balance'
@@ -24,8 +24,9 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const effectiveRevenue = calcEffectiveRevenue(business);
   const totalExpenses = calcTotalExpenses(business);
   const netProfit = effectiveRevenue - totalExpenses;
-  const isAuto = hasAccountant(business);
-  const hasPending = business.pendingRevenue > 0;
+  const inventoryQty = business.inventory.quantity;
+  const inventoryMax = business.inventory.maxCapacity;
+  const hasInventory = inventoryQty > 0;
   const template = businessTemplates.find((t) => t.type === business.type);
   const nextUnlock = template ? getNextUnlock(business, template) : null;
   const neighborhood = business.neighborhoodId ? getNeighborhood(business.neighborhoodId) : undefined;
@@ -48,12 +49,8 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const handleCollect = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!hasPending) return;
-    const amount = business.pendingRevenue;
-    collectRevenue(business.id);
-    setCollectAnim(amount);
-    setTimeout(() => setCollectAnim(null), 1500);
-  }, [business.id, business.pendingRevenue, hasPending, collectRevenue]);
+    // Revenue is now auto-collected via sales system
+  }, []);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -64,7 +61,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   return (
     <div
       className={`relative rounded-[18px] bg-surface-card/60 border p-4 transition-all duration-300 overflow-hidden ${
-        hasPending
+        hasInventory
           ? 'border-[#22C55E]/30 shadow-[0_0_18px_rgba(34,197,94,0.25)]'
           : 'border-line-subtle shadow-[var(--shadow-card)]'
       }`}
@@ -95,8 +92,8 @@ export default function BusinessCard({ business }: BusinessCardProps) {
               </p>
             )}
           </div>
-          {isAuto && (
-            <span className="text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded">🧮 خودکار</span>
+          {hasInventory && (
+            <span className="text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded">📦 {inventoryQty}/{inventoryMax}</span>
           )}
         </div>
 
@@ -116,16 +113,16 @@ export default function BusinessCard({ business }: BusinessCardProps) {
               className="h-full rounded-[999px] transition-all duration-1000"
               style={{
                 width: `${progress}%`,
-                background: hasPending
+                background: hasInventory
                   ? 'linear-gradient(90deg, #22C55E, #16A34A)'
                   : 'linear-gradient(90deg, #6366F1, #8B5CF6)',
-                boxShadow: hasPending ? '0 0 8px rgba(34,197,94,0.5)' : '0 0 6px rgba(99,102,241,0.3)',
+                boxShadow: hasInventory ? '0 0 8px rgba(34,197,94,0.5)' : '0 0 6px rgba(99,102,241,0.3)',
               }}
             />
           </div>
           <div className="flex items-center justify-between mt-1 text-[9px]">
             <span className="text-fg-faint">
-              {hasPending ? '✅ آماده جمع‌آوری' : `⏱ ${formatTime(timeLeft)} تا تولید`}
+              {hasInventory ? `📦 ${inventoryQty} واحد در انبار` : `⏱ ${formatTime(timeLeft)} تا تولید`}
             </span>
           </div>
         </div>
@@ -166,19 +163,16 @@ export default function BusinessCard({ business }: BusinessCardProps) {
         )}
       </Link>
 
-      {/* Collect button — big, rewarding */}
-      {hasPending && (
-        <button
-          onClick={handleCollect}
-          className="w-full mt-3 py-3 rounded-[999px] font-black text-sm text-white active:scale-[0.96] transition-all flex flex-col items-center justify-center gap-0.5"
+      {/* Inventory indicator */}
+      {hasInventory && (
+        <div className="w-full mt-3 py-2 rounded-[999px] font-black text-sm text-white flex flex-col items-center justify-center gap-0.5"
           style={{
             background: 'linear-gradient(135deg, #22C55E, #16A34A)',
             boxShadow: '0 4px 20px rgba(34,197,94,0.45)',
           }}
         >
-          <span>💰 جمع‌آوری</span>
-          <span className="font-fa text-base">+{business.pendingRevenue.toLocaleString('fa-IR')}</span>
-        </button>
+          <span>📦 انبار: {inventoryQty}/{inventoryMax}</span>
+        </div>
       )}
     </div>
   );

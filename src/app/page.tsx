@@ -123,11 +123,11 @@ export default function HomePage() {
         <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {businesses.map((biz) => {
             const net = calcEffectiveRevenue(biz) - calcTotalExpenses(biz);
-            const hasPending = biz.pendingRevenue > 0;
+            const hasInventory = biz.inventory.quantity > 0;
             return (
               <Link key={biz.id} href={`/business/${biz.id}`} className="shrink-0">
                 <div className={`w-36 rounded-[16px] border p-3 transition-all ${
-                  hasPending
+                  hasInventory
                     ? 'border-[#22C55E]/30 bg-[#22C55E]/5 shadow-[0_0_12px_rgba(34,197,94,0.12)]'
                     : 'border-line-subtle bg-surface-card/40'
                 }`}>
@@ -143,10 +143,10 @@ export default function HomePage() {
                   <p className="text-[#22C55E] font-bold font-fa text-[11px] mt-1.5">
                     +{net.toLocaleString('fa-IR')}
                   </p>
-                  {hasPending && (
+                  {hasInventory && (
                     <div className="mt-1.5 text-center py-1 rounded-[8px] bg-[#22C55E]/15">
                       <p className="text-accent-money font-black text-xs font-fa animate-pulse">
-                        {biz.pendingRevenue.toLocaleString('fa-IR')}
+                        📦 {biz.inventory.quantity}/{biz.inventory.maxCapacity}
                       </p>
                     </div>
                   )}
