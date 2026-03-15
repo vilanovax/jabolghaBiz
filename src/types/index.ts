@@ -410,6 +410,76 @@ export interface OrderBoardState {
   lastOrderGenerationAt: number;
 }
 
+// ==================== BANKING ====================
+
+export type BankPersonality = 'conservative' | 'moderate' | 'risky';
+
+export interface LoanPackage {
+  id: string;
+  name: string;
+  amount: number;
+  interestRate: number;           // e.g. 0.05 = 5%
+  totalPayback: number;           // amount * (1 + interestRate)
+  installmentCount: number;
+  installmentAmount: number;      // totalPayback / installmentCount
+  installmentIntervalMs: number;  // فاصله بین اقساط
+  latePenaltyRate: number;        // e.g. 0.1 = 10% جریمه دیرکرد
+  requiredLevel: number;
+  requiredAssets: number;         // حداقل دارایی کل
+}
+
+export interface BankTemplate {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  personality: BankPersonality;
+  unlockLevel: number;
+  loanPackages: LoanPackage[];
+  depositInterestRate: number;    // نرخ سود سپرده در هر بازه
+  depositInterestIntervalMs: number;
+  earlyWithdrawalPenaltyRate: number; // جریمه برداشت زودهنگام از سود
+  minDepositAmount: number;
+  maxDepositAmount: number;
+}
+
+export interface ActiveLoan {
+  id: string;
+  bankId: string;
+  packageId: string;
+  originalAmount: number;
+  totalPayback: number;
+  installmentAmount: number;
+  installmentCount: number;
+  paidInstallments: number;
+  installmentIntervalMs: number;
+  nextInstallmentAt: number;
+  latePenaltyRate: number;
+  accruedPenalty: number;
+  takenAt: number;
+  missedPayments: number;
+}
+
+export interface ActiveDeposit {
+  id: string;
+  bankId: string;
+  amount: number;
+  interestRate: number;
+  depositedAt: number;
+  accruedInterest: number;
+  lastInterestAt: number;
+  interestIntervalMs: number;
+}
+
+export interface BankingState {
+  loans: ActiveLoan[];
+  deposits: ActiveDeposit[];
+  totalLoansTaken: number;
+  totalDepositsOpened: number;
+  totalInterestPaid: number;
+  totalInterestEarned: number;
+}
+
 // ==================== MISSIONS & ACHIEVEMENTS ====================
 
 export type MissionType = 'daily' | 'weekly' | 'one_time';

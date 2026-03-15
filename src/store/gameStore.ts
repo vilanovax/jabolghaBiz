@@ -25,6 +25,8 @@ import {
   LifeState,
   SpecialOrder,
   OrderBoardState,
+  BankingState,
+  BankTemplate,
 } from '@/types';
 import {
   mockPlayer,
@@ -55,6 +57,8 @@ import {
   STAT_GAMEPLAY_EFFECTS,
   FICTIONAL_COMPANIES,
   ORDER_CONFIG,
+  BANK_TEMPLATES,
+  BANK_CONFIG,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -253,6 +257,17 @@ interface GameState {
   deliverOrder: (orderId: string) => void;
   generateOrders: () => void;
   expireOrders: () => void;
+
+  // Banking
+  banking: BankingState;
+  bankTemplates: BankTemplate[];
+  canTakeLoan: (bankId: string, packageId: string) => { eligible: boolean; reason?: string };
+  takeLoan: (bankId: string, packageId: string) => boolean;
+  processInstallments: () => void;
+  canDeposit: (bankId: string, amount: number) => { eligible: boolean; reason?: string };
+  deposit: (bankId: string, amount: number) => boolean;
+  withdraw: (bankId: string) => void;
+  accrueDepositInterest: () => void;
 
   // Achievement Toast
   achievementToastQueue: Achievement[];
@@ -1525,11 +1540,180 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     }));
   },
 
+  // ==================== Banking ====================
+
+  banking: {
+    loans: [],
+    deposits: [],
+    totalLoansTaken: 0,
+    totalDepositsOpened: 0,
+    totalInterestPaid: 0,
+    totalInterestEarned: 0,
+  },
+  bankTemplates: BANK_TEMPLATES,
+
+  canTakeLoan: (bankId, packageId) => {
+    const { player, businesses, banking } = get();
+    const bank = BANK_TEMPLATES.find((b) => b.id === bankId);
+    if (!bank) return { eligible: false, reason: 'بانک یافت نشد' };
+    if (player.level < bank.unlockLevel) return { eligible: false, reason: `سطح ${bank.unlockLevel} لازم است` };
+    const pkg = bank.loanPackages.find((p) => p.id === packageId);
+    if (!pkg) return { eligible: false, reason: 'بسته وام یافت نشد' };
+    if (player.level < pkg.requiredLevel) return { eligible: false, reason: `سطح ${pkg.requiredLevel} لازم است` };
+    const totalAssets = calcEmpireValue(player, businesses);
+    if (totalAssets < pkg.requiredAssets) return { eligible: false, reason: `حداقل ${pkg.requiredAssets.toLocaleString('fa-IR')} دارایی لازم است` };
+    if (banking.loans.find((l) => l.bankId === bankId)) return { eligible: false, reason: 'وام فعال از این بانک دارید' };
+    if (banking.loans.length >= BANK_CONFIG.maxTotalLoans) return { eligible: false, reason: 'حداکثر تعداد وام فعال' };
+    return { eligible: true };
+  },
+
+  takeLoan: (bankId, packageId) => {
+    const { canTakeLoan } = get();
+    const check = canTakeLoan(bankId, packageId);
+    if (!check.eligible) return false;
+    const bank = BANK_TEMPLATES.find((b) => b.id === bankId)!;
+    const pkg = bank.loanPackages.find((p) => p.id === packageId)!;
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance + pkg.amount },
+      banking: {
+        ...state.banking,
+        totalLoansTaken: state.banking.totalLoansTaken + 1,
+        loans: [...state.banking.loans, {
+          id: `loan-${Date.now()}`,
+          bankId,
+          packageId,
+          originalAmount: pkg.amount,
+          totalPayback: pkg.totalPayback,
+          installmentAmount: pkg.installmentAmount,
+          installmentCount: pkg.installmentCount,
+          paidInstallments: 0,
+          installmentIntervalMs: pkg.installmentIntervalMs,
+          nextInstallmentAt: Date.now() + pkg.installmentIntervalMs,
+          latePenaltyRate: pkg.latePenaltyRate,
+          accruedPenalty: 0,
+          takenAt: Date.now(),
+          missedPayments: 0,
+        }],
+      },
+    }));
+    return true;
+  },
+
+  processInstallments: () => {
+    const { banking, player } = get();
+    if (banking.loans.length === 0) return;
+    const now = Date.now();
+    let balance = player.balance;
+    let totalInterestPaid = banking.totalInterestPaid;
+    const updatedLoans = banking.loans.filter((loan) => {
+      if (now < loan.nextInstallmentAt) return true; // not due yet
+      const totalDue = loan.installmentAmount + loan.accruedPenalty;
+      if (balance >= totalDue) {
+        balance -= totalDue;
+        const interestPortion = (loan.totalPayback - loan.originalAmount) / loan.installmentCount;
+        totalInterestPaid += interestPortion + loan.accruedPenalty;
+        loan.paidInstallments += 1;
+        loan.accruedPenalty = 0;
+        loan.missedPayments = 0;
+        if (loan.paidInstallments >= loan.installmentCount) {
+          return false; // fully paid — remove
+        }
+        loan.nextInstallmentAt = now + loan.installmentIntervalMs;
+      } else {
+        // insufficient balance — penalty
+        const penalty = Math.round(loan.installmentAmount * loan.latePenaltyRate);
+        loan.accruedPenalty += penalty;
+        loan.missedPayments += 1;
+        loan.nextInstallmentAt = now + loan.installmentIntervalMs;
+      }
+      return true;
+    });
+    set((state) => ({
+      player: { ...state.player, balance },
+      banking: { ...state.banking, loans: updatedLoans, totalInterestPaid },
+    }));
+  },
+
+  canDeposit: (bankId, amount) => {
+    const { player, banking } = get();
+    const bank = BANK_TEMPLATES.find((b) => b.id === bankId);
+    if (!bank) return { eligible: false, reason: 'بانک یافت نشد' };
+    if (player.level < bank.unlockLevel) return { eligible: false, reason: `سطح ${bank.unlockLevel} لازم است` };
+    if (banking.deposits.find((d) => d.bankId === bankId)) return { eligible: false, reason: 'سپرده فعال در این بانک دارید' };
+    if (banking.deposits.length >= BANK_CONFIG.maxTotalDeposits) return { eligible: false, reason: 'حداکثر تعداد سپرده فعال' };
+    if (amount < bank.minDepositAmount) return { eligible: false, reason: `حداقل ${bank.minDepositAmount.toLocaleString('fa-IR')} تومان` };
+    if (amount > bank.maxDepositAmount) return { eligible: false, reason: `حداکثر ${bank.maxDepositAmount.toLocaleString('fa-IR')} تومان` };
+    if (player.balance < amount) return { eligible: false, reason: 'موجودی کافی نیست' };
+    return { eligible: true };
+  },
+
+  deposit: (bankId, amount) => {
+    const { canDeposit } = get();
+    const check = canDeposit(bankId, amount);
+    if (!check.eligible) return false;
+    const bank = BANK_TEMPLATES.find((b) => b.id === bankId)!;
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance - amount },
+      banking: {
+        ...state.banking,
+        totalDepositsOpened: state.banking.totalDepositsOpened + 1,
+        deposits: [...state.banking.deposits, {
+          id: `dep-${Date.now()}`,
+          bankId,
+          amount,
+          interestRate: bank.depositInterestRate,
+          depositedAt: Date.now(),
+          accruedInterest: 0,
+          lastInterestAt: Date.now(),
+          interestIntervalMs: bank.depositInterestIntervalMs,
+        }],
+      },
+    }));
+    return true;
+  },
+
+  withdraw: (bankId) => {
+    const { banking } = get();
+    const deposit = banking.deposits.find((d) => d.bankId === bankId);
+    if (!deposit) return;
+    const bank = BANK_TEMPLATES.find((b) => b.id === bankId)!;
+    const netInterest = Math.round(deposit.accruedInterest * (1 - bank.earlyWithdrawalPenaltyRate));
+    const totalReturn = deposit.amount + netInterest;
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance + totalReturn },
+      banking: {
+        ...state.banking,
+        totalInterestEarned: state.banking.totalInterestEarned + netInterest,
+        deposits: state.banking.deposits.filter((d) => d.bankId !== bankId),
+      },
+    }));
+  },
+
+  accrueDepositInterest: () => {
+    const { banking } = get();
+    if (banking.deposits.length === 0) return;
+    const now = Date.now();
+    let changed = false;
+    const updatedDeposits = banking.deposits.map((dep) => {
+      if (now - dep.lastInterestAt >= dep.interestIntervalMs) {
+        changed = true;
+        const interest = Math.round(dep.amount * dep.interestRate);
+        return { ...dep, accruedInterest: dep.accruedInterest + interest, lastInterestAt: now };
+      }
+      return dep;
+    });
+    if (changed) {
+      set((state) => ({
+        banking: { ...state.banking, deposits: updatedDeposits },
+      }));
+    }
+  },
+
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
-  version: 3,
+  version: 4,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -1607,6 +1791,18 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         };
       }
     }
+    if (version < 4) {
+      if (!state.banking) {
+        state.banking = {
+          loans: [],
+          deposits: [],
+          totalLoansTaken: 0,
+          totalDepositsOpened: 0,
+          totalInterestPaid: 0,
+          totalInterestEarned: 0,
+        };
+      }
+    }
     return state;
   },
   partialize: (state) => ({
@@ -1622,5 +1818,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     missions: state.missions,
     life: state.life,
     orderBoard: state.orderBoard,
+    banking: state.banking,
   }),
 }));

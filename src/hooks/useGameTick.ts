@@ -8,6 +8,8 @@ const MARKET_INTERVAL = 5 * 60 * 1000;  // هر ۵ دقیقه
 const EVENT_CHECK_INTERVAL = 60 * 1000; // هر ۶۰ ثانیه
 const STAT_DECAY_CHECK = 30 * 1000;     // چک کاهش stat هر ۳۰ ثانیه
 const ORDER_CHECK_INTERVAL = 60 * 1000; // چک سفارشات هر ۶۰ ثانیه
+const INSTALLMENT_CHECK_INTERVAL = 60 * 1000; // چک اقساط هر ۶۰ ثانیه
+const DEPOSIT_CHECK_INTERVAL = 60 * 1000;     // چک سود سپرده هر ۶۰ ثانیه
 
 export function useGameTick() {
   const tickBusinesses = useGameStore((s) => s.tickBusinesses);
@@ -17,10 +19,14 @@ export function useGameTick() {
   const decayStats = useGameStore((s) => s.decayStats);
   const generateOrders = useGameStore((s) => s.generateOrders);
   const expireOrders = useGameStore((s) => s.expireOrders);
+  const processInstallments = useGameStore((s) => s.processInstallments);
+  const accrueDepositInterest = useGameStore((s) => s.accrueDepositInterest);
   const lastMarketUpdate = useRef(Date.now());
   const lastEventCheck = useRef(Date.now());
   const lastDecayCheck = useRef(Date.now());
   const lastOrderCheck = useRef(Date.now());
+  const lastInstallmentCheck = useRef(Date.now());
+  const lastDepositCheck = useRef(Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,8 +59,20 @@ export function useGameTick() {
         expireOrders();
         lastOrderCheck.current = now;
       }
+
+      // پردازش اقساط وام هر ۶۰ ثانیه
+      if (now - lastInstallmentCheck.current >= INSTALLMENT_CHECK_INTERVAL) {
+        processInstallments();
+        lastInstallmentCheck.current = now;
+      }
+
+      // سود سپرده هر ۶۰ ثانیه
+      if (now - lastDepositCheck.current >= DEPOSIT_CHECK_INTERVAL) {
+        accrueDepositInterest();
+        lastDepositCheck.current = now;
+      }
     }, TICK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders]);
+  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders, processInstallments, accrueDepositInterest]);
 }

@@ -19,6 +19,7 @@ import {
   LifeAction,
   PlayerStats,
   OrderBoardState,
+  BankTemplate,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -1260,5 +1261,127 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     icon: '📋', severity: 'minor', scope: 'business_type', targetBusinessType: 'transport',
     effect: 'revenue_multiplier', effectValue: 1.5, durationMs: 5 * 60 * 1000, isPositive: true,
     newsTitle: 'قرارداد بزرگ حمل‌ونقل امضا شد', newsSummary: 'یک شرکت حمل‌ونقل قرارداد سنگین جدیدی بست.',
+  },
+];
+
+// ==================== BANKING ====================
+
+export const BANK_CONFIG = {
+  installmentCheckIntervalMs: 60 * 1000,
+  depositInterestIntervalMs: 60 * 1000,
+  maxLoansPerBank: 1,
+  maxDepositsPerBank: 1,
+  maxTotalLoans: 3,
+  maxTotalDeposits: 3,
+};
+
+export const BANK_TEMPLATES: BankTemplate[] = [
+  {
+    id: 'bank-aramesh',
+    name: 'بانک آرامش',
+    icon: '🏦',
+    description: 'بانکی محافظه‌کار با سود کم اما مطمئن. جریمه‌های ملایم.',
+    personality: 'conservative',
+    unlockLevel: 1,
+    loanPackages: [
+      {
+        id: 'loan-aramesh-s', name: 'وام خُرد',
+        amount: 50_000, interestRate: 0.04, totalPayback: 52_000,
+        installmentCount: 5, installmentAmount: 10_400,
+        installmentIntervalMs: 3 * 60 * 1000,
+        latePenaltyRate: 0.05, requiredLevel: 1, requiredAssets: 0,
+      },
+      {
+        id: 'loan-aramesh-m', name: 'وام متوسط',
+        amount: 120_000, interestRate: 0.06, totalPayback: 127_200,
+        installmentCount: 8, installmentAmount: 15_900,
+        installmentIntervalMs: 3 * 60 * 1000,
+        latePenaltyRate: 0.05, requiredLevel: 3, requiredAssets: 50_000,
+      },
+      {
+        id: 'loan-aramesh-l', name: 'وام کلان',
+        amount: 250_000, interestRate: 0.08, totalPayback: 270_000,
+        installmentCount: 12, installmentAmount: 22_500,
+        installmentIntervalMs: 3 * 60 * 1000,
+        latePenaltyRate: 0.05, requiredLevel: 6, requiredAssets: 150_000,
+      },
+    ],
+    depositInterestRate: 0.02,
+    depositInterestIntervalMs: 5 * 60 * 1000,
+    earlyWithdrawalPenaltyRate: 0.0,
+    minDepositAmount: 10_000,
+    maxDepositAmount: 500_000,
+  },
+  {
+    id: 'bank-forsat',
+    name: 'بانک فرصت',
+    icon: '🏛️',
+    description: 'بانکی متعادل با سود خوب و شرایط منصفانه.',
+    personality: 'moderate',
+    unlockLevel: 3,
+    loanPackages: [
+      {
+        id: 'loan-forsat-s', name: 'وام رشد',
+        amount: 80_000, interestRate: 0.08, totalPayback: 86_400,
+        installmentCount: 6, installmentAmount: 14_400,
+        installmentIntervalMs: 2.5 * 60 * 1000,
+        latePenaltyRate: 0.10, requiredLevel: 3, requiredAssets: 30_000,
+      },
+      {
+        id: 'loan-forsat-m', name: 'وام توسعه',
+        amount: 200_000, interestRate: 0.10, totalPayback: 220_000,
+        installmentCount: 10, installmentAmount: 22_000,
+        installmentIntervalMs: 2.5 * 60 * 1000,
+        latePenaltyRate: 0.10, requiredLevel: 5, requiredAssets: 100_000,
+      },
+      {
+        id: 'loan-forsat-l', name: 'وام سرمایه‌گذاری',
+        amount: 400_000, interestRate: 0.12, totalPayback: 448_000,
+        installmentCount: 14, installmentAmount: 32_000,
+        installmentIntervalMs: 2.5 * 60 * 1000,
+        latePenaltyRate: 0.10, requiredLevel: 8, requiredAssets: 250_000,
+      },
+    ],
+    depositInterestRate: 0.035,
+    depositInterestIntervalMs: 4 * 60 * 1000,
+    earlyWithdrawalPenaltyRate: 0.3,
+    minDepositAmount: 20_000,
+    maxDepositAmount: 800_000,
+  },
+  {
+    id: 'bank-atlas',
+    name: 'بانک اطلس',
+    icon: '💎',
+    description: 'بانکی پرریسک با سودهای بالا اما جریمه‌های سنگین!',
+    personality: 'risky',
+    unlockLevel: 5,
+    loanPackages: [
+      {
+        id: 'loan-atlas-s', name: 'وام جسورانه',
+        amount: 150_000, interestRate: 0.15, totalPayback: 172_500,
+        installmentCount: 6, installmentAmount: 28_750,
+        installmentIntervalMs: 2 * 60 * 1000,
+        latePenaltyRate: 0.20, requiredLevel: 5, requiredAssets: 80_000,
+      },
+      {
+        id: 'loan-atlas-m', name: 'وام بزرگ',
+        amount: 350_000, interestRate: 0.18, totalPayback: 413_000,
+        installmentCount: 10, installmentAmount: 41_300,
+        installmentIntervalMs: 2 * 60 * 1000,
+        latePenaltyRate: 0.20, requiredLevel: 8, requiredAssets: 200_000,
+      },
+      {
+        id: 'loan-atlas-l', name: 'وام طلایی',
+        amount: 700_000, interestRate: 0.22, totalPayback: 854_000,
+        installmentCount: 14, installmentAmount: 61_000,
+        installmentIntervalMs: 2 * 60 * 1000,
+        latePenaltyRate: 0.20, requiredLevel: 12, requiredAssets: 500_000,
+      },
+    ],
+    depositInterestRate: 0.06,
+    depositInterestIntervalMs: 3 * 60 * 1000,
+    earlyWithdrawalPenaltyRate: 0.5,
+    minDepositAmount: 50_000,
+    maxDepositAmount: 1_500_000,
   },
 ];

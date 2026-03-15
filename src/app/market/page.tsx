@@ -5,13 +5,15 @@ import { useGameStore } from '@/store/gameStore';
 import ProductPriceCard from '@/components/market/ProductPriceCard';
 import SpecialOrderCard from '@/components/market/SpecialOrderCard';
 import AcceptedOrderCard from '@/components/market/AcceptedOrderCard';
-import { TrendingUp, ClipboardList, Package } from 'lucide-react';
+import BankingTab from '@/components/market/BankingTab';
+import { TrendingUp, ClipboardList, Package, Landmark } from 'lucide-react';
 
-type Tab = 'orders' | 'my_orders' | 'prices';
+type Tab = 'orders' | 'my_orders' | 'prices' | 'banking';
 
 export default function MarketPage() {
   const products = useGameStore((s) => s.products);
   const orderBoard = useGameStore((s) => s.orderBoard);
+  const banking = useGameStore((s) => s.banking);
   const [tab, setTab] = useState<Tab>('orders');
 
   // Sort products: hot (>20% change) first
@@ -25,10 +27,13 @@ export default function MarketPage() {
     (p) => Math.abs((p.currentPrice - p.basePrice) / p.basePrice) >= 0.2
   ).length;
 
+  const bankingCount = banking.loans.length + banking.deposits.length;
+
   const tabs: { key: Tab; label: string; icon: typeof TrendingUp; count: number }[] = [
-    { key: 'orders', label: 'تابلو سفارشات', icon: ClipboardList, count: orderBoard.availableOrders.length },
+    { key: 'orders', label: 'سفارشات', icon: ClipboardList, count: orderBoard.availableOrders.length },
     { key: 'my_orders', label: 'سفارشات من', icon: Package, count: orderBoard.acceptedOrders.length },
     { key: 'prices', label: 'قیمت‌ها', icon: TrendingUp, count: products.length },
+    { key: 'banking', label: 'بانک', icon: Landmark, count: bankingCount },
   ];
 
   return (
@@ -131,6 +136,9 @@ export default function MarketPage() {
           ))}
         </div>
       )}
+
+      {/* ==================== بانک ==================== */}
+      {tab === 'banking' && <BankingTab />}
     </div>
   );
 }
