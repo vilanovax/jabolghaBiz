@@ -27,6 +27,8 @@ import {
   OrderBoardState,
   BankingState,
   BankTemplate,
+  AIRival,
+  RivalsState,
 } from '@/types';
 import {
   mockPlayer,
@@ -59,6 +61,9 @@ import {
   ORDER_CONFIG,
   BANK_TEMPLATES,
   BANK_CONFIG,
+  RIVAL_TEMPLATES,
+  RIVAL_CONFIG,
+  RIVAL_NEWS_TEMPLATES,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -268,6 +273,11 @@ interface GameState {
   deposit: (bankId: string, amount: number) => boolean;
   withdraw: (bankId: string) => void;
   accrueDepositInterest: () => void;
+
+  // AI Rivals
+  rivals: RivalsState;
+  tickRivals: () => void;
+  getDynamicLeaderboard: () => LeaderboardEntry[];
 
   // Achievement Toast
   achievementToastQueue: Achievement[];
@@ -809,6 +819,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   // ==================== موتور اقتصاد — بروزرسانی قیمت‌های بازار ====================
 
   updateMarketPrices: () => {
+    const activeRivals = get().rivals.rivals.filter((r) => r.active);
     set((state) => ({
       products: state.products.map((prod) => {
         // تغییر تصادفی ±5-15%
@@ -822,8 +833,17 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         );
 
         // تغییر عرضه و تقاضا
-        const supplyChange = Math.round((Math.random() - 0.5) * 50);
-        const demandChange = Math.round((Math.random() - 0.5) * 50);
+        let supplyChange = Math.round((Math.random() - 0.5) * 50);
+        let demandChange = Math.round((Math.random() - 0.5) * 50);
+
+        // تاثیر رقبا روی عرضه و تقاضا
+        for (const rival of activeRivals) {
+          if (Math.random() < rival.marketInfluence * 0.3) {
+            const shift = Math.round((Math.random() - 0.5) * RIVAL_CONFIG.marketShiftRange * rival.marketInfluence);
+            supplyChange += shift;
+            demandChange -= shift;
+          }
+        }
 
         // بروزرسانی تاریخچه قیمت (۷ عنصر آخر)
         const newHistory = [...prod.priceHistory.slice(-6), newPrice];
@@ -949,12 +969,46 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       });
     }
 
+    // Rival order snatching
+    const activeRivals = get().rivals.rivals.filter((r) => r.active);
+    const snatchedIndices: number[] = [];
+    const snatchNews: NewsArticle[] = [];
+    const rivalUpdates: Record<string, number> = {}; // id -> wealth bonus
+
+    for (let i = 0; i < newOrders.length; i++) {
+      for (const rival of activeRivals) {
+        if (Math.random() < rival.orderAggressiveness * RIVAL_CONFIG.orderSnatchBaseChance) {
+          snatchedIndices.push(i);
+          rivalUpdates[rival.id] = (rivalUpdates[rival.id] || 0) + Math.round(newOrders[i].totalPayment * 0.3);
+          const tpl = RIVAL_NEWS_TEMPLATES.orderSnatched(rival.name, newOrders[i].productName, newOrders[i].totalPayment);
+          snatchNews.push({
+            id: `news-rival-order-${now}-${i}`,
+            title: tpl.title, summary: tpl.summary,
+            category: 'rival', icon: rival.avatar, timestamp: now,
+          });
+          break; // only one rival snatches each order
+        }
+      }
+    }
+
+    const survivingOrders = newOrders.filter((_, i) => !snatchedIndices.includes(i));
+    const currentNews = get().news;
+
+    // Apply rival wealth bonuses
+    if (Object.keys(rivalUpdates).length > 0) {
+      const updatedRivals = get().rivals.rivals.map((r) =>
+        rivalUpdates[r.id] ? { ...r, wealth: r.wealth + rivalUpdates[r.id] } : r
+      );
+      set({ rivals: { ...get().rivals, rivals: updatedRivals } });
+    }
+
     set({
       orderBoard: {
         ...orderBoard,
-        availableOrders: [...orderBoard.availableOrders, ...newOrders],
+        availableOrders: [...orderBoard.availableOrders, ...survivingOrders],
         lastOrderGenerationAt: now,
       },
+      news: [...snatchNews, ...currentNews].slice(0, 20),
     });
   },
 
@@ -1709,11 +1763,132 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     }
   },
 
+  // ==================== AI Rivals ====================
+
+  rivals: {
+    rivals: RIVAL_TEMPLATES.map((t) => ({
+      ...t,
+      wealth: t.unlockLevel * 50_000,
+      level: Math.max(1, t.unlockLevel - 2),
+      businessCount: Math.max(1, Math.floor(t.unlockLevel / 3)),
+      lastLevelUpAt: 0,
+      lastNewsAt: 0,
+      active: false,
+    })),
+    lastRivalTickAt: 0,
+  },
+
+  tickRivals: () => {
+    const { player, rivals, news } = get();
+    const now = Date.now();
+    const updatedNews = [...news];
+    let changed = false;
+
+    const updatedRivals = rivals.rivals.map((rival) => {
+      const r = { ...rival };
+
+      // Unlock check
+      if (!r.active && player.level >= r.unlockLevel) {
+        r.active = true;
+        changed = true;
+        const tpl = RIVAL_NEWS_TEMPLATES.unlocked(r.name);
+        updatedNews.unshift({
+          id: `news-rival-unlock-${r.id}-${now}`,
+          title: tpl.title,
+          summary: tpl.summary,
+          category: 'rival',
+          icon: r.avatar,
+          timestamp: now,
+          isBreaking: true,
+        });
+      }
+
+      if (!r.active) return r;
+      changed = true;
+
+      // Wealth growth
+      const mult = RIVAL_CONFIG.personalityMultipliers[r.personality] ?? 1.0;
+      const growth = r.baseGrowthRate * r.level * mult * (1 + Math.random() * 0.3);
+      r.wealth = Math.round(r.wealth + growth);
+
+      // Level up check
+      if (r.level < RIVAL_CONFIG.maxRivalLevel && r.wealth > r.level * RIVAL_CONFIG.levelUpWealthThreshold) {
+        r.level += 1;
+        r.lastLevelUpAt = now;
+        if (Math.random() < 0.4) r.businessCount += 1;
+        if (now - r.lastNewsAt > RIVAL_CONFIG.newsMinIntervalMs) {
+          const tpl = RIVAL_NEWS_TEMPLATES.levelUp(r.name, r.level);
+          updatedNews.unshift({
+            id: `news-rival-lvl-${r.id}-${now}`,
+            title: tpl.title, summary: tpl.summary,
+            category: 'rival', icon: r.avatar, timestamp: now,
+          });
+          r.lastNewsAt = now;
+        }
+      }
+
+      // Random news (~10% chance, throttled)
+      if (Math.random() < 0.10 && now - r.lastNewsAt > RIVAL_CONFIG.newsMinIntervalMs) {
+        const roll = Math.random();
+        let tpl;
+        if (roll < 0.4) {
+          tpl = RIVAL_NEWS_TEMPLATES.newBusiness(r.name, r.businessCount);
+        } else {
+          // Wealth milestone (round to nearest 100k)
+          const milestone = Math.floor(r.wealth / 100_000) * 100_000;
+          tpl = RIVAL_NEWS_TEMPLATES.wealthMilestone(r.name, milestone);
+        }
+        updatedNews.unshift({
+          id: `news-rival-${r.id}-${now}`,
+          title: tpl.title, summary: tpl.summary,
+          category: 'rival', icon: r.avatar, timestamp: now,
+        });
+        r.lastNewsAt = now;
+      }
+
+      return r;
+    });
+
+    if (changed) {
+      set({
+        rivals: { rivals: updatedRivals, lastRivalTickAt: now },
+        news: updatedNews.slice(0, 20),
+      });
+    }
+  },
+
+  getDynamicLeaderboard: () => {
+    const { player, businesses, rivals } = get();
+    const playerEntry: LeaderboardEntry = {
+      rank: 0,
+      playerId: player.id,
+      username: player.username,
+      avatar: player.avatar,
+      wealth: player.balance,
+      level: player.level,
+      businessCount: businesses.length,
+    };
+    const rivalEntries: LeaderboardEntry[] = rivals.rivals
+      .filter((r) => r.active)
+      .map((r) => ({
+        rank: 0,
+        playerId: r.id,
+        username: r.name,
+        avatar: r.avatar,
+        wealth: r.wealth,
+        level: r.level,
+        businessCount: r.businessCount,
+      }));
+    return [playerEntry, ...rivalEntries]
+      .sort((a, b) => b.wealth - a.wealth)
+      .map((entry, i) => ({ ...entry, rank: i + 1 }));
+  },
+
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
-  version: 4,
+  version: 5,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -1803,6 +1978,22 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         };
       }
     }
+    if (version < 5) {
+      if (!state.rivals) {
+        state.rivals = {
+          rivals: RIVAL_TEMPLATES.map((t) => ({
+            ...t,
+            wealth: t.unlockLevel * 50_000,
+            level: Math.max(1, t.unlockLevel - 2),
+            businessCount: Math.max(1, Math.floor(t.unlockLevel / 3)),
+            lastLevelUpAt: 0,
+            lastNewsAt: 0,
+            active: false,
+          })),
+          lastRivalTickAt: 0,
+        };
+      }
+    }
     return state;
   },
   partialize: (state) => ({
@@ -1819,5 +2010,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     life: state.life,
     orderBoard: state.orderBoard,
     banking: state.banking,
+    rivals: state.rivals,
   }),
 }));

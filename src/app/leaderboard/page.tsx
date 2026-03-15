@@ -6,7 +6,8 @@ import Card from '@/components/ui/Card';
 import { Trophy } from 'lucide-react';
 
 export default function LeaderboardPage() {
-  const leaderboard = useGameStore((s) => s.leaderboard);
+  const getDynamicLeaderboard = useGameStore((s) => s.getDynamicLeaderboard);
+  const leaderboard = getDynamicLeaderboard();
 
   const totalWealth = leaderboard.reduce((sum, e) => sum + e.wealth, 0);
 

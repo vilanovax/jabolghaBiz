@@ -261,6 +261,32 @@ export interface LeaderboardEntry {
   businessCount: number;
 }
 
+// ==================== AI RIVALS ====================
+
+export type RivalPersonality = 'aggressive' | 'steady' | 'cautious' | 'opportunist' | 'flashy' | 'grinder';
+
+export interface AIRival {
+  id: string;
+  name: string;
+  avatar: string;
+  personality: RivalPersonality;
+  unlockLevel: number;
+  wealth: number;
+  level: number;
+  businessCount: number;
+  baseGrowthRate: number;
+  orderAggressiveness: number;  // 0-1
+  marketInfluence: number;      // 0-1
+  lastLevelUpAt: number;
+  lastNewsAt: number;
+  active: boolean;
+}
+
+export interface RivalsState {
+  rivals: AIRival[];
+  lastRivalTickAt: number;
+}
+
 // ==================== LIFE ====================
 
 export type LifeActionCategory = 'food' | 'rest' | 'education' | 'fitness' | 'entertainment';
@@ -300,7 +326,7 @@ export interface FridayMarketItem {
 
 // ==================== NEWS ====================
 
-export type NewsCategory = 'market' | 'ranking' | 'gold' | 'currency' | 'crypto' | 'stock' | 'event';
+export type NewsCategory = 'market' | 'ranking' | 'gold' | 'currency' | 'crypto' | 'stock' | 'event' | 'rival';
 
 export interface NewsArticle {
   id: string;

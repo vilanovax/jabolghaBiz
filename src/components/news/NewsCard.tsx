@@ -11,6 +11,7 @@ const categoryLabels: Record<NewsCategory, string> = {
   crypto: 'رمزارز',
   stock: 'بورس',
   event: 'رویداد',
+  rival: 'رقیب',
 };
 
 const categoryColors: Record<NewsCategory, string> = {
@@ -21,6 +22,7 @@ const categoryColors: Record<NewsCategory, string> = {
   crypto: '#8b5cf6',
   stock: '#3b82f6',
   event: '#ec4899',
+  rival: '#f97316',
 };
 
 const categoryGlow: Record<NewsCategory, 'primary' | 'profit' | 'gold'> = {
@@ -31,6 +33,7 @@ const categoryGlow: Record<NewsCategory, 'primary' | 'profit' | 'gold'> = {
   crypto: 'primary',
   stock: 'primary',
   event: 'primary',
+  rival: 'primary',
 };
 
 function timeAgo(timestamp: number): string {

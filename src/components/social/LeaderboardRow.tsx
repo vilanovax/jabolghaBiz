@@ -28,6 +28,7 @@ const rankLabels: Record<number, string> = {
 export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
   const playerId = useGameStore((s) => s.player.id);
   const isMe = entry.playerId === playerId;
+  const isRival = entry.playerId.startsWith('rival-');
 
   return (
     <div
@@ -41,7 +42,7 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       <span className="text-2xl">{entry.avatar}</span>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-bold truncate ${isMe ? 'text-indigo-300' : 'text-fg'}`}>
-          {entry.username} {isMe && '(شما)'}
+          {entry.username} {isMe && '(شما)'} {isRival && <span className="text-[8px] text-fg-faint ml-1">🤖 رقیب</span>}
         </p>
         <p className="text-[10px] text-fg-muted">
           سطح {entry.level} · {entry.businessCount} کسب‌وکار

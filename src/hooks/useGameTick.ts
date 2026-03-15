@@ -10,6 +10,7 @@ const STAT_DECAY_CHECK = 30 * 1000;     // چک کاهش stat هر ۳۰ ثانی
 const ORDER_CHECK_INTERVAL = 60 * 1000; // چک سفارشات هر ۶۰ ثانیه
 const INSTALLMENT_CHECK_INTERVAL = 60 * 1000; // چک اقساط هر ۶۰ ثانیه
 const DEPOSIT_CHECK_INTERVAL = 60 * 1000;     // چک سود سپرده هر ۶۰ ثانیه
+const RIVAL_TICK_INTERVAL = 60 * 1000;        // تیک رقبا هر ۶۰ ثانیه
 
 export function useGameTick() {
   const tickBusinesses = useGameStore((s) => s.tickBusinesses);
@@ -21,12 +22,14 @@ export function useGameTick() {
   const expireOrders = useGameStore((s) => s.expireOrders);
   const processInstallments = useGameStore((s) => s.processInstallments);
   const accrueDepositInterest = useGameStore((s) => s.accrueDepositInterest);
+  const tickRivals = useGameStore((s) => s.tickRivals);
   const lastMarketUpdate = useRef(Date.now());
   const lastEventCheck = useRef(Date.now());
   const lastDecayCheck = useRef(Date.now());
   const lastOrderCheck = useRef(Date.now());
   const lastInstallmentCheck = useRef(Date.now());
   const lastDepositCheck = useRef(Date.now());
+  const lastRivalTick = useRef(Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,8 +74,14 @@ export function useGameTick() {
         accrueDepositInterest();
         lastDepositCheck.current = now;
       }
+
+      // تیک رقبای AI هر ۶۰ ثانیه
+      if (now - lastRivalTick.current >= RIVAL_TICK_INTERVAL) {
+        tickRivals();
+        lastRivalTick.current = now;
+      }
     }, TICK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders, processInstallments, accrueDepositInterest]);
+  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders, processInstallments, accrueDepositInterest, tickRivals]);
 }

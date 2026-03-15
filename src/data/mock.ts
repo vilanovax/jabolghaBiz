@@ -20,6 +20,7 @@ import {
   PlayerStats,
   OrderBoardState,
   BankTemplate,
+  AIRival,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -1385,3 +1386,72 @@ export const BANK_TEMPLATES: BankTemplate[] = [
     maxDepositAmount: 1_500_000,
   },
 ];
+
+// ==================== AI RIVALS ====================
+
+export const RIVAL_CONFIG = {
+  tickIntervalMs: 60 * 1000,
+  newsMinIntervalMs: 5 * 60 * 1000,
+  levelUpWealthThreshold: 500_000,
+  maxRivalLevel: 20,
+  orderSnatchBaseChance: 0.15,
+  marketShiftRange: 20,
+  personalityMultipliers: {
+    aggressive: 1.3,
+    steady: 1.0,
+    cautious: 0.7,
+    opportunist: 1.1,
+    flashy: 1.2,
+    grinder: 0.9,
+  } as Record<string, number>,
+};
+
+export const RIVAL_TEMPLATES: Omit<AIRival, 'wealth' | 'level' | 'businessCount' | 'lastLevelUpAt' | 'lastNewsAt' | 'active'>[] = [
+  {
+    id: 'rival-1', name: 'حاج‌آقا بازاری', avatar: '🧔', personality: 'steady',
+    unlockLevel: 3, baseGrowthRate: 150, orderAggressiveness: 0.08, marketInfluence: 0.3,
+  },
+  {
+    id: 'rival-2', name: 'خانم کارآفرین', avatar: '👩‍💼', personality: 'opportunist',
+    unlockLevel: 5, baseGrowthRate: 200, orderAggressiveness: 0.15, marketInfluence: 0.4,
+  },
+  {
+    id: 'rival-3', name: 'آقای ملک‌پور', avatar: '🏠', personality: 'cautious',
+    unlockLevel: 8, baseGrowthRate: 100, orderAggressiveness: 0.05, marketInfluence: 0.2,
+  },
+  {
+    id: 'rival-4', name: 'سلطان دیجیتال', avatar: '🤖', personality: 'aggressive',
+    unlockLevel: 10, baseGrowthRate: 350, orderAggressiveness: 0.22, marketInfluence: 0.6,
+  },
+  {
+    id: 'rival-5', name: 'جناب سرمایه‌دار', avatar: '💎', personality: 'flashy',
+    unlockLevel: 13, baseGrowthRate: 400, orderAggressiveness: 0.18, marketInfluence: 0.5,
+  },
+  {
+    id: 'rival-6', name: 'استاد صنعت', avatar: '🏭', personality: 'grinder',
+    unlockLevel: 16, baseGrowthRate: 250, orderAggressiveness: 0.12, marketInfluence: 0.35,
+  },
+];
+
+export const RIVAL_NEWS_TEMPLATES = {
+  orderSnatched: (name: string, product: string, amount: number) => ({
+    title: `${name} سفارش ${product} را قاپید!`,
+    summary: `${name} سفارشی به مبلغ ${amount.toLocaleString('fa-IR')} تومان را قبل از شما قبول کرد.`,
+  }),
+  levelUp: (name: string, level: number) => ({
+    title: `${name} به سطح ${level} رسید`,
+    summary: `رقیب شما ${name} پیشرفت کرد و حالا در سطح ${level} فعالیت می‌کند.`,
+  }),
+  newBusiness: (name: string, count: number) => ({
+    title: `${name} شرکت جدید زد`,
+    summary: `${name} حالا ${count} کسب‌وکار فعال دارد.`,
+  }),
+  wealthMilestone: (name: string, amount: number) => ({
+    title: `${name} از مرز ${amount.toLocaleString('fa-IR')} تومان گذشت`,
+    summary: `ثروت ${name} به بیش از ${amount.toLocaleString('fa-IR')} تومان رسید!`,
+  }),
+  unlocked: (name: string) => ({
+    title: `رقیب جدید: ${name}`,
+    summary: `${name} وارد بازار شد و با شما رقابت می‌کند!`,
+  }),
+};
