@@ -502,7 +502,14 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           const unitPrice = marketProduct ? marketProduct.currentPrice : 1000;
           const eventMult = get().getEventMultiplier(biz.type);
           const rushMultiplier = get().isRushHourActive() ? RUSH_HOUR.multiplier : 1;
-          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier);
+          // Profit margin multiplier from unlocked products (e.g. برند خصوصی, کارت وفاداری)
+          const productRevMult = 1 + biz.products
+            .filter((p) => p.unlocked && p.revenueMultiplier)
+            .reduce((sum, p) => sum + (p.revenueMultiplier ?? 0), 0);
+          // Chain store bonus: owning 2+ supermarkets at Tier 5 (Lv18+) gives +15% to all
+          const chainBonus = biz.type === 'supermarket' && biz.level >= 18 &&
+            state.businesses.filter((b) => b.type === 'supermarket').length >= 2 ? 0.15 : 0;
+          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * (productRevMult + chainBonus));
           // Subtract expenses proportional to elapsed time
           const totalExpenses = calcTotalExpenses(biz);
           const expensePerSec = totalExpenses / biz.cycleDuration;

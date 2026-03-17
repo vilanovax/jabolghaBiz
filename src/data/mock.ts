@@ -538,14 +538,23 @@ const factoryProducts: BusinessProduct[] = [
 ];
 
 const supermarketProducts: BusinessProduct[] = [
-  { id: 'bp-sm1', name: 'بخش نانوایی', icon: '🍞', description: 'تولید و فروش نان تازه', unlockCost: 20_000, productionBoost: 2, capacityBoost: 10, unlocked: false,
+  // ---- محور ظرفیت انبار (Stock Capacity) ----
+  { id: 'bp-sm1', name: 'بخش نانوایی', icon: '🍞', description: '+۲ تولید، +۱۰ ظرفیت انبار', unlockCost: 20_000, productionBoost: 2, capacityBoost: 10, unlocked: false,
     requirements: { businessLevel: 5 },
   },
-  { id: 'bp-sm2', name: 'بخش آنلاین', icon: '🛒', description: 'فروشگاه اینترنتی و ارسال به درب منزل', unlockCost: 45_000, productionBoost: 3, capacityBoost: 15, unlocked: false,
-    requirements: { businessLevel: 12 },
+  { id: 'bp-sm3', name: 'بازار میوه و تره‌بار', icon: '🍎', description: '+۳ تولید، +۲۵ ظرفیت انبار', unlockCost: 60_000, productionBoost: 3, capacityBoost: 25, unlocked: false,
+    requirements: { businessLevel: 14, officeLevel: 3 },
   },
-  { id: 'bp-sm3', name: 'بازار میوه و تره‌بار', icon: '🍎', description: 'بخش ویژه محصولات تازه', unlockCost: 60_000, productionBoost: 3, capacityBoost: 20, unlocked: false,
-    requirements: { businessLevel: 18, officeLevel: 3 },
+  // ---- محور سرعت فروش (Sales Speed) ----
+  { id: 'bp-sm2', name: 'فروشگاه آنلاین', icon: '🛒', description: '+۳ تولید، +۱۵ ظرفیت — فروش آنلاین ۲۴ساعته', unlockCost: 45_000, productionBoost: 3, capacityBoost: 15, unlocked: false,
+    requirements: { businessLevel: 10 },
+  },
+  // ---- محور حاشیه سود (Profit Margin) ----
+  { id: 'bp-sm4', name: 'برند خصوصی', icon: '🏷️', description: 'محصولات با برچسب اختصاصی — +۱۰٪ درآمد هر فروش', unlockCost: 55_000, productionBoost: 0, capacityBoost: 0, revenueMultiplier: 0.10, unlocked: false,
+    requirements: { businessLevel: 9 },
+  },
+  { id: 'bp-sm5', name: 'کارت وفاداری', icon: '💳', description: 'باشگاه مشتریان — +۱۵٪ درآمد و مشتری دائمی', unlockCost: 90_000, productionBoost: 0, capacityBoost: 0, revenueMultiplier: 0.15, unlocked: false,
+    requirements: { businessLevel: 14, officeLevel: 2 },
   },
 ];
 
@@ -734,7 +743,7 @@ export const businessTemplates: BusinessTemplate[] = [
     description: 'فروش مستقیم محصولات. حجم بالا، درآمد پایدار.',
     startCost: 70_000, baseProductionRate: 6, baseSaleRate: 4, baseInventoryCapacity: 50,
     productId: 'prod-3', cycleDuration: 90, baseExpenses: 1_500,
-    maxEmployees: 6, maxProducts: 2, maxLevel: 20,
+    maxEmployees: 6, maxProducts: 5, maxLevel: 20,
     initialEquipment: 'قفسه‌ها و صندوق فروش',
     availableEmployees: supermarketEmployees, availableProducts: supermarketProducts,
   },
@@ -1116,6 +1125,10 @@ export const SPECIALTY_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'sp-sm-3', title: 'گردش مالی بالا', description: '۵۰۰,۰۰۰ تومان از سوپرمارکت کسب کن', icon: '💰', type: 'one_time', condition: 'earn_total', target: 500_000, reward: 60_000, businessTypeFilter: 'supermarket' },
   { id: 'sp-sm-4', title: 'زنجیره فروشگاهی', description: '۲ سوپرمارکت همزمان داشته باش', icon: '🏬', type: 'one_time', condition: 'own_businesses', target: 2, reward: 80_000, businessTypeFilter: 'supermarket' },
   { id: 'sp-sm-5', title: 'هایپرمارکت', description: 'سوپرمارکت رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-6', title: 'فروش کلان', description: '۱,۰۰۰ واحد کالا در سوپرمارکت بفروش', icon: '📊', type: 'one_time', condition: 'sell_units', target: 1_000, reward: 120_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-7', title: 'سفارش‌های ویژه', description: '۵ سفارش ویژه در سوپرمارکت تکمیل کن', icon: '📦', type: 'one_time', condition: 'complete_special_order', target: 5, reward: 80_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-8', title: 'درآمد میلیونی', description: '۱,۰۰۰,۰۰۰ تومان از سوپرمارکت کسب کن', icon: '💎', type: 'one_time', condition: 'earn_total', target: 1_000_000, reward: 200_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-9', title: 'شبکه فروشگاهی', description: 'سوپرمارکت رو به سطح ۱۵ برسون', icon: '🏆', type: 'one_time', condition: 'reach_business_level', target: 15, reward: 300_000, businessTypeFilter: 'supermarket' },
   // ---- RESTAURANT ----
   { id: 'sp-rs-1', title: 'اولین سرویس', description: '۵۰ واحد غذا بفروش', icon: '🍽️', type: 'one_time', condition: 'sell_units', target: 50, reward: 12_000, businessTypeFilter: 'restaurant' },
   { id: 'sp-rs-2', title: 'رستوران واقعی', description: 'رستوران رو به سطح ۵ برسون', icon: '⭐', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 35_000, businessTypeFilter: 'restaurant' },

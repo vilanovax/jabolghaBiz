@@ -140,6 +140,7 @@ export interface BusinessProduct {
   unlockCost: number;
   productionBoost: number;  // واحد اضافه تولید در هر سیکل
   capacityBoost: number;    // ظرفیت اضافه انبار
+  revenueMultiplier?: number; // ضریب اضافه درآمد (مثلاً 0.1 = +10% سود)
   unlocked: boolean;
   requirements?: ProductRequirements;
 }

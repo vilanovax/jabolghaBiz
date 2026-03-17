@@ -107,6 +107,12 @@ export default function BusinessDetailPage() {
   const inventoryPercent = effectiveCapacity > 0 ? (biz.inventory.quantity / effectiveCapacity) * 100 : 0;
   const inventoryColor = inventoryPercent > 90 ? '#EF4444' : inventoryPercent < 30 ? '#22C55E' : '#3B82F6';
 
+  // حاشیه سود از محصولات آنلاک‌شده
+  const productRevMult = biz.products
+    .filter((p) => p.unlocked && p.revenueMultiplier)
+    .reduce((sum, p) => sum + (p.revenueMultiplier ?? 0), 0);
+  const profitMarginPct = Math.round(productRevMult * 100);
+
   const nextBaseProduction = Math.round(biz.baseProductionRate * 1.15);
   const nextUpgradeCost = Math.round(biz.upgradeCost * 1.5);
   const nextEffectiveProduction = calcEffectiveRevenue({ ...biz, baseProductionRate: nextBaseProduction });
@@ -302,10 +308,11 @@ export default function BusinessDetailPage() {
               { icon: '⚙️', label: 'تولید', value: `${effectiveProduction} ${vocab.productUnit}/سیکل` },
               { icon: '🛒', label: 'فروش خودکار', value: `${effectiveSaleRate} ${vocab.productUnit}/دقیقه` },
               { icon: '📦', label: `ظرفیت ${vocab.inventoryName}`, value: `${biz.inventory.quantity}/${effectiveCapacity}` },
+              ...(profitMarginPct > 0 ? [{ icon: '💹', label: 'حاشیه سود اضافه', value: `+${profitMarginPct}٪` }] : []),
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between py-1 border-b border-line-subtle/50 last:border-0">
                 <span className="text-fg-muted">{row.icon} {row.label}</span>
-                <span className="text-fg font-fa font-bold">{row.value}</span>
+                <span className={`font-fa font-bold ${row.icon === '💹' ? 'text-[#22C55E]' : 'text-fg'}`}>{row.value}</span>
               </div>
             ))}
           </div>
