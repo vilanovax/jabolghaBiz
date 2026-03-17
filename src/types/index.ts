@@ -29,6 +29,15 @@ export type BusinessType =
   | 'transport'
   | 'farming';
 
+// ==================== SPECIALTY ====================
+
+export interface SpecialtyMilestone {
+  levelThreshold: number;
+  name: string;
+  icon: string;
+  description: string;
+}
+
 export interface Neighborhood {
   id: string;
   name: string;
@@ -545,6 +554,7 @@ export interface MissionTemplate {
   target: number;            // هدف (مثلاً ۳ بار جمع‌آوری)
   reward: number;            // جایزه تومانی
   xpReward?: number;         // جایزه تجربه
+  businessTypeFilter?: BusinessType; // فقط برای ماموریت‌های تخصصی
 }
 
 export interface ActiveMission {
@@ -563,6 +573,7 @@ export interface ActiveMission {
   claimed: boolean;          // آیا جایزه دریافت شده؟
   assignedAt: number;        // timestamp اختصاص
   expiresAt: number;         // daily=24h, weekly=7d, one_time=never
+  businessTypeFilter?: BusinessType; // فقط برای ماموریت‌های تخصصی
 }
 
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'diamond';

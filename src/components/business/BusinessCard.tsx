@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Business, BusinessTemplate } from '@/types';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock } from '@/store/gameStore';
-import { businessTemplates, getNeighborhood, getCityByNeighborhood } from '@/data/mock';
+import { businessTemplates, getNeighborhood, getCityByNeighborhood, SPECIALTY_MILESTONES } from '@/data/mock';
 import EventBanner from '@/components/hooks/EventBanner';
 import Link from 'next/link';
 
@@ -30,6 +30,8 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const template = businessTemplates.find((t) => t.type === business.type);
   const nextUnlock = template ? getNextUnlock(business, template) : null;
   const neighborhood = business.neighborhoodId ? getNeighborhood(business.neighborhoodId) : undefined;
+  const specialtyMilestones = SPECIALTY_MILESTONES[business.type];
+  const currentTier = [...specialtyMilestones].reverse().find((m) => business.level >= m.levelThreshold) ?? specialtyMilestones[0];
   const city = business.neighborhoodId ? getCityByNeighborhood(business.neighborhoodId) : undefined;
   const trafficMult = neighborhood ? neighborhood.customerTraffic : 1.0;
   const effectiveCycleDuration = Math.max(10, Math.round(business.cycleDuration / trafficMult));
@@ -80,10 +82,13 @@ export default function BusinessCard({ business }: BusinessCardProps) {
         <div className="flex items-center gap-2.5">
           <span className="text-2xl">{business.icon}</span>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-black text-fg text-sm truncate">{business.name}</h3>
               <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/15 px-1.5 py-0.5 rounded">
                 LV {business.level}
+              </span>
+              <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded-[999px]">
+                {currentTier.icon} {currentTier.name}
               </span>
             </div>
             {neighborhood && city && (

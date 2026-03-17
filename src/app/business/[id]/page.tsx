@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ProgressBar from '@/components/ui/ProgressBar';
 import ProgressRing from '@/components/ui/ProgressRing';
-import { businessTemplates, getOfficeTier, getOfficeName, OFFICE_TIERS, getEmployeeUpgradeDuration, getBusinessUpgradeDuration, BUSINESS_VOCABULARY } from '@/data/mock';
+import { businessTemplates, getOfficeTier, getOfficeName, OFFICE_TIERS, getEmployeeUpgradeDuration, getBusinessUpgradeDuration, BUSINESS_VOCABULARY, SPECIALTY_MILESTONES } from '@/data/mock';
 import {
   ArrowUpCircle, Users, Package, ChevronRight,
   Lock, Unlock, Coins, Building2, X, ChevronUp,
@@ -244,6 +244,56 @@ export default function BusinessDetailPage() {
           <div className="px-1">
             <ProgressBar value={biz.level} max={biz.maxLevel} label="📊 پیشرفت سطح" showValue color="upgrade" size="md" />
           </div>
+
+          {/* تخصص */}
+          {(() => {
+            const milestones = SPECIALTY_MILESTONES[biz.type];
+            const currentIdx = [...milestones].map((m, i) => ({ ...m, i })).reverse().find((m) => biz.level >= m.levelThreshold)?.i ?? 0;
+            const tier = milestones[currentIdx];
+            const nextTier = currentIdx < milestones.length - 1 ? milestones[currentIdx + 1] : null;
+            const levelsToNext = nextTier ? nextTier.levelThreshold - biz.level : 0;
+            const tierProgress = nextTier ? biz.level - tier.levelThreshold : tier.levelThreshold;
+            const tierMax = nextTier ? nextTier.levelThreshold - tier.levelThreshold : tier.levelThreshold;
+            return (
+              <div className="rounded-[18px] border border-[#22C55E]/20 bg-[#22C55E]/5 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{tier.icon}</span>
+                    <div>
+                      <p className="text-xs font-black text-[#22C55E]">{tier.name}</p>
+                      <p className="text-[9px] text-fg-muted">{tier.description}</p>
+                    </div>
+                  </div>
+                  {nextTier ? (
+                    <div className="text-center">
+                      <p className="text-[8px] text-fg-muted">بعدی</p>
+                      <p className="text-[10px] font-bold text-fg-secondary">{nextTier.icon} {nextTier.name}</p>
+                      <p className="text-[8px] text-fg-faint font-fa">{levelsToNext} سطح مانده</p>
+                    </div>
+                  ) : (
+                    <span className="text-[9px] text-[#F59E0B] bg-[#F59E0B]/10 px-2 py-0.5 rounded-[999px] font-bold">
+                      حداکثر تخصص
+                    </span>
+                  )}
+                </div>
+                {nextTier && (
+                  <ProgressBar value={tierProgress} max={tierMax} color="profit" size="sm" />
+                )}
+                {/* نقشه راه تایرها */}
+                <div className="flex items-center justify-between mt-2.5 px-1">
+                  {milestones.map((m) => {
+                    const reached = biz.level >= m.levelThreshold;
+                    return (
+                      <div key={m.levelThreshold} className="flex flex-col items-center gap-0.5">
+                        <span className={`text-base transition-opacity ${reached ? 'opacity-100' : 'opacity-25'}`}>{m.icon}</span>
+                        <span className={`text-[7px] font-fa ${reached ? 'text-[#22C55E]' : 'text-fg-faint'}`}>LV{m.levelThreshold}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* آمار */}
           <div className="space-y-1 text-[11px] px-1">

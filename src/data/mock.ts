@@ -21,6 +21,7 @@ import {
   OrderBoardState,
   BankTemplate,
   AIRival,
+  SpecialtyMilestone,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -1047,6 +1048,89 @@ export const ONE_TIME_MISSIONS: MissionTemplate[] = [
   { id: 'otm-100k', title: 'صد هزاری', description: 'به ۱۰۰,۰۰۰ تومان موجودی برس', icon: '💰', type: 'one_time', condition: 'reach_balance', target: 100_000, reward: 20_000, xpReward: 10 },
   { id: 'otm-500k', title: 'نیم میلیونر', description: 'به ۵۰۰,۰۰۰ تومان موجودی برس', icon: '💵', type: 'one_time', condition: 'reach_balance', target: 500_000, reward: 50_000, xpReward: 20 },
   { id: 'otm-1m', title: 'میلیونر', description: 'به ۱,۰۰۰,۰۰۰ تومان موجودی برس', icon: '🤑', type: 'one_time', condition: 'reach_balance', target: 1_000_000, reward: 100_000, xpReward: 50 },
+];
+
+// ==================== SPECIALTY MILESTONES ====================
+
+export const SPECIALTY_MILESTONES: Record<BusinessType, SpecialtyMilestone[]> = {
+  farming: [
+    { levelThreshold: 1,  name: 'زمیندار کوچک',      icon: '🌱', description: 'یه زمین کوچیک داری' },
+    { levelThreshold: 4,  name: 'کشاورز',              icon: '🚜', description: 'کشاورزی حرفه‌ای' },
+    { levelThreshold: 8,  name: 'مزرعه‌دار',           icon: '🌾', description: 'مزرعه متوسط' },
+    { levelThreshold: 13, name: 'کشاورز بزرگ',         icon: '🏡', description: 'مزرعه بزرگ' },
+    { levelThreshold: 18, name: 'امپراتوری کشاورزی',   icon: '👑', description: 'بزرگترین مزرعه‌دار' },
+  ],
+  factory: [
+    { levelThreshold: 1,  name: 'کارگاه کوچک',        icon: '🔧', description: 'یه کارگاه ساده' },
+    { levelThreshold: 4,  name: 'کارگاه',              icon: '⚙️', description: 'کارگاه فعال' },
+    { levelThreshold: 8,  name: 'کارخانه',             icon: '🏭', description: 'کارخانه متوسط' },
+    { levelThreshold: 13, name: 'صنعتگر بزرگ',         icon: '🏗️', description: 'صنعتگر برجسته' },
+    { levelThreshold: 18, name: 'غول صنعتی',           icon: '🌋', description: 'بزرگترین صنعتگر' },
+  ],
+  supermarket: [
+    { levelThreshold: 1,  name: 'دکان محلی',           icon: '🛖', description: 'یه دکان کوچیک' },
+    { levelThreshold: 4,  name: 'مینی‌مارکت',           icon: '🏪', description: 'مینی‌مارکت محله' },
+    { levelThreshold: 8,  name: 'سوپرمارکت',           icon: '🏬', description: 'سوپرمارکت شناخته‌شده' },
+    { levelThreshold: 13, name: 'هایپرمارکت',           icon: '🏢', description: 'هایپرمارکت بزرگ' },
+    { levelThreshold: 18, name: 'شبکه فروشگاهی',       icon: '🌐', description: 'زنجیره ملی' },
+  ],
+  restaurant: [
+    { levelThreshold: 1,  name: 'غذاخوری',             icon: '🍜', description: 'غذاخوری ساده' },
+    { levelThreshold: 4,  name: 'رستوران',              icon: '🍽️', description: 'رستوران واقعی' },
+    { levelThreshold: 8,  name: 'رستوران مشهور',        icon: '⭐', description: 'رستوران پرطرفدار' },
+    { levelThreshold: 13, name: 'زنجیره رستوران',       icon: '🌟', description: 'زنجیره رستورانی' },
+    { levelThreshold: 18, name: 'امپراتوری غذایی',      icon: '👑', description: 'بزرگترین زنجیره' },
+  ],
+  app_startup: [
+    { levelThreshold: 1,  name: 'فریلنسر',             icon: '💻', description: 'فریلنسر مستقل' },
+    { levelThreshold: 4,  name: 'استودیو کوچک',        icon: '🖥️', description: 'استودیوی نوپا' },
+    { levelThreshold: 8,  name: 'شرکت نرم‌افزاری',     icon: '📱', description: 'شرکت نرم‌افزاری' },
+    { levelThreshold: 13, name: 'تک‌استارتاپ',         icon: '🚀', description: 'استارتاپ موفق' },
+    { levelThreshold: 18, name: 'هلدینگ دیجیتال',      icon: '🌐', description: 'هلدینگ دیجیتال' },
+  ],
+  transport: [
+    { levelThreshold: 1,  name: 'وانت‌بار',             icon: '🚐', description: 'یه وانت ساده' },
+    { levelThreshold: 4,  name: 'آژانس تاکسی',         icon: '🚕', description: 'آژانس کوچیک' },
+    { levelThreshold: 8,  name: 'شرکت باربری',         icon: '🚚', description: 'شرکت باربری' },
+    { levelThreshold: 13, name: 'ناوگان حمل‌ونقل',     icon: '🚛', description: 'ناوگان بزرگ' },
+    { levelThreshold: 18, name: 'لجستیک ملی',          icon: '🗺️', description: 'لجستیک سراسری' },
+  ],
+};
+
+// ==================== SPECIALTY MISSIONS ====================
+
+export const SPECIALTY_MISSION_TEMPLATES: MissionTemplate[] = [
+  // ---- FARMING ----
+  { id: 'sp-fm-1', title: 'اولین برداشت', description: '۵۰ واحد محصول کشاورزی تولید کن', icon: '🌾', type: 'one_time', condition: 'produce_units', target: 50, reward: 10_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-2', title: 'کشاورز حرفه‌ای', description: 'مزرعه رو به سطح ۵ برسون', icon: '🚜', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-3', title: 'فروشنده محصول', description: '۲۰۰ واحد محصول کشاورزی بفروش', icon: '🏪', type: 'one_time', condition: 'sell_units', target: 200, reward: 35_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-4', title: 'مزرعه بزرگ', description: 'مزرعه رو به سطح ۱۰ برسون', icon: '🌻', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 70_000, businessTypeFilter: 'farming' },
+  // ---- FACTORY ----
+  { id: 'sp-fc-1', title: 'خط تولید', description: '۱۰۰ واحد محصول کارخانه تولید کن', icon: '⚙️', type: 'one_time', condition: 'produce_units', target: 100, reward: 20_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-2', title: 'کارخانه‌دار', description: 'کارخانه رو به سطح ۵ برسون', icon: '🏭', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 45_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-3', title: 'فروش صنعتی', description: '۵۰۰ واحد کالای کارخانه بفروش', icon: '📦', type: 'one_time', condition: 'sell_units', target: 500, reward: 80_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-4', title: 'غول صنعتی', description: 'کارخانه رو به سطح ۱۰ برسون', icon: '🔩', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 120_000, businessTypeFilter: 'factory' },
+  // ---- SUPERMARKET ----
+  { id: 'sp-sm-1', title: 'فروش اول', description: '۵۰ واحد کالا در سوپرمارکت بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 50, reward: 15_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-2', title: 'مینی‌مارکت', description: 'سوپرمارکت رو به سطح ۵ برسون', icon: '🏪', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 40_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-3', title: 'گردش مالی بالا', description: '۵۰۰,۰۰۰ تومان از سوپرمارکت کسب کن', icon: '💰', type: 'one_time', condition: 'earn_total', target: 500_000, reward: 60_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-4', title: 'زنجیره فروشگاهی', description: '۲ سوپرمارکت همزمان داشته باش', icon: '🏬', type: 'one_time', condition: 'own_businesses', target: 2, reward: 80_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-5', title: 'هایپرمارکت', description: 'سوپرمارکت رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'supermarket' },
+  // ---- RESTAURANT ----
+  { id: 'sp-rs-1', title: 'اولین سرویس', description: '۵۰ واحد غذا بفروش', icon: '🍽️', type: 'one_time', condition: 'sell_units', target: 50, reward: 12_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-2', title: 'رستوران واقعی', description: 'رستوران رو به سطح ۵ برسون', icon: '⭐', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 35_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-3', title: 'زنجیره رستوران', description: '۲ رستوران همزمان داشته باش', icon: '🌟', type: 'one_time', condition: 'own_businesses', target: 2, reward: 60_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-4', title: 'امپراتوری غذایی', description: 'رستوران رو به سطح ۱۰ برسون', icon: '👑', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 100_000, businessTypeFilter: 'restaurant' },
+  // ---- APP_STARTUP ----
+  { id: 'sp-as-1', title: 'اولین ماژول', description: '۳۰ ماژول نرم‌افزاری تولید کن', icon: '💻', type: 'one_time', condition: 'produce_units', target: 30, reward: 20_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-2', title: 'استارتاپ جدی', description: 'استارتاپ رو به سطح ۵ برسون', icon: '🚀', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 50_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-3', title: 'فروش دیجیتال', description: '۱۵۰ واحد محصول دیجیتال بفروش', icon: '📲', type: 'one_time', condition: 'sell_units', target: 150, reward: 75_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-4', title: 'هلدینگ دیجیتال', description: 'استارتاپ رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'app_startup' },
+  // ---- TRANSPORT ----
+  { id: 'sp-tr-1', title: 'اولین سرویس', description: '۳۰ واحد بار حمل کن', icon: '🚐', type: 'one_time', condition: 'sell_units', target: 30, reward: 15_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-2', title: 'شرکت حمل‌ونقل', description: 'شرکت حمل‌ونقل رو به سطح ۵ برسون', icon: '🚕', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 40_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-3', title: 'ناوگان', description: '۲ شرکت حمل‌ونقل همزمان داشته باش', icon: '🚛', type: 'one_time', condition: 'own_businesses', target: 2, reward: 70_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-4', title: 'لجستیک ملی', description: 'شرکت حمل‌ونقل رو به سطح ۱۰ برسون', icon: '🗺️', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 120_000, businessTypeFilter: 'transport' },
 ];
 
 // ==================== ACHIEVEMENTS ====================

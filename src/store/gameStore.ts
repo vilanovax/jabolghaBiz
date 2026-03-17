@@ -64,6 +64,7 @@ import {
   RIVAL_TEMPLATES,
   RIVAL_CONFIG,
   RIVAL_NEWS_TEMPLATES,
+  SPECIALTY_MISSION_TEMPLATES,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -252,7 +253,7 @@ interface GameState {
   // Missions & Achievements
   missions: MissionsState;
   refreshMissions: () => void;           // ریفرش ماموریت‌های روزانه/هفتگی
-  progressMission: (condition: MissionCondition, amount?: number) => void;
+  progressMission: (condition: MissionCondition, amount?: number, businessType?: BusinessType) => void;
   claimMissionReward: (missionId: string) => void;
   checkAchievements: () => void;
 
@@ -362,7 +363,12 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
     get().progressMission('create_business', 1);
     get().progressMission('own_businesses', get().businesses.length);
+    // per-type dispatch for specialty missions
+    const newBizType = template.type;
+    const typeCount = get().businesses.filter((b) => b.type === newBizType).length;
+    get().progressMission('own_businesses', typeCount, newBizType);
     get().checkAchievements();
+    get().refreshMissions(); // activate specialty missions for newly owned type
   },
 
   upgradeBusiness: (businessId) => {
@@ -413,8 +419,12 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     }));
 
     get().progressMission('upgrade_business', 1);
-    const maxLevel = Math.max(...get().businesses.map((b) => b.level));
+    const allBiz = get().businesses;
+    const maxLevel = Math.max(...allBiz.map((b) => b.level));
     get().progressMission('reach_business_level', maxLevel);
+    // per-type dispatch for specialty missions (biz.type unchanged by upgrade)
+    const typeMaxLevel = Math.max(...allBiz.filter((b) => b.type === biz.type).map((b) => b.level));
+    get().progressMission('reach_business_level', typeMaxLevel, biz.type);
     get().checkAchievements();
   },
 
@@ -426,6 +436,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       let balanceAdd = 0;
       let totalProduced = 0;
       let totalSold = 0;
+      const producedByType: Partial<Record<BusinessType, number>> = {};
+      const soldByType: Partial<Record<BusinessType, number>> = {};
+      const earnedByType: Partial<Record<BusinessType, number>> = {};
       const { stats } = state.player;
       const energyCycleMult = STAT_GAMEPLAY_EFFECTS.energyCycleMultiplier(stats.energy);
       const happinessRevMult = STAT_GAMEPLAY_EFFECTS.happinessRevenueMultiplier(stats.happiness);
@@ -462,6 +475,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           newFracProd = rawProduced - wholeProduced;
           newQuantity = Math.min(maxCap, newQuantity + wholeProduced);
           totalProduced += wholeProduced;
+          producedByType[biz.type] = (producedByType[biz.type] ?? 0) + wholeProduced;
           newLastCycleAt = biz.lastCycleAt + completedCycles * effectiveCycleDuration * 1000;
         }
 
@@ -482,6 +496,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         if (actualSold > 0) {
           newQuantity -= actualSold;
           totalSold += actualSold;
+          soldByType[biz.type] = (soldByType[biz.type] ?? 0) + actualSold;
           // Calculate income
           const marketProduct = state.products.find((p) => p.id === biz.inventory.productId);
           const unitPrice = marketProduct ? marketProduct.currentPrice : 1000;
@@ -492,7 +507,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           const totalExpenses = calcTotalExpenses(biz);
           const expensePerSec = totalExpenses / biz.cycleDuration;
           const expenseCost = Math.round(expensePerSec * elapsed * eventMult.expenseMultiplier);
-          balanceAdd += Math.max(0, income - expenseCost);
+          const netIncome = Math.max(0, income - expenseCost);
+          balanceAdd += netIncome;
+          earnedByType[biz.type] = (earnedByType[biz.type] ?? 0) + netIncome;
         }
 
         return {
@@ -504,12 +521,22 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         };
       });
 
-      // Progress missions
+      // Progress missions — global
       if (totalProduced > 0) {
         setTimeout(() => get().progressMission('produce_units', totalProduced), 0);
       }
       if (totalSold > 0) {
         setTimeout(() => get().progressMission('sell_units', totalSold), 0);
+      }
+      // Progress missions — per type (for specialty missions)
+      for (const [type, count] of Object.entries(producedByType) as [BusinessType, number][]) {
+        if (count > 0) setTimeout(() => get().progressMission('produce_units', count, type), 0);
+      }
+      for (const [type, count] of Object.entries(soldByType) as [BusinessType, number][]) {
+        if (count > 0) setTimeout(() => get().progressMission('sell_units', count, type), 0);
+      }
+      for (const [type, amount] of Object.entries(earnedByType) as [BusinessType, number][]) {
+        if (amount > 0) setTimeout(() => get().progressMission('earn_total', amount, type), 0);
       }
 
       return {
@@ -1408,7 +1435,36 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         completed: false,
         claimed: false,
         assignedAt: now,
-        expiresAt: 0, // never expires
+        expiresAt: 0,
+      });
+      needsUpdate = true;
+    }
+
+    // ماموریت‌های تخصصی — فقط برای انواعی که بازیکن داره
+    const ownedTypes = [...new Set(businesses.map((b) => b.type))];
+    const activeSpecialtyIds = updated.filter((m) => m.businessTypeFilter).map((m) => m.templateId);
+    for (const t of SPECIALTY_MISSION_TEMPLATES) {
+      if (!t.businessTypeFilter) continue;
+      if (!ownedTypes.includes(t.businessTypeFilter)) continue;
+      if (missions.completedMissionIds.includes(t.id)) continue;
+      if (activeSpecialtyIds.includes(t.id)) continue;
+      updated.push({
+        id: `mission-${t.id}-${now}`,
+        templateId: t.id,
+        title: t.title,
+        description: t.description,
+        icon: t.icon,
+        type: 'one_time',
+        condition: t.condition,
+        target: t.target,
+        progress: 0,
+        reward: t.reward,
+        xpReward: t.xpReward ?? 0,
+        completed: false,
+        claimed: false,
+        assignedAt: now,
+        expiresAt: 0,
+        businessTypeFilter: t.businessTypeFilter,
       });
       needsUpdate = true;
     }
@@ -1417,11 +1473,22 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     for (const m of updated) {
       if (m.completed) continue;
       let currentValue = 0;
-      if (m.condition === 'own_businesses') currentValue = businesses.length;
-      else if (m.condition === 'reach_balance') currentValue = get().player.balance;
-      else if (m.condition === 'total_employees') currentValue = businesses.reduce((s, b) => s + b.employees.length, 0);
-      else if (m.condition === 'reach_business_level') currentValue = Math.max(0, ...businesses.map((b) => b.level));
-      else continue;
+      if (m.condition === 'own_businesses') {
+        currentValue = m.businessTypeFilter
+          ? businesses.filter((b) => b.type === m.businessTypeFilter).length
+          : businesses.length;
+      } else if (m.condition === 'reach_balance') {
+        currentValue = get().player.balance;
+      } else if (m.condition === 'total_employees') {
+        currentValue = businesses.reduce((s, b) => s + b.employees.length, 0);
+      } else if (m.condition === 'reach_business_level') {
+        const relevant = m.businessTypeFilter
+          ? businesses.filter((b) => b.type === m.businessTypeFilter)
+          : businesses;
+        currentValue = relevant.length > 0 ? Math.max(...relevant.map((b) => b.level)) : 0;
+      } else {
+        continue;
+      }
 
       if (currentValue !== m.progress) {
         m.progress = currentValue;
@@ -1444,12 +1511,15 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     }
   },
 
-  progressMission: (condition, amount = 1) => {
+  progressMission: (condition, amount = 1, businessType?) => {
     const { missions } = get();
     let changed = false;
     const updated = missions.activeMissions.map((m) => {
       if (m.completed || m.claimed) return m;
       if (m.condition !== condition) return m;
+
+      // ماموریت‌های تخصصی: فقط پیش بره اگه نوع کسب‌وکار مطابقت داشته باشه
+      if (m.businessTypeFilter && businessType !== m.businessTypeFilter) return m;
 
       // برای شرایط "وضعیتی" (reach_balance, own_businesses, ...) مقدار مستقیم ست میشه
       const isStateCondition = ['reach_balance', 'own_businesses', 'total_employees', 'reach_business_level'].includes(condition);
