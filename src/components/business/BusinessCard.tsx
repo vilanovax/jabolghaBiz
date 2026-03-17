@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Business, BusinessTemplate } from '@/types';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock, calcEcosystemBonus } from '@/store/gameStore';
 import { businessTemplates, getNeighborhood, getCityByNeighborhood, SPECIALTY_MILESTONES } from '@/data/mock';
 import EventBanner from '@/components/hooks/EventBanner';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ interface BusinessCardProps {
 
 export default function BusinessCard({ business }: BusinessCardProps) {
   // collectRevenue is now a no-op; auto-sales handle income
+  const allBusinesses = useGameStore((s) => s.businesses);
   const activeEvents = useGameStore((s) => s.randomEvents.activeEvents);
   const relevantEvents = activeEvents.filter(
     (e) => (e.scope === 'global' || e.targetBusinessType === business.type) && e.effect !== 'instant_balance'
@@ -35,6 +36,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const city = business.neighborhoodId ? getCityByNeighborhood(business.neighborhoodId) : undefined;
   const trafficMult = neighborhood ? neighborhood.customerTraffic : 1.0;
   const effectiveCycleDuration = Math.max(10, Math.round(business.cycleDuration / trafficMult));
+  const ecosystemBonus = calcEcosystemBonus(business, allBusinesses);
 
   useEffect(() => {
     const update = () => {
@@ -90,6 +92,11 @@ export default function BusinessCard({ business }: BusinessCardProps) {
               <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded-[999px]">
                 {currentTier.icon} {currentTier.name}
               </span>
+              {ecosystemBonus.count > 0 && (
+                <span className="text-[9px] text-sky-400 font-bold bg-sky-500/10 px-1.5 py-0.5 rounded-[999px]">
+                  🌐 اکوسیستم
+                </span>
+              )}
             </div>
             {neighborhood && city && (
               <p className="text-[9px] text-fg-muted mt-0.5">

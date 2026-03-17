@@ -103,6 +103,60 @@ export function calcEmpireValue(player: PlayerProfile, businesses: Business[]): 
   return player.balance + businessesValue;
 }
 
+// ==================== Natural Demand (Ecosystem Bonus) ====================
+// هر نوع کسب‌وکار از وجود سایرین سود می‌بره — بدون اجبار، فقط فرصت
+
+export interface EcosystemBonus {
+  saleRateBonus: number;   // واحد اضافه فروش در دقیقه
+  revenueBonus: number;    // ضریب اضافه درآمد (0.05 = +5٪)
+  label: string;           // نام اثر برای نمایش
+  count: number;           // تعداد کسب‌وکارهای تاثیرگذار
+}
+
+export function calcEcosystemBonus(biz: Business, allBusinesses: Business[]): EcosystemBonus {
+  const others = allBusinesses.filter((b) => b.id !== biz.id);
+
+  if (biz.type === 'transport') {
+    // هر کارخانه/مزرعه/سوپرمارکت/رستوران = تقاضای حمل‌ونقل بیشتر
+    const shippers = others.filter((b) =>
+      b.type === 'factory' || b.type === 'farming' || b.type === 'supermarket' || b.type === 'restaurant'
+    ).length;
+    return { saleRateBonus: shippers * 0.4, revenueBonus: 0, label: 'تقاضای لجستیک', count: shippers };
+  }
+
+  if (biz.type === 'app_startup') {
+    // هر کسب‌وکار = مشتری بالقوه نرم‌افزار
+    const clients = others.length;
+    return { saleRateBonus: 0, revenueBonus: clients * 0.04, label: 'مشتریان B2B', count: clients };
+  }
+
+  if (biz.type === 'restaurant') {
+    // کارمندان کسب‌وکارهای دیگه = مشتری رستوران
+    const workplaces = others.filter((b) => b.type !== 'restaurant').length;
+    return { saleRateBonus: workplaces * 0.3, revenueBonus: 0, label: 'مشتریان محل کار', count: workplaces };
+  }
+
+  if (biz.type === 'supermarket') {
+    // مزرعه‌های محلی = کالای تازه، تقاضای بیشتر
+    const farms = others.filter((b) => b.type === 'farming').length;
+    return { saleRateBonus: farms * 0.5, revenueBonus: farms * 0.03, label: 'تامین محلی', count: farms };
+  }
+
+  if (biz.type === 'farming') {
+    // هر سوپرمارکت/رستوران = خریدار محصول
+    const buyers = others.filter((b) => b.type === 'supermarket' || b.type === 'restaurant').length;
+    return { saleRateBonus: 0, revenueBonus: buyers * 0.05, label: 'خریداران محصول', count: buyers };
+  }
+
+  if (biz.type === 'factory') {
+    // شرکت‌های حمل‌ونقل = توزیع سریع‌تر کالا
+    const transporters = others.filter((b) => b.type === 'transport').length;
+    return { saleRateBonus: transporters * 0.5, revenueBonus: 0, label: 'شبکه توزیع', count: transporters };
+  }
+
+  return { saleRateBonus: 0, revenueBonus: 0, label: '', count: 0 };
+}
+
 // ==================== Next Unlock Helper ====================
 
 export type UnlockType = 'employee' | 'product' | 'office' | 'enterprise';
@@ -486,7 +540,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
             const levelMult = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
             return sum + e.salesBoost * levelMult;
           }, 0);
-        const totalSaleRate = biz.baseSaleRate + salesBoost; // units per minute
+        const ecosystem = calcEcosystemBonus(biz, state.businesses);
+        const totalSaleRate = biz.baseSaleRate + salesBoost + ecosystem.saleRateBonus; // units per minute
         const elapsedMin = elapsed / 60;
         const rawSold = totalSaleRate * elapsedMin + biz.fractionalSold;
         const wholeSold = Math.floor(rawSold);
@@ -509,7 +564,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           // Chain store bonus: owning 2+ supermarkets at Tier 5 (Lv18+) gives +15% to all
           const chainBonus = biz.type === 'supermarket' && biz.level >= 18 &&
             state.businesses.filter((b) => b.type === 'supermarket').length >= 2 ? 0.15 : 0;
-          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * (productRevMult + chainBonus));
+          // Ecosystem (natural demand) revenue bonus
+          const totalRevMult = productRevMult + chainBonus + ecosystem.revenueBonus;
+          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult);
           // Subtract expenses proportional to elapsed time
           const totalExpenses = calcTotalExpenses(biz);
           const expensePerSec = totalExpenses / biz.cycleDuration;

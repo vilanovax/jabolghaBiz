@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock, calcEcosystemBonus } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ProgressBar from '@/components/ui/ProgressBar';
@@ -46,6 +46,7 @@ function checkProductReqs(biz: Business, prod: BusinessProduct): { label: string
 export default function BusinessDetailPage() {
   const { id } = useParams<{ id: string }>();
   const biz = useGameStore((s) => s.businesses.find((b) => b.id === id));
+  const allBusinesses = useGameStore((s) => s.businesses);
   const balance = useGameStore((s) => s.player.balance);
   const upgradeBusiness = useGameStore((s) => s.upgradeBusiness);
   const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
@@ -112,6 +113,7 @@ export default function BusinessDetailPage() {
     .filter((p) => p.unlocked && p.revenueMultiplier)
     .reduce((sum, p) => sum + (p.revenueMultiplier ?? 0), 0);
   const profitMarginPct = Math.round(productRevMult * 100);
+  const ecosystemBonus = calcEcosystemBonus(biz, allBusinesses);
 
   const nextBaseProduction = Math.round(biz.baseProductionRate * 1.15);
   const nextUpgradeCost = Math.round(biz.upgradeCost * 1.5);
@@ -308,11 +310,20 @@ export default function BusinessDetailPage() {
               { icon: '⚙️', label: 'تولید', value: `${effectiveProduction} ${vocab.productUnit}/سیکل` },
               { icon: '🛒', label: 'فروش خودکار', value: `${effectiveSaleRate} ${vocab.productUnit}/دقیقه` },
               { icon: '📦', label: `ظرفیت ${vocab.inventoryName}`, value: `${biz.inventory.quantity}/${effectiveCapacity}` },
-              ...(profitMarginPct > 0 ? [{ icon: '💹', label: 'حاشیه سود اضافه', value: `+${profitMarginPct}٪` }] : []),
+              ...(profitMarginPct > 0 ? [{ icon: '💹', label: 'حاشیه سود اضافه', value: `+${profitMarginPct}٪`, highlight: true }] : []),
+              ...(ecosystemBonus.count > 0 ? [{
+                icon: '🌐',
+                label: ecosystemBonus.label,
+                value: [
+                  ecosystemBonus.saleRateBonus > 0 ? `+${ecosystemBonus.saleRateBonus}/دقیقه` : '',
+                  ecosystemBonus.revenueBonus > 0 ? `+${Math.round(ecosystemBonus.revenueBonus * 100)}٪` : '',
+                ].filter(Boolean).join(' · '),
+                highlight: true,
+              }] : []),
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between py-1 border-b border-line-subtle/50 last:border-0">
                 <span className="text-fg-muted">{row.icon} {row.label}</span>
-                <span className={`font-fa font-bold ${row.icon === '💹' ? 'text-[#22C55E]' : 'text-fg'}`}>{row.value}</span>
+                <span className={`font-fa font-bold ${'highlight' in row && row.highlight ? 'text-[#22C55E]' : 'text-fg'}`}>{row.value}</span>
               </div>
             ))}
           </div>
