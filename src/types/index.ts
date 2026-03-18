@@ -692,6 +692,73 @@ export interface SupermarketState {
   currentTier: number;
 }
 
+// ==================== MANAGERS ====================
+
+export type ManagerClass = 'financial' | 'operational' | 'marketing';
+export type ManagerRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export interface ManagerAbility {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  effectType: 'revenue_boost' | 'production_boost' | 'sales_boost';
+  effectMultiplier: number;      // e.g. 2.0 = ×2
+  durationMs: number;            // مدت فعال بودن
+  cooldownMs: number;            // زمان انتظار
+}
+
+export interface ManagerTemplate {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  managerClass: ManagerClass;
+  rarity: ManagerRarity;
+  hireCost: number;
+  salary: number;               // حقوق هر سیکل (از همه بیزنس‌ها کسر)
+  passiveEffect: {
+    type: 'revenue' | 'production_speed' | 'sale_rate';
+    value: number;              // e.g. 0.08 = +8%
+  };
+  ability: ManagerAbility;
+  unlockCondition?: {
+    type: MissionCondition;
+    target: number;
+  };
+  unlockLevel: number;          // حداقل لول بازیکن
+  maxLevel: number;             // حداکثر لول مدیر (1-5)
+}
+
+export interface HiredManager {
+  id: string;
+  templateId: string;
+  name: string;
+  icon: string;
+  managerClass: ManagerClass;
+  rarity: ManagerRarity;
+  salary: number;
+  level: number;                // 1-5
+  maxLevel: number;
+  passiveEffect: {
+    type: 'revenue' | 'production_speed' | 'sale_rate';
+    value: number;
+  };
+  ability: ManagerAbility;
+  lastAbilityUsedAt: number | null;
+  abilityActiveUntil: number | null;
+  upgradeStartedAt: number | null;
+  upgradeEndsAt: number | null;
+  hiredAt: number;
+  baseHireCost: number;
+}
+
+export interface ManagersState {
+  hiredManagers: HiredManager[];
+  activeSlots: (string | null)[];  // [slot1_managerId, slot2_managerId]
+  maxSlots: number;                // 1 or 2
+}
+
 // ==================== NAVIGATION ====================
 
 export interface NavItem {

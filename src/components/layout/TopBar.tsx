@@ -2,7 +2,7 @@
 
 import { useGameStore } from '@/store/gameStore';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
-import { Zap, Settings, ClipboardList } from 'lucide-react';
+import { Zap, Settings, ClipboardList, Crown, Store } from 'lucide-react';
 import Link from 'next/link';
 
 interface TopBarProps {
@@ -42,6 +42,18 @@ export default function TopBar({ onMissionsClick }: TopBarProps) {
             <ClipboardList size={17} />
             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#EF4444] rounded-full" />
           </button>
+          <Link
+            href="/managers"
+            className="p-2 rounded-[999px] hover:bg-surface-card/60 transition-colors text-[#F59E0B] hover:text-[#D97706]"
+          >
+            <Crown size={17} />
+          </Link>
+          <Link
+            href="/friday-market"
+            className="p-2 rounded-[999px] hover:bg-surface-card/60 transition-colors text-[#22C55E] hover:text-[#16A34A]"
+          >
+            <Store size={17} />
+          </Link>
           <Link
             href="/settings"
             className="p-2 rounded-[999px] hover:bg-surface-card/60 transition-colors text-fg-muted hover:text-fg"

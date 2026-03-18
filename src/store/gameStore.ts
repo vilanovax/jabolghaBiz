@@ -32,6 +32,9 @@ import {
   SupermarketState,
   ShelfSlot,
   SupermarketBoost,
+  ManagersState,
+  HiredManager,
+  ManagerTemplate,
 } from '@/types';
 import {
   mockPlayer,
@@ -74,6 +77,10 @@ import {
   createInitialSupermarketState,
   getSupermarketTier,
   generateSupermarketOrder,
+  MANAGER_TEMPLATES,
+  MANAGER_CONFIG,
+  getManagerUpgradeCost,
+  getManagerUpgradeDuration,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -110,6 +117,43 @@ export function calcTotalExpenses(biz: Business): number {
 export function calcEmpireValue(player: PlayerProfile, businesses: Business[]): number {
   const businessesValue = businesses.reduce((sum, b) => sum + b.baseProductionRate * b.level * 10, 0);
   return player.balance + businessesValue;
+}
+
+// ==================== Manager Boosts Helper ====================
+
+export function getActiveManagerBoosts(managers: ManagersState): {
+  revenueMultiplier: number;
+  productionSpeedMultiplier: number;
+  saleRateMultiplier: number;
+} {
+  const now = Date.now();
+  let revMult = 1;
+  let prodMult = 1;
+  let saleMult = 1;
+
+  for (const slotId of managers.activeSlots) {
+    if (!slotId) continue;
+    const mgr = managers.hiredManagers.find((m) => m.id === slotId);
+    if (!mgr) continue;
+
+    // level multiplier: هر لول +15%
+    const levelMult = 1 + (mgr.level - 1) * MANAGER_CONFIG.levelPassiveBoost;
+    const passiveValue = mgr.passiveEffect.value * levelMult;
+
+    // passive effect
+    if (mgr.passiveEffect.type === 'revenue') revMult += passiveValue;
+    else if (mgr.passiveEffect.type === 'production_speed') prodMult += passiveValue;
+    else if (mgr.passiveEffect.type === 'sale_rate') saleMult += passiveValue;
+
+    // active ability boost
+    if (mgr.abilityActiveUntil && mgr.abilityActiveUntil > now) {
+      if (mgr.ability.effectType === 'revenue_boost') revMult *= mgr.ability.effectMultiplier;
+      else if (mgr.ability.effectType === 'production_boost') prodMult *= mgr.ability.effectMultiplier;
+      else if (mgr.ability.effectType === 'sales_boost') saleMult *= mgr.ability.effectMultiplier;
+    }
+  }
+
+  return { revenueMultiplier: revMult, productionSpeedMultiplier: prodMult, saleRateMultiplier: saleMult };
 }
 
 // ==================== Natural Demand (Ecosystem Bonus) ====================
@@ -352,6 +396,15 @@ interface GameState {
   acceptSupermarketOrder: (businessId: string, orderId: string) => void;
   getSupermarketState: (businessId: string) => SupermarketState | null;
 
+  // Managers
+  managers: ManagersState;
+  hireManager: (templateId: string) => void;
+  activateManager: (managerId: string, slotIndex: number) => void;
+  deactivateManager: (slotIndex: number) => void;
+  useManagerAbility: (managerId: string) => void;
+  upgradeManager: (managerId: string) => void;
+  completeManagerUpgrade: (managerId: string) => void;
+
   // Achievement Toast
   achievementToastQueue: Achievement[];
   dismissAchievementToast: () => void;
@@ -517,11 +570,16 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       const hungerRevMult = STAT_GAMEPLAY_EFFECTS.hungerRevenueMultiplier(stats.hunger);
       const statRevenueMult = happinessRevMult * hungerRevMult;
 
+      // Manager boosts (macro)
+      const mgrBoosts = getActiveManagerBoosts(state.managers);
+      // Update maxSlots based on player level
+      const newMaxSlots = state.player.level >= MANAGER_CONFIG.slot2UnlockLevel ? 2 : 1;
+
       const updatedBiz = state.businesses.map((biz) => {
         const elapsed = (now - biz.lastCycleAt) / 1000;
         const nb = biz.neighborhoodId ? getNeighborhood(biz.neighborhoodId) : undefined;
         const trafficMult = nb ? nb.customerTraffic : 1.0;
-        const effectiveCycleDuration = Math.max(10, Math.round(biz.cycleDuration / (trafficMult * energyCycleMult)));
+        const effectiveCycleDuration = Math.max(10, Math.round(biz.cycleDuration / (trafficMult * energyCycleMult * mgrBoosts.productionSpeedMultiplier)));
         const completedCycles = Math.floor(elapsed / effectiveCycleDuration);
 
         // --- Production (only on cycle completion) ---
@@ -559,7 +617,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
             return sum + e.salesBoost * levelMult;
           }, 0);
         const ecosystem = calcEcosystemBonus(biz, state.businesses);
-        const totalSaleRate = biz.baseSaleRate + salesBoost + ecosystem.saleRateBonus; // units per minute
+        const totalSaleRate = (biz.baseSaleRate + salesBoost + ecosystem.saleRateBonus) * mgrBoosts.saleRateMultiplier; // units per minute
         const elapsedMin = elapsed / 60;
         const rawSold = totalSaleRate * elapsedMin + biz.fractionalSold;
         const wholeSold = Math.floor(rawSold);
@@ -584,7 +642,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
             state.businesses.filter((b) => b.type === 'supermarket').length >= 2 ? 0.15 : 0;
           // Ecosystem (natural demand) revenue bonus
           const totalRevMult = productRevMult + chainBonus + ecosystem.revenueBonus;
-          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult);
+          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult * mgrBoosts.revenueMultiplier);
           // Subtract expenses proportional to elapsed time
           const totalExpenses = calcTotalExpenses(biz);
           const expensePerSec = totalExpenses / biz.cycleDuration;
@@ -621,8 +679,21 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         if (amount > 0) setTimeout(() => get().progressMission('earn_total', amount, type), 0);
       }
 
+      // Expire manager abilities & update maxSlots
+      const updatedManagers: ManagersState = {
+        ...state.managers,
+        maxSlots: newMaxSlots,
+        hiredManagers: state.managers.hiredManagers.map((m) => {
+          if (m.abilityActiveUntil && m.abilityActiveUntil <= now) {
+            return { ...m, abilityActiveUntil: null };
+          }
+          return m;
+        }),
+      };
+
       return {
         businesses: updatedBiz,
+        managers: updatedManagers,
         player: balanceAdd > 0
           ? { ...state.player, balance: state.player.balance + balanceAdd }
           : state.player,
@@ -2332,11 +2403,154 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     return get().supermarketStates[businessId] ?? null;
   },
 
+  // ==================== Managers ====================
+
+  managers: {
+    hiredManagers: [],
+    activeSlots: [null, null],
+    maxSlots: 1,
+  },
+
+  hireManager: (templateId) => {
+    const { player, managers } = get();
+    const template = MANAGER_TEMPLATES.find((t) => t.id === templateId);
+    if (!template) return;
+    if (player.balance < template.hireCost) return;
+    if (player.level < template.unlockLevel) return;
+    if (managers.hiredManagers.some((m) => m.templateId === templateId)) return;
+
+    const newManager: HiredManager = {
+      id: `mgr_${Date.now()}`,
+      templateId: template.id,
+      name: template.name,
+      icon: template.icon,
+      managerClass: template.managerClass,
+      rarity: template.rarity,
+      salary: template.salary,
+      level: 1,
+      maxLevel: template.maxLevel,
+      passiveEffect: { ...template.passiveEffect },
+      ability: { ...template.ability },
+      lastAbilityUsedAt: null,
+      abilityActiveUntil: null,
+      upgradeStartedAt: null,
+      upgradeEndsAt: null,
+      hiredAt: Date.now(),
+      baseHireCost: template.hireCost,
+    };
+
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance - template.hireCost },
+      managers: {
+        ...state.managers,
+        hiredManagers: [...state.managers.hiredManagers, newManager],
+      },
+    }));
+  },
+
+  activateManager: (managerId, slotIndex) => {
+    const { managers } = get();
+    if (slotIndex < 0 || slotIndex >= managers.maxSlots) return;
+    const mgr = managers.hiredManagers.find((m) => m.id === managerId);
+    if (!mgr) return;
+    // اگه قبلاً در اسلات دیگه‌ای هست، حذف کن
+    const newSlots = [...managers.activeSlots];
+    const existingSlot = newSlots.indexOf(managerId);
+    if (existingSlot !== -1) newSlots[existingSlot] = null;
+    newSlots[slotIndex] = managerId;
+
+    set((state) => ({
+      managers: { ...state.managers, activeSlots: newSlots },
+    }));
+  },
+
+  deactivateManager: (slotIndex) => {
+    const { managers } = get();
+    if (slotIndex < 0 || slotIndex >= managers.activeSlots.length) return;
+    const newSlots = [...managers.activeSlots];
+    newSlots[slotIndex] = null;
+    set((state) => ({
+      managers: { ...state.managers, activeSlots: newSlots },
+    }));
+  },
+
+  useManagerAbility: (managerId) => {
+    const now = Date.now();
+    const { managers } = get();
+    const mgr = managers.hiredManagers.find((m) => m.id === managerId);
+    if (!mgr) return;
+    // باید در اسلات فعال باشه
+    if (!managers.activeSlots.includes(managerId)) return;
+    // بررسی cooldown
+    if (mgr.lastAbilityUsedAt) {
+      const cooldownEnd = mgr.lastAbilityUsedAt + mgr.ability.cooldownMs;
+      if (now < cooldownEnd) return;
+    }
+
+    set((state) => ({
+      managers: {
+        ...state.managers,
+        hiredManagers: state.managers.hiredManagers.map((m) =>
+          m.id === managerId
+            ? { ...m, lastAbilityUsedAt: now, abilityActiveUntil: now + m.ability.durationMs }
+            : m
+        ),
+      },
+    }));
+  },
+
+  upgradeManager: (managerId) => {
+    const { player, managers } = get();
+    const mgr = managers.hiredManagers.find((m) => m.id === managerId);
+    if (!mgr) return;
+    if (mgr.level >= mgr.maxLevel) return;
+    if (mgr.upgradeStartedAt) return; // ارتقا در حال انجام
+
+    const cost = getManagerUpgradeCost(mgr.baseHireCost, mgr.level);
+    if (player.balance < cost) return;
+
+    const duration = getManagerUpgradeDuration(mgr.level);
+    const now = Date.now();
+
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance - cost },
+      managers: {
+        ...state.managers,
+        hiredManagers: state.managers.hiredManagers.map((m) =>
+          m.id === managerId
+            ? { ...m, upgradeStartedAt: now, upgradeEndsAt: now + duration }
+            : m
+        ),
+      },
+    }));
+  },
+
+  completeManagerUpgrade: (managerId) => {
+    const now = Date.now();
+    set((state) => ({
+      managers: {
+        ...state.managers,
+        hiredManagers: state.managers.hiredManagers.map((m) => {
+          if (m.id !== managerId) return m;
+          if (!m.upgradeEndsAt || now < m.upgradeEndsAt) return m;
+          const newLevel = m.level + 1;
+          return {
+            ...m,
+            level: newLevel,
+            salary: Math.round(m.salary * MANAGER_CONFIG.salaryPerLevelMultiplier),
+            upgradeStartedAt: null,
+            upgradeEndsAt: null,
+          };
+        }),
+      },
+    }));
+  },
+
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
-  version: 6,
+  version: 7,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -2447,6 +2661,15 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         state.supermarketStates = {};
       }
     }
+    if (version < 7) {
+      if (!state.managers) {
+        state.managers = {
+          hiredManagers: [],
+          activeSlots: [null, null],
+          maxSlots: 1,
+        };
+      }
+    }
     return state;
   },
   partialize: (state) => ({
@@ -2465,5 +2688,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     banking: state.banking,
     rivals: state.rivals,
     supermarketStates: state.supermarketStates,
+    managers: state.managers,
   }),
 }));

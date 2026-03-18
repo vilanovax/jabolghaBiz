@@ -22,6 +22,7 @@ import {
   BankTemplate,
   AIRival,
   SpecialtyMilestone,
+  ManagerTemplate,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -1710,3 +1711,246 @@ export const SUPERMARKET_CONFIG = {
   tierCustomerMultiplier: [1, 1.2, 1.5, 2.0, 2.5], // مشتری بیشتر در تایرهای بالا
   checkoutBaseSpeed: 8,             // سرعت پایه هر صندوق (مشتری/دقیقه)
 };
+
+// ==================== MANAGERS ====================
+
+// ---------- ثابت‌های مدیران ----------
+
+export const MANAGER_CONFIG = {
+  upgradeCostMultiplier: 2,         // هزینه ارتقا = hireCost × 2^level
+  upgradeDurationMinutes: 20,       // هر لول × 20 دقیقه
+  levelPassiveBoost: 0.15,          // هر لول +15% به passive
+  salaryPerLevelMultiplier: 1.3,    // حقوق × 1.3 هر لول
+  slot2UnlockLevel: 10,             // لول آنلاک اسلات دوم
+};
+
+export function getManagerUpgradeDuration(level: number): number {
+  return level * MANAGER_CONFIG.upgradeDurationMinutes * 60 * 1000; // ms
+}
+
+export function getManagerUpgradeCost(baseHireCost: number, currentLevel: number): number {
+  return Math.round(baseHireCost * Math.pow(MANAGER_CONFIG.upgradeCostMultiplier, currentLevel));
+}
+
+// ---------- تمپلیت مدیران ----------
+
+export const MANAGER_TEMPLATES: ManagerTemplate[] = [
+  // ===== مالی =====
+  {
+    id: 'mgr_financial_common',
+    name: 'حسابدار ارشد',
+    icon: '💰',
+    description: 'درآمد کل شرکت‌ها رو افزایش میده',
+    managerClass: 'financial',
+    rarity: 'common',
+    hireCost: 50_000,
+    salary: 500,
+    passiveEffect: { type: 'revenue', value: 0.05 },
+    ability: {
+      id: 'ab_fin_common',
+      name: 'جهش مالی',
+      description: 'درآمد ×۱.۵ برای ۶۰ ثانیه',
+      icon: '💵',
+      effectType: 'revenue_boost',
+      effectMultiplier: 1.5,
+      durationMs: 60_000,
+      cooldownMs: 20 * 60_000,
+    },
+    unlockLevel: 3,
+    maxLevel: 5,
+  },
+  {
+    id: 'mgr_financial_rare',
+    name: 'مدیر مالی',
+    icon: '🏦',
+    description: 'با تجربه بانکی، درآمد رو بهینه می‌کنه',
+    managerClass: 'financial',
+    rarity: 'rare',
+    hireCost: 200_000,
+    salary: 1_500,
+    passiveEffect: { type: 'revenue', value: 0.08 },
+    ability: {
+      id: 'ab_fin_rare',
+      name: 'سونامی سود',
+      description: 'درآمد ×۱.۸ برای ۶۰ ثانیه',
+      icon: '🌊',
+      effectType: 'revenue_boost',
+      effectMultiplier: 1.8,
+      durationMs: 60_000,
+      cooldownMs: 20 * 60_000,
+    },
+    unlockLevel: 8,
+    unlockCondition: { type: 'upgrade_business', target: 5 },
+    maxLevel: 5,
+  },
+  {
+    id: 'mgr_financial_epic',
+    name: 'معاون مالی',
+    icon: '👔',
+    description: 'استراتژیست مالی با بیشترین تاثیر روی درآمد',
+    managerClass: 'financial',
+    rarity: 'epic',
+    hireCost: 800_000,
+    salary: 4_000,
+    passiveEffect: { type: 'revenue', value: 0.12 },
+    ability: {
+      id: 'ab_fin_epic',
+      name: 'انفجار درآمد',
+      description: 'درآمد ×۲ برای ۶۰ ثانیه',
+      icon: '💎',
+      effectType: 'revenue_boost',
+      effectMultiplier: 2.0,
+      durationMs: 60_000,
+      cooldownMs: 25 * 60_000,
+    },
+    unlockLevel: 15,
+    unlockCondition: { type: 'earn_total', target: 5_000_000 },
+    maxLevel: 5,
+  },
+
+  // ===== عملیاتی =====
+  {
+    id: 'mgr_operational_common',
+    name: 'سرکارگر',
+    icon: '⚙️',
+    description: 'سرعت تولید همه شرکت‌ها رو بالا می‌بره',
+    managerClass: 'operational',
+    rarity: 'common',
+    hireCost: 40_000,
+    salary: 400,
+    passiveEffect: { type: 'production_speed', value: 0.08 },
+    ability: {
+      id: 'ab_ops_common',
+      name: 'شتاب تولید',
+      description: 'سرعت تولید ×۱.۵ برای ۴۵ ثانیه',
+      icon: '⚡',
+      effectType: 'production_boost',
+      effectMultiplier: 1.5,
+      durationMs: 45_000,
+      cooldownMs: 20 * 60_000,
+    },
+    unlockLevel: 3,
+    maxLevel: 5,
+  },
+  {
+    id: 'mgr_operational_rare',
+    name: 'مدیر عملیات',
+    icon: '🔧',
+    description: 'بهینه‌ساز خط تولید با تجربه صنعتی',
+    managerClass: 'operational',
+    rarity: 'rare',
+    hireCost: 180_000,
+    salary: 1_200,
+    passiveEffect: { type: 'production_speed', value: 0.12 },
+    ability: {
+      id: 'ab_ops_rare',
+      name: 'توربو تولید',
+      description: 'سرعت تولید ×۱.۸ برای ۴۵ ثانیه',
+      icon: '🚀',
+      effectType: 'production_boost',
+      effectMultiplier: 1.8,
+      durationMs: 45_000,
+      cooldownMs: 20 * 60_000,
+    },
+    unlockLevel: 8,
+    unlockCondition: { type: 'produce_units', target: 500 },
+    maxLevel: 5,
+  },
+  {
+    id: 'mgr_operational_epic',
+    name: 'معاون عملیات',
+    icon: '🏭',
+    description: 'مهندس ارشد با حداکثر بازدهی تولید',
+    managerClass: 'operational',
+    rarity: 'epic',
+    hireCost: 700_000,
+    salary: 3_500,
+    passiveEffect: { type: 'production_speed', value: 0.18 },
+    ability: {
+      id: 'ab_ops_epic',
+      name: 'انقلاب صنعتی',
+      description: 'سرعت تولید ×۲ برای ۴۵ ثانیه',
+      icon: '🔥',
+      effectType: 'production_boost',
+      effectMultiplier: 2.0,
+      durationMs: 45_000,
+      cooldownMs: 25 * 60_000,
+    },
+    unlockLevel: 15,
+    unlockCondition: { type: 'total_upgrades', target: 15 },
+    maxLevel: 5,
+  },
+
+  // ===== بازاریابی =====
+  {
+    id: 'mgr_marketing_common',
+    name: 'بازاریاب',
+    icon: '📢',
+    description: 'سرعت فروش محصولات رو افزایش میده',
+    managerClass: 'marketing',
+    rarity: 'common',
+    hireCost: 45_000,
+    salary: 450,
+    passiveEffect: { type: 'sale_rate', value: 0.05 },
+    ability: {
+      id: 'ab_mkt_common',
+      name: 'کمپین فروش',
+      description: 'فروش ×۱.۵ برای ۶۰ ثانیه',
+      icon: '📣',
+      effectType: 'sales_boost',
+      effectMultiplier: 1.5,
+      durationMs: 60_000,
+      cooldownMs: 20 * 60_000,
+    },
+    unlockLevel: 3,
+    maxLevel: 5,
+  },
+  {
+    id: 'mgr_marketing_rare',
+    name: 'مدیر بازاریابی',
+    icon: '📊',
+    description: 'متخصص بازار با شبکه فروش گسترده',
+    managerClass: 'marketing',
+    rarity: 'rare',
+    hireCost: 190_000,
+    salary: 1_300,
+    passiveEffect: { type: 'sale_rate', value: 0.08 },
+    ability: {
+      id: 'ab_mkt_rare',
+      name: 'موج تبلیغات',
+      description: 'فروش ×۱.۸ برای ۶۰ ثانیه',
+      icon: '📺',
+      effectType: 'sales_boost',
+      effectMultiplier: 1.8,
+      durationMs: 60_000,
+      cooldownMs: 20 * 60_000,
+    },
+    unlockLevel: 8,
+    unlockCondition: { type: 'sell_units', target: 500 },
+    maxLevel: 5,
+  },
+  {
+    id: 'mgr_marketing_epic',
+    name: 'معاون بازاریابی',
+    icon: '🎯',
+    description: 'گورو فروش با بیشترین تاثیر بر بازار',
+    managerClass: 'marketing',
+    rarity: 'epic',
+    hireCost: 750_000,
+    salary: 3_800,
+    passiveEffect: { type: 'sale_rate', value: 0.12 },
+    ability: {
+      id: 'ab_mkt_epic',
+      name: 'انفجار فروش',
+      description: 'فروش ×۲ برای ۶۰ ثانیه',
+      icon: '💥',
+      effectType: 'sales_boost',
+      effectMultiplier: 2.0,
+      durationMs: 60_000,
+      cooldownMs: 25 * 60_000,
+    },
+    unlockLevel: 15,
+    unlockCondition: { type: 'own_businesses', target: 3 },
+    maxLevel: 5,
+  },
+];
