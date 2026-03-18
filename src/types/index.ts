@@ -612,6 +612,86 @@ export interface MissionsState {
   totalUpgrades: number;           // شمارنده کل ارتقاها
 }
 
+// ==================== SUPERMARKET DEEP SYSTEM ====================
+
+// دسته‌بندی کالاهای قفسه
+export type ShelfCategory = 'essential' | 'fresh' | 'luxury' | 'household';
+
+// کالای قابل چیدن روی قفسه
+export interface ShelfProduct {
+  id: string;
+  name: string;
+  icon: string;
+  category: ShelfCategory;
+  buyPrice: number;         // قیمت خرید (تامین) هر واحد
+  sellPrice: number;        // قیمت فروش هر واحد
+  salesSpeed: number;       // واحد فروش در دقیقه (سرعت فروش ذاتی)
+  unlockTier: number;       // تایر آنلاک (1-5)
+  description: string;
+}
+
+// یک ردیف قفسه در فروشگاه
+export interface ShelfSlot {
+  id: string;
+  productId: string | null; // کالای چیده‌شده (null = خالی)
+  quantity: number;         // موجودی فعلی
+  maxCapacity: number;      // ظرفیت قفسه
+}
+
+// صندوق فروشگاه
+export interface CheckoutLane {
+  id: number;
+  speed: number;            // مشتری سرویس‌شده در دقیقه
+  unlocked: boolean;
+}
+
+// سفارش ویژه سوپرمارکتی
+export interface SupermarketOrder {
+  id: string;
+  title: string;
+  icon: string;
+  requiredProducts: { productId: string; quantity: number }[];
+  bonusMultiplier: number;  // ضریب سود (1.5 = +50%)
+  deadline: number;         // timestamp پایان مهلت
+  createdAt: number;
+  accepted: boolean;
+  completed: boolean;
+  failed: boolean;
+}
+
+// بوست موقت سوپرمارکت
+export interface SupermarketBoost {
+  type: 'sales_speed' | 'customer_flow' | 'revenue';
+  multiplier: number;       // مثلاً 2.0 = ×2
+  expiresAt: number;        // timestamp انقضا
+  label: string;
+}
+
+// تایر پیشرفت سوپرمارکت
+export interface SupermarketTier {
+  tier: number;
+  name: string;
+  icon: string;
+  requiredLevel: number;
+  shelfSlots: number;       // تعداد قفسه
+  checkoutLanes: number;    // تعداد صندوق
+  features: string[];       // قابلیت‌های آنلاک‌شده
+}
+
+// وضعیت کامل سوپرمارکت (هر بیزنس سوپرمارکتی یکی داره)
+export interface SupermarketState {
+  shelves: ShelfSlot[];
+  checkouts: CheckoutLane[];
+  activeOrders: SupermarketOrder[];
+  boosts: SupermarketBoost[];
+  customersInStore: number;
+  customersServed: number;          // آمار کل
+  totalShelfProductsSold: number;   // آمار کل فروش قفسه‌ای
+  totalShelfRevenue: number;        // آمار کل درآمد قفسه‌ای
+  lastCustomerTickAt: number;
+  currentTier: number;
+}
+
 // ==================== NAVIGATION ====================
 
 export interface NavItem {

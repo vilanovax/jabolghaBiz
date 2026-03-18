@@ -29,6 +29,9 @@ import {
   BankTemplate,
   AIRival,
   RivalsState,
+  SupermarketState,
+  ShelfSlot,
+  SupermarketBoost,
 } from '@/types';
 import {
   mockPlayer,
@@ -65,6 +68,12 @@ import {
   RIVAL_CONFIG,
   RIVAL_NEWS_TEMPLATES,
   SPECIALTY_MISSION_TEMPLATES,
+  SHELF_PRODUCTS,
+  SUPERMARKET_TIERS,
+  SUPERMARKET_CONFIG,
+  createInitialSupermarketState,
+  getSupermarketTier,
+  generateSupermarketOrder,
 } from '@/data/mock';
 
 // ==================== Helper Functions ====================
@@ -333,6 +342,15 @@ interface GameState {
   rivals: RivalsState;
   tickRivals: () => void;
   getDynamicLeaderboard: () => LeaderboardEntry[];
+
+  // Supermarket Deep System
+  supermarketStates: Record<string, SupermarketState>;
+  initSupermarketState: (businessId: string) => void;
+  stockShelf: (businessId: string, shelfId: string, productId: string, quantity: number) => void;
+  clearShelf: (businessId: string, shelfId: string) => void;
+  tickSupermarket: (businessId: string) => void;
+  acceptSupermarketOrder: (businessId: string, orderId: string) => void;
+  getSupermarketState: (businessId: string) => SupermarketState | null;
 
   // Achievement Toast
   achievementToastQueue: Achievement[];
@@ -2018,11 +2036,307 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       .map((entry, i) => ({ ...entry, rank: i + 1 }));
   },
 
+  // ==================== Supermarket Deep System ====================
+
+  supermarketStates: {},
+
+  initSupermarketState: (businessId) => {
+    const { supermarketStates, businesses } = get();
+    if (supermarketStates[businessId]) return;
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz || biz.type !== 'supermarket') return;
+
+    const tier = getSupermarketTier(biz.level);
+    const initial = createInitialSupermarketState();
+    // تعداد قفسه و صندوق بر اساس تایر
+    while (initial.shelves.length < tier.shelfSlots) {
+      initial.shelves.push({
+        id: `shelf-${initial.shelves.length + 1}`,
+        productId: null,
+        quantity: 0,
+        maxCapacity: 30,
+      });
+    }
+    while (initial.checkouts.length < tier.checkoutLanes) {
+      initial.checkouts.push({
+        id: initial.checkouts.length + 1,
+        speed: SUPERMARKET_CONFIG.checkoutBaseSpeed,
+        unlocked: true,
+      });
+    }
+    initial.currentTier = tier.tier;
+
+    set({ supermarketStates: { ...get().supermarketStates, [businessId]: initial } });
+  },
+
+  stockShelf: (businessId, shelfId, productId, quantity) => {
+    const { supermarketStates, player, businesses } = get();
+    const smState = supermarketStates[businessId];
+    if (!smState) return;
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz) return;
+
+    const shelf = smState.shelves.find((s) => s.id === shelfId);
+    if (!shelf) return;
+
+    const product = SHELF_PRODUCTS.find((p) => p.id === productId);
+    if (!product) return;
+
+    // بررسی تایر
+    const tier = getSupermarketTier(biz.level);
+    if (product.unlockTier > tier.tier) return;
+
+    // اگه قفسه محصول دیگه‌ای داره باید اول خالی بشه
+    if (shelf.productId && shelf.productId !== productId) return;
+
+    const spaceLeft = shelf.maxCapacity - shelf.quantity;
+    const actualQty = Math.min(quantity, spaceLeft);
+    if (actualQty <= 0) return;
+
+    const cost = Math.round(actualQty * product.buyPrice * SUPERMARKET_CONFIG.shelfRestockCost);
+    if (player.balance < cost) return;
+
+    set((state) => ({
+      supermarketStates: {
+        ...state.supermarketStates,
+        [businessId]: {
+          ...smState,
+          shelves: smState.shelves.map((s) =>
+            s.id === shelfId
+              ? { ...s, productId, quantity: s.quantity + actualQty }
+              : s
+          ),
+        },
+      },
+      player: { ...state.player, balance: state.player.balance - cost },
+    }));
+  },
+
+  clearShelf: (businessId, shelfId) => {
+    const { supermarketStates } = get();
+    const smState = supermarketStates[businessId];
+    if (!smState) return;
+
+    set((state) => ({
+      supermarketStates: {
+        ...state.supermarketStates,
+        [businessId]: {
+          ...smState,
+          shelves: smState.shelves.map((s) =>
+            s.id === shelfId
+              ? { ...s, productId: null, quantity: 0 }
+              : s
+          ),
+        },
+      },
+    }));
+  },
+
+  tickSupermarket: (businessId) => {
+    const { supermarketStates, businesses, player } = get();
+    const smState = supermarketStates[businessId];
+    if (!smState) return;
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz || biz.type !== 'supermarket') return;
+
+    const now = Date.now();
+    const elapsed = (now - smState.lastCustomerTickAt) / 1000;
+    if (elapsed < SUPERMARKET_CONFIG.customerTickInterval) return;
+
+    const tier = getSupermarketTier(biz.level);
+    const tierMult = SUPERMARKET_CONFIG.tierCustomerMultiplier[tier.tier - 1] ?? 1;
+
+    // --- بروزرسانی تایر (اگه لول بالا رفته) ---
+    let updatedShelves = [...smState.shelves];
+    let updatedCheckouts = [...smState.checkouts];
+    if (tier.tier > smState.currentTier) {
+      // اضافه کردن قفسه‌های جدید
+      while (updatedShelves.length < tier.shelfSlots) {
+        updatedShelves.push({
+          id: `shelf-${updatedShelves.length + 1}`,
+          productId: null,
+          quantity: 0,
+          maxCapacity: 30,
+        });
+      }
+      // اضافه کردن صندوق‌های جدید
+      while (updatedCheckouts.length < tier.checkoutLanes) {
+        updatedCheckouts.push({
+          id: updatedCheckouts.length + 1,
+          speed: SUPERMARKET_CONFIG.checkoutBaseSpeed,
+          unlocked: true,
+        });
+      }
+    }
+
+    // --- بوست‌های فعال ---
+    const activeBoosts = smState.boosts.filter((b) => b.expiresAt > now);
+    const salesSpeedBoost = activeBoosts
+      .filter((b) => b.type === 'sales_speed')
+      .reduce((m, b) => m * b.multiplier, 1);
+    const revenueBoost = activeBoosts
+      .filter((b) => b.type === 'revenue')
+      .reduce((m, b) => m * b.multiplier, 1);
+
+    // --- فروش از قفسه‌ها ---
+    const elapsedMin = elapsed / 60;
+    // کل ظرفیت صندوق (مشتری/دقیقه)
+    const checkoutCapacity = updatedCheckouts
+      .filter((c) => c.unlocked)
+      .reduce((sum, c) => sum + c.speed, 0);
+    // حداکثر مشتری = ظرفیت صندوق × زمان × ضریب تایر
+    const maxCustomers = Math.floor(checkoutCapacity * elapsedMin * tierMult);
+
+    let totalSold = 0;
+    let totalRevenue = 0;
+    let customersServed = 0;
+    let remainingCustomerDemand = maxCustomers;
+
+    // فروش از هر قفسه بر اساس سرعت فروش محصول
+    updatedShelves = updatedShelves.map((shelf) => {
+      if (!shelf.productId || shelf.quantity <= 0 || remainingCustomerDemand <= 0) return shelf;
+
+      const product = SHELF_PRODUCTS.find((p) => p.id === shelf.productId);
+      if (!product) return shelf;
+
+      // حداکثر فروش = سرعت فروش ذاتی × زمان × بوست
+      const maxSellable = Math.floor(product.salesSpeed * elapsedMin * salesSpeedBoost);
+      const actualSold = Math.min(maxSellable, shelf.quantity, remainingCustomerDemand);
+
+      if (actualSold > 0) {
+        totalSold += actualSold;
+        totalRevenue += actualSold * product.sellPrice;
+        customersServed += Math.ceil(actualSold / 2); // هر مشتری ~2 محصول
+        remainingCustomerDemand -= actualSold;
+      }
+
+      return { ...shelf, quantity: shelf.quantity - actualSold };
+    });
+
+    // اعمال بوست درآمد
+    totalRevenue = Math.round(totalRevenue * revenueBoost);
+
+    // --- سفارش‌های ویژه: پیشرفت ---
+    let updatedOrders = smState.activeOrders.map((order) => {
+      if (order.completed || order.failed) return order;
+      if (now > order.deadline) return { ...order, failed: true };
+      if (!order.accepted) return order;
+
+      // بررسی تکمیل سفارش
+      const allMet = order.requiredProducts.every((req) => {
+        const shelf = updatedShelves.find((s) => s.productId === req.productId);
+        return shelf && shelf.quantity >= req.quantity;
+      });
+
+      if (allMet) {
+        // کم کردن از قفسه‌ها
+        updatedShelves = updatedShelves.map((shelf) => {
+          const req = order.requiredProducts.find((r) => r.productId === shelf.productId);
+          if (!req) return shelf;
+          return { ...shelf, quantity: shelf.quantity - req.quantity };
+        });
+
+        // محاسبه پاداش
+        const orderRevenue = order.requiredProducts.reduce((sum, req) => {
+          const product = SHELF_PRODUCTS.find((p) => p.id === req.productId);
+          return sum + (product ? product.sellPrice * req.quantity : 0);
+        }, 0);
+        totalRevenue += Math.round(orderRevenue * order.bonusMultiplier);
+
+        return { ...order, completed: true };
+      }
+      return order;
+    });
+
+    // --- تولید سفارش جدید ---
+    const activeOrderCount = updatedOrders.filter((o) => !o.completed && !o.failed).length;
+    if (tier.tier >= 3 && activeOrderCount < SUPERMARKET_CONFIG.maxActiveOrders) {
+      const stockedIds = updatedShelves.filter((s) => s.productId).map((s) => s.productId!);
+      const newOrder = generateSupermarketOrder(tier.tier, stockedIds);
+      if (newOrder) {
+        updatedOrders = [...updatedOrders, newOrder];
+      }
+    }
+
+    // --- حذف سفارش‌های قدیمی (بعد از ۵ دقیقه) ---
+    updatedOrders = updatedOrders.filter(
+      (o) => !(o.completed || o.failed) || now - o.createdAt < 300_000
+    );
+
+    // --- بوست از تکمیل سفارش ---
+    const justCompleted = updatedOrders.filter(
+      (o) => o.completed && !smState.activeOrders.find((old) => old.id === o.id && old.completed)
+    );
+    const newBoosts: SupermarketBoost[] = [...activeBoosts];
+    for (const _ of justCompleted) {
+      newBoosts.push({
+        type: 'sales_speed',
+        multiplier: 1.5,
+        expiresAt: now + SUPERMARKET_CONFIG.boostDuration,
+        label: '×1.5 سرعت فروش',
+      });
+      // Progress mission
+      setTimeout(() => get().progressMission('complete_special_order', 1, 'supermarket'), 0);
+    }
+
+    set((state) => ({
+      supermarketStates: {
+        ...state.supermarketStates,
+        [businessId]: {
+          ...smState,
+          shelves: updatedShelves,
+          checkouts: updatedCheckouts,
+          activeOrders: updatedOrders,
+          boosts: newBoosts,
+          customersInStore: Math.min(remainingCustomerDemand > 0 ? maxCustomers - remainingCustomerDemand : maxCustomers, 20),
+          customersServed: smState.customersServed + customersServed,
+          totalShelfProductsSold: smState.totalShelfProductsSold + totalSold,
+          totalShelfRevenue: smState.totalShelfRevenue + totalRevenue,
+          lastCustomerTickAt: now,
+          currentTier: tier.tier,
+        },
+      },
+      player: totalRevenue > 0
+        ? { ...state.player, balance: state.player.balance + totalRevenue }
+        : state.player,
+    }));
+
+    // Mission progress
+    if (totalSold > 0) {
+      setTimeout(() => get().progressMission('sell_units', totalSold, 'supermarket'), 0);
+    }
+    if (totalRevenue > 0) {
+      setTimeout(() => get().progressMission('earn_total', totalRevenue, 'supermarket'), 0);
+    }
+  },
+
+  acceptSupermarketOrder: (businessId, orderId) => {
+    const { supermarketStates } = get();
+    const smState = supermarketStates[businessId];
+    if (!smState) return;
+
+    set((state) => ({
+      supermarketStates: {
+        ...state.supermarketStates,
+        [businessId]: {
+          ...smState,
+          activeOrders: smState.activeOrders.map((o) =>
+            o.id === orderId ? { ...o, accepted: true } : o
+          ),
+        },
+      },
+    }));
+  },
+
+  getSupermarketState: (businessId) => {
+    return get().supermarketStates[businessId] ?? null;
+  },
+
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
-  version: 5,
+  version: 6,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -2128,6 +2442,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         };
       }
     }
+    if (version < 6) {
+      if (!state.supermarketStates) {
+        state.supermarketStates = {};
+      }
+    }
     return state;
   },
   partialize: (state) => ({
@@ -2145,5 +2464,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     orderBoard: state.orderBoard,
     banking: state.banking,
     rivals: state.rivals,
+    supermarketStates: state.supermarketStates,
   }),
 }));

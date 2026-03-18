@@ -1552,3 +1552,161 @@ export const RIVAL_NEWS_TEMPLATES = {
     summary: `${name} وارد بازار شد و با شما رقابت می‌کند!`,
   }),
 };
+
+// ==================== SUPERMARKET DEEP SYSTEM ====================
+
+import {
+  ShelfProduct,
+  ShelfSlot,
+  CheckoutLane,
+  SupermarketTier,
+  SupermarketState,
+  SupermarketOrder,
+} from '@/types';
+
+// ---------- کاتالوگ کالاهای قفسه ----------
+
+export const SHELF_PRODUCTS: ShelfProduct[] = [
+  // --- Tier 1: مغازه محلی (ضروریات) ---
+  { id: 'sp-bread',   name: 'نان',         icon: '🍞', category: 'essential', buyPrice: 30,  sellPrice: 55,  salesSpeed: 12, unlockTier: 1, description: 'ارزون و پرفروش' },
+  { id: 'sp-milk',    name: 'شیر',         icon: '🥛', category: 'essential', buyPrice: 40,  sellPrice: 70,  salesSpeed: 10, unlockTier: 1, description: 'مصرف روزانه بالا' },
+  { id: 'sp-rice',    name: 'برنج',        icon: '🍚', category: 'essential', buyPrice: 80,  sellPrice: 130, salesSpeed: 6,  unlockTier: 1, description: 'سود متوسط، فروش ثابت' },
+
+  // --- Tier 2: مینی‌مارکت (تنوع بیشتر) ---
+  { id: 'sp-soda',    name: 'نوشابه',      icon: '🥤', category: 'essential', buyPrice: 25,  sellPrice: 50,  salesSpeed: 14, unlockTier: 2, description: 'ارزون و خیلی سریع' },
+  { id: 'sp-fruit',   name: 'میوه',        icon: '🍎', category: 'fresh',     buyPrice: 60,  sellPrice: 110, salesSpeed: 8,  unlockTier: 2, description: 'تازه و پرسود' },
+  { id: 'sp-egg',     name: 'تخم‌مرغ',     icon: '🥚', category: 'essential', buyPrice: 50,  sellPrice: 90,  salesSpeed: 9,  unlockTier: 2, description: 'فروش ثابت و مطمئن' },
+
+  // --- Tier 3: سوپرمارکت (سفارش ویژه + صندوق دوم) ---
+  { id: 'sp-meat',    name: 'گوشت',        icon: '🥩', category: 'fresh',     buyPrice: 200, sellPrice: 350, salesSpeed: 4,  unlockTier: 3, description: 'گرون ولی سود بالا' },
+  { id: 'sp-cheese',  name: 'پنیر',        icon: '🧀', category: 'fresh',     buyPrice: 100, sellPrice: 180, salesSpeed: 5,  unlockTier: 3, description: 'حاشیه سود خوب' },
+  { id: 'sp-snack',   name: 'تنقلات',      icon: '🍿', category: 'luxury',    buyPrice: 35,  sellPrice: 75,  salesSpeed: 11, unlockTier: 3, description: 'سریع ولی سود کم' },
+
+  // --- Tier 4: هایپرمارکت (فروش همزمان + مشتری بیشتر) ---
+  { id: 'sp-deterg',  name: 'شوینده',      icon: '🧴', category: 'household', buyPrice: 120, sellPrice: 220, salesSpeed: 3,  unlockTier: 4, description: 'کند ولی سود عالی' },
+  { id: 'sp-cosmetic',name: 'لوازم آرایشی',icon: '💄', category: 'luxury',    buyPrice: 150, sellPrice: 300, salesSpeed: 2,  unlockTier: 4, description: 'گرون‌ترین و کندترین' },
+  { id: 'sp-baby',    name: 'لوازم بچه',   icon: '🍼', category: 'household', buyPrice: 180, sellPrice: 320, salesSpeed: 3,  unlockTier: 4, description: 'سود بالا، فروش کند' },
+
+  // --- Tier 5: شبکه فروشگاهی (شعبه + passive) ---
+  { id: 'sp-elec',    name: 'لوازم الکترونیکی', icon: '📱', category: 'luxury', buyPrice: 500, sellPrice: 900, salesSpeed: 1, unlockTier: 5, description: 'گرون‌ترین، بیشترین سود' },
+  { id: 'sp-organic', name: 'محصولات ارگانیک',  icon: '🌿', category: 'fresh',  buyPrice: 250, sellPrice: 450, salesSpeed: 3, unlockTier: 5, description: 'لوکس و پرسود' },
+];
+
+// ---------- تایرهای پیشرفت سوپرمارکت ----------
+
+export const SUPERMARKET_TIERS: SupermarketTier[] = [
+  {
+    tier: 1, name: 'مغازه محلی', icon: '🛖', requiredLevel: 1,
+    shelfSlots: 2, checkoutLanes: 1,
+    features: ['۳ کالای پایه', 'فروش ساده'],
+  },
+  {
+    tier: 2, name: 'مینی‌مارکت', icon: '🏪', requiredLevel: 5,
+    shelfSlots: 3, checkoutLanes: 1,
+    features: ['+۳ کالای جدید', 'فروش سریع‌تر'],
+  },
+  {
+    tier: 3, name: 'سوپرمارکت', icon: '🏬', requiredLevel: 10,
+    shelfSlots: 4, checkoutLanes: 2,
+    features: ['سفارش ویژه', 'صندوق دوم', '+۳ کالای تازه'],
+  },
+  {
+    tier: 4, name: 'هایپرمارکت', icon: '🏢', requiredLevel: 15,
+    shelfSlots: 6, checkoutLanes: 3,
+    features: ['فروش همزمان', 'مشتری بیشتر', '+۳ کالای لوکس'],
+  },
+  {
+    tier: 5, name: 'شبکه فروشگاهی', icon: '🌐', requiredLevel: 20,
+    shelfSlots: 8, checkoutLanes: 4,
+    features: ['شعبه (Passive)', '+۲ کالای ویژه', 'سفارش‌های کلان'],
+  },
+];
+
+// ---------- تولید سفارش‌های ویژه سوپرمارکتی ----------
+
+const SM_ORDER_TITLES = [
+  { title: 'سفارش مدرسه', icon: '🏫' },
+  { title: 'سفارش هتل', icon: '🏨' },
+  { title: 'سفارش مراسم', icon: '🎉' },
+  { title: 'سفارش ادارات', icon: '🏢' },
+  { title: 'سفارش بیمارستان', icon: '🏥' },
+  { title: 'سفارش رستوران', icon: '🍽️' },
+];
+
+export function generateSupermarketOrder(tier: number, availableProducts: string[]): SupermarketOrder | null {
+  if (tier < 3 || availableProducts.length === 0) return null;
+
+  const template = SM_ORDER_TITLES[Math.floor(Math.random() * SM_ORDER_TITLES.length)];
+  // انتخاب 1-2 محصول تصادفی
+  const numProducts = tier >= 4 ? 2 : 1;
+  const shuffled = [...availableProducts].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(numProducts, shuffled.length));
+
+  const requiredProducts = selected.map((pid) => {
+    const product = SHELF_PRODUCTS.find((p) => p.id === pid);
+    const baseQty = tier >= 5 ? 40 : tier >= 4 ? 25 : 15;
+    const qty = baseQty + Math.floor(Math.random() * 15);
+    return { productId: pid, quantity: qty };
+  });
+
+  const bonusMultiplier = 1.3 + (tier - 3) * 0.2 + Math.random() * 0.2;
+  const deadlineMinutes = tier >= 5 ? 5 : tier >= 4 ? 4 : 3;
+
+  return {
+    id: `smo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    title: template.title,
+    icon: template.icon,
+    requiredProducts,
+    bonusMultiplier: Math.round(bonusMultiplier * 100) / 100,
+    deadline: Date.now() + deadlineMinutes * 60 * 1000,
+    createdAt: Date.now(),
+    accepted: false,
+    completed: false,
+    failed: false,
+  };
+}
+
+// ---------- ساخت state اولیه سوپرمارکت ----------
+
+export function createInitialSupermarketState(): SupermarketState {
+  return {
+    shelves: [
+      { id: 'shelf-1', productId: null, quantity: 0, maxCapacity: 30 },
+      { id: 'shelf-2', productId: null, quantity: 0, maxCapacity: 30 },
+    ],
+    checkouts: [
+      { id: 1, speed: 8, unlocked: true },
+    ],
+    activeOrders: [],
+    boosts: [],
+    customersInStore: 0,
+    customersServed: 0,
+    totalShelfProductsSold: 0,
+    totalShelfRevenue: 0,
+    lastCustomerTickAt: Date.now(),
+    currentTier: 1,
+  };
+}
+
+// ---------- محاسبه تایر فعلی بر اساس سطح ----------
+
+export function getSupermarketTier(level: number): SupermarketTier {
+  let result = SUPERMARKET_TIERS[0];
+  for (const t of SUPERMARKET_TIERS) {
+    if (level >= t.requiredLevel) result = t;
+  }
+  return result;
+}
+
+// ---------- کانفیگ سوپرمارکت ----------
+
+export const SUPERMARKET_CONFIG = {
+  customerTickInterval: 3,          // هر ۳ ثانیه tick مشتری
+  baseCustomerRate: 2,              // مشتری پایه در دقیقه
+  shelfRestockCost: 1.0,            // ضریب هزینه پر کردن قفسه (× buyPrice)
+  orderGenerationInterval: 120_000, // هر ۲ دقیقه چک سفارش جدید
+  maxActiveOrders: 2,
+  boostDuration: 60_000,            // بوست‌ها ۱ دقیقه
+  tierCustomerMultiplier: [1, 1.2, 1.5, 2.0, 2.5], // مشتری بیشتر در تایرهای بالا
+  checkoutBaseSpeed: 8,             // سرعت پایه هر صندوق (مشتری/دقیقه)
+};

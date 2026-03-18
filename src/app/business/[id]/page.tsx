@@ -14,8 +14,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { BusinessProduct, Business, EmployeeRole } from '@/types';
+import SupermarketPanel from '@/components/business/SupermarketPanel';
+import { ShoppingCart } from 'lucide-react';
 
-type Tab = 'overview' | 'employees' | 'products';
+type Tab = 'overview' | 'employees' | 'products' | 'supermarket';
 
 const roleLabels: Record<EmployeeRole, string> = {
   production: 'تولید',
@@ -127,6 +129,7 @@ export default function BusinessDetailPage() {
 
   const tabs: { key: Tab; label: string; icon: typeof Users }[] = [
     { key: 'overview', label: 'کلی', icon: Coins },
+    ...(biz.type === 'supermarket' ? [{ key: 'supermarket' as Tab, label: 'فروشگاه', icon: ShoppingCart }] : []),
     { key: 'employees', label: vocab.workers, icon: Users },
     { key: 'products', label: 'محصولات', icon: Package },
   ];
@@ -521,6 +524,11 @@ export default function BusinessDetailPage() {
         </>
         );
       })()}
+
+      {/* ==================== تب فروشگاه (سوپرمارکت) ==================== */}
+      {tab === 'supermarket' && biz.type === 'supermarket' && (
+        <SupermarketPanel business={biz} />
+      )}
 
       {/* ==================== تب نیروها ==================== */}
       {tab === 'employees' && (
