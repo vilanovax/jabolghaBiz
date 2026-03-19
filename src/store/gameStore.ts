@@ -290,6 +290,13 @@ export function getNextUnlock(biz: Business, template: BusinessTemplate): NextUn
   return candidates[0];
 }
 
+export interface FloatingRewardItem {
+  id: string;
+  amount: number;
+  label?: string;   // e.g. "+5% ماموریت"
+  subtitle?: string; // e.g. "سفارش تکمیل شد"
+}
+
 interface GameState {
   player: PlayerProfile;
   businesses: Business[];
@@ -408,6 +415,11 @@ interface GameState {
   // Achievement Toast
   achievementToastQueue: Achievement[];
   dismissAchievementToast: () => void;
+
+  // Floating Rewards
+  floatingRewards: FloatingRewardItem[];
+  addFloatingReward: (reward: Omit<FloatingRewardItem, 'id'>) => void;
+  clearFloatingReward: (id: string) => void;
 
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -600,7 +612,10 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
         if (completedCycles > 0) {
           const productionRate = calcEffectiveRevenue(biz); // units per cycle
-          const rawProduced = productionRate * completedCycles + newFracProd;
+          // Soft collect: slow production when inventory near-full (≥90%)
+          const inventoryFullness = biz.inventory.quantity / maxCap;
+          const softCollectMult = inventoryFullness >= 0.9 ? 0.5 : 1;
+          const rawProduced = productionRate * completedCycles * softCollectMult + newFracProd;
           const wholeProduced = Math.floor(rawProduced);
           newFracProd = rawProduced - wholeProduced;
           newQuantity = Math.min(maxCap, newQuantity + wholeProduced);
@@ -1102,6 +1117,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       },
     }));
 
+    get().addFloatingReward({
+      amount: payment,
+      subtitle: isComplete ? 'سفارش تکمیل شد' : 'تحویل جزئی',
+    });
+
     if (isComplete) {
       get().progressMission('complete_special_order', 1);
       get().progressMission('earn_total', payment);
@@ -1266,6 +1286,12 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...player, balance: player.balance + amount },
     });
 
+    get().addFloatingReward({
+      amount,
+      label: newStreak > 1 ? `🔥 روز ${newStreak}` : undefined,
+      subtitle: 'بونوس روزانه',
+    });
+
     get().progressMission('claim_daily_bonus', 1);
     get().progressMission('reach_balance', get().player.balance);
     get().checkAchievements();
@@ -1320,8 +1346,10 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       return;
     }
 
-    // شانس
-    if (Math.random() > EVENT_CONFIG.triggerChance) {
+    // شانس — در ساعت طلایی دو برابر میشه
+    const rushActive = get().isRushHourActive();
+    const effectiveChance = rushActive ? Math.min(0.7, EVENT_CONFIG.triggerChance * 2) : EVENT_CONFIG.triggerChance;
+    if (Math.random() > effectiveChance) {
       set({ randomEvents: { ...randomEvents, lastEventCheckAt: now } });
       return;
     }
@@ -1447,15 +1475,53 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...player, balance: player.balance - option.cost },
     });
 
+    // Floating reward: cost paid, show confirmation
+    if (option.cost > 0) {
+      get().addFloatingReward({
+        amount: -option.cost,
+        label: option.label,
+        subtitle: 'واکنش ثبت شد',
+      });
+    }
+
     get().progressMission('respond_to_event', 1);
   },
 
   expireEvents: () => {
     const now = Date.now();
-    const { randomEvents } = get();
+    const { randomEvents, news } = get();
+    const expired = randomEvents.activeEvents.filter((e) => e.expiresAt <= now);
     const filtered = randomEvents.activeEvents.filter((e) => e.expiresAt > now);
-    if (filtered.length !== randomEvents.activeEvents.length) {
-      set({ randomEvents: { ...randomEvents, activeEvents: filtered } });
+
+    if (expired.length > 0) {
+      const { businesses } = get();
+      const totalRevPerMs = businesses.reduce((sum, b) => sum + calcEffectiveRevenue(b), 0) / 30000; // avg 30s cycle
+
+      // فرصت‌های از دست رفته رو به خبر تبدیل کن (فقط رویدادهای مثبت که بدون پاسخ رفتن)
+      const missedNews: NewsArticle[] = expired
+        .filter((e) => e.isPositive && !e.responded && e.effect === 'revenue_multiplier')
+        .map((e) => {
+          const durationMs = e.expiresAt - e.startedAt;
+          const estimatedMissed = Math.round(totalRevPerMs * (e.effectValue - 1) * durationMs);
+          const secondsLate = Math.min(59, Math.round((now - e.expiresAt) / 1000) + Math.round(Math.random() * 20 + 5));
+          return {
+            id: `news-missed-${e.id}`,
+            title: `⏰ فقط ${secondsLate} ثانیه دیر رسیدی!`,
+            summary: estimatedMissed > 0
+              ? `${e.title} — تقریباً ${estimatedMissed.toLocaleString('fa-IR')} تومان از دست رفت`
+              : `${e.title} منقضی شد. دفعه بعد سریع‌تر عمل کن!`,
+            category: 'event' as const,
+            icon: '⏰',
+            timestamp: now,
+            isBreaking: false,
+            relatedBusinessType: e.targetBusinessType,
+          };
+        });
+
+      set({
+        randomEvents: { ...randomEvents, activeEvents: filtered },
+        news: missedNews.length > 0 ? [...missedNews, ...news].slice(0, 20) : news,
+      });
     }
   },
 
@@ -1717,6 +1783,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           : player.stats,
       },
     });
+    get().addFloatingReward({
+      amount: mission.reward,
+      label: mission.xpReward > 0 ? `+${mission.xpReward} XP` : undefined,
+      subtitle: 'ماموریت تکمیل شد',
+    });
   },
 
   checkAchievements: () => {
@@ -1815,6 +1886,17 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     set((state) => ({
       achievementToastQueue: state.achievementToastQueue.slice(1),
     }));
+  },
+
+  // ==================== Floating Rewards ====================
+
+  floatingRewards: [],
+  addFloatingReward: (reward) => {
+    const id = `reward-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    set((s) => ({ floatingRewards: [...s.floatingRewards, { ...reward, id }] }));
+  },
+  clearFloatingReward: (id) => {
+    set((s) => ({ floatingRewards: s.floatingRewards.filter((r) => r.id !== id) }));
   },
 
   // ==================== Banking ====================

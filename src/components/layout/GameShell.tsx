@@ -10,6 +10,7 @@ import DailyBonusModal from '@/components/hooks/DailyBonusModal';
 import EventModal from '@/components/hooks/EventModal';
 import AchievementToast from '@/components/achievements/AchievementToast';
 import LevelUpOverlay from '@/components/hooks/LevelUpOverlay';
+import FloatingRewardLayer from '@/components/ui/FloatingReward';
 
 const dailyTasks = [
   { text: 'یک کارمند جدید استخدام کن', done: false },
@@ -64,6 +65,9 @@ export default function GameShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <BottomNav />
+
+      {/* Floating Reward Popups */}
+      <FloatingRewardLayer />
 
       {/* Achievement Toast */}
       <AchievementToast />

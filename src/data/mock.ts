@@ -1361,6 +1361,57 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     effect: 'revenue_multiplier', effectValue: 1.5, durationMs: 5 * 60 * 1000, isPositive: true,
     newsTitle: 'قرارداد بزرگ حمل‌ونقل امضا شد', newsSummary: 'یک شرکت حمل‌ونقل قرارداد سنگین جدیدی بست.',
   },
+
+  // ===== GOLDEN OPPORTUNITIES (کوتاه‌مدت، هیجانی) =====
+  {
+    id: 'evt-flash-order', title: '🔥 سفارش فوری!', description: 'یک مشتری بزرگ سفارش اضطراری داد. ۹۰ ثانیه وقت داری!',
+    icon: '⚡', severity: 'major', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 1.4, durationMs: 90 * 1000, isPositive: true,
+    responseOptions: [{ id: 'resp-flash-priority', label: 'اولویت‌بندی فوری', icon: '🚀', cost: 5_000, effectMultiplier: 1.5, description: 'با هزینه کم، درآمد رو ۵۰٪ بیشتر کن' }],
+    newsTitle: 'سفارش فوری بازار: درآمد ۴۰٪ بالا رفت', newsSummary: 'تقاضای ناگهانی باعث جهش قیمت‌ها شد.',
+  },
+  {
+    id: 'evt-cheap-supply', title: '📦 تامین ارزان فوری', description: 'یه تأمین‌کننده موجودی مازاد داره. فقط ۲ دقیقه مهلت!',
+    icon: '📦', severity: 'minor', scope: 'global',
+    effect: 'expense_multiplier', effectValue: 0.65, durationMs: 2 * 60 * 1000, isPositive: true,
+    newsTitle: 'فروش فوری تأمین‌کنندگان', newsSummary: 'تأمین‌کنندگان موجودی مازاد خود را با تخفیف عرضه کردند.',
+  },
+  {
+    id: 'evt-vip-customer', title: '👑 مشتری VIP', description: 'یک مشتری ثروتمند وارد شد. درآمد ۵ دقیقه بالاست!',
+    icon: '👑', severity: 'minor', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 1.6, durationMs: 5 * 60 * 1000, isPositive: true,
+    responseOptions: [{ id: 'resp-vip-deal', label: 'پیشنهاد ویژه بده', icon: '🎁', cost: 8_000, effectMultiplier: 1.4, description: 'تخفیف ویژه بده، درآمد دوچندان میشه' }],
+    newsTitle: 'مشتری VIP وارد بازار شد', newsSummary: 'حضور خریداران بزرگ باعث رونق موقت بازار شد.',
+  },
+  {
+    id: 'evt-market-window', title: '📈 پنجره بازار باز شد', description: 'تقاضا ناگهان اوج گرفت. ۳ دقیقه وقت داری!',
+    icon: '📈', severity: 'minor', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 1.35, durationMs: 3 * 60 * 1000, isPositive: true,
+    newsTitle: 'تقاضای ناگهانی در بازار', newsSummary: 'موج جدید خرید در بازار شکل گرفت.',
+  },
+
+  // ===== DECISION EVENTS (تصمیم کارمند/رقیب) =====
+  {
+    id: 'evt-employee-raise', title: '👨‍💼 درخواست افزایش حقوق', description: 'یکی از کارمندان حقوق بیشتری می‌خواد. قبول کنی، عملکرد بهتر میشه.',
+    icon: '👨‍💼', severity: 'minor', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 1.0, durationMs: 4 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-raise-accept', label: 'قبول (+20% عملکرد)', icon: '✅', cost: 12_000, effectMultiplier: 1.2, description: 'حقوق بده، درآمد بیشتر میشه' }],
+    newsTitle: 'موج درخواست افزایش حقوق در بازار کار', newsSummary: 'کارمندان در پی افزایش حقوق در شرایط اقتصادی جدید هستند.',
+  },
+  {
+    id: 'evt-rival-discount', title: '⚔️ رقیب تخفیف داد!', description: 'یه رقیب ۲۰٪ تخفیف اعلام کرد. مشتریا دارن میرن پیشش.',
+    icon: '⚔️', severity: 'major', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 0.8, durationMs: 4 * 60 * 1000, isPositive: false,
+    responseOptions: [{ id: 'resp-rival-match', label: 'مقابله با تخفیف', icon: '🔥', cost: 10_000, effectMultiplier: 0.0, description: 'با هزینه‌ای کم اثر رو خنثی کن' }],
+    newsTitle: 'رقبا وارد جنگ قیمتی شدند', newsSummary: 'رقابت شدید قیمتی در بازار آغاز شد.',
+  },
+  {
+    id: 'evt-partnership-offer', title: '🤝 پیشنهاد مشارکت', description: 'یه شرکت میخواد باهات کار کنه. سرمایه‌گذاری کوچیک، سود بزرگ.',
+    icon: '🤝', severity: 'minor', scope: 'global',
+    effect: 'revenue_multiplier', effectValue: 1.0, durationMs: 3 * 60 * 1000, isPositive: true,
+    responseOptions: [{ id: 'resp-partner-accept', label: 'مشارکت رو قبول کن', icon: '🤝', cost: 20_000, effectMultiplier: 1.5, description: 'سرمایه‌گذاری کوچیک، درآمد بالاتر' }],
+    newsTitle: 'موج مشارکت‌های تجاری جدید', newsSummary: 'شرکت‌ها با مشارکت‌های استراتژیک دنبال رشد هستند.',
+  },
 ];
 
 // ==================== BANKING ====================
