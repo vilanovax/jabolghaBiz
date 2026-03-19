@@ -16,23 +16,25 @@ export default function AchievementToast() {
   const queue = useGameStore((s) => s.achievementToastQueue);
   const dismiss = useGameStore((s) => s.dismissAchievementToast);
   const [visible, setVisible] = useState(false);
+  const [claimed, setClaimed] = useState(false);
 
   const current = queue[0];
 
   useEffect(() => {
     if (!current) {
       setVisible(false);
+      setClaimed(false);
       return;
     }
 
-    // Animate in
+    setClaimed(false);
     const showTimer = setTimeout(() => setVisible(true), 50);
 
-    // Auto dismiss
+    // Auto dismiss after 6s if not claimed
     const hideTimer = setTimeout(() => {
       setVisible(false);
-      setTimeout(dismiss, 300); // wait for exit animation
-    }, 3500);
+      setTimeout(dismiss, 300);
+    }, 6000);
 
     return () => {
       clearTimeout(showTimer);
@@ -43,6 +45,16 @@ export default function AchievementToast() {
   if (!current) return null;
 
   const rarity = rarityConfig[current.rarity];
+  const hasReward = (current.reward?.money && current.reward.money > 0) ||
+    (current.reward?.statBoost && Object.keys(current.reward.statBoost).length > 0);
+
+  const handleClaim = () => {
+    setClaimed(true);
+    setTimeout(() => {
+      setVisible(false);
+      setTimeout(dismiss, 300);
+    }, 800);
+  };
 
   return (
     <div
@@ -51,15 +63,15 @@ export default function AchievementToast() {
       }`}
     >
       <div
-        className="max-w-lg w-full rounded-[16px] px-4 py-3 border backdrop-blur-xl"
+        className="max-w-lg w-full rounded-[16px] px-4 py-3 border backdrop-blur-xl animate-achievement-shine"
         style={{
           background: `linear-gradient(135deg, ${rarity.glow}, rgba(0,0,0,0.6))`,
           borderColor: rarity.color + '40',
-          boxShadow: `0 8px 32px ${rarity.glow}`,
+          boxShadow: `0 8px 32px ${rarity.glow}, 0 0 60px ${rarity.glow}`,
         }}
       >
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{current.badge}</span>
+          <div className="text-3xl animate-pop-in">{current.badge}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="text-sm font-black text-white">{current.title}</p>
@@ -81,6 +93,31 @@ export default function AchievementToast() {
               </div>
             )}
           </div>
+
+          {/* Claim / Dismiss button */}
+          {hasReward && !claimed ? (
+            <button
+              onClick={handleClaim}
+              className="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black text-white transition-all active:scale-95"
+              style={{
+                background: `linear-gradient(135deg, ${rarity.color}, ${rarity.color}CC)`,
+                boxShadow: `0 2px 12px ${rarity.glow}`,
+              }}
+            >
+              دریافت
+            </button>
+          ) : claimed ? (
+            <span className="shrink-0 text-[10px] font-bold text-white/60 animate-pop-in">
+              دریافت شد ✓
+            </span>
+          ) : (
+            <button
+              onClick={handleClaim}
+              className="shrink-0 p-1.5 rounded-full text-white/40 hover:text-white/70 transition-colors"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
     </div>
