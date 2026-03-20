@@ -36,15 +36,34 @@ export default function MarketPage() {
     { key: 'banking', label: 'بانک', icon: Landmark, count: bankingCount },
   ];
 
+  const totalOrderValue = orderBoard.availableOrders.reduce((sum, o) => sum + o.totalPayment, 0);
+  const urgentCount = orderBoard.availableOrders.filter(
+    (o) => Math.ceil(Math.max(0, o.deadline - Date.now()) / 60000) <= 5
+  ).length;
+
   return (
     <div className="space-y-4 py-4 pb-24">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-black">بازار</h1>
-        {hotCount > 0 && (
-          <span className="text-[10px] bg-[#EF4444]/15 text-[#EF4444] px-2 py-0.5 rounded-[999px] font-bold animate-pulse">
-            🔥 {hotCount} محصول داغ
-          </span>
-        )}
+        <div>
+          <h1 className="text-lg font-black">بازار</h1>
+          {totalOrderValue > 0 && (
+            <p className="text-[10px] text-fg-muted mt-0.5">
+              <span className="font-fa font-bold text-accent-money">{totalOrderValue.toLocaleString('fa-IR')}</span> تومان سفارش فعال
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {urgentCount > 0 && (
+            <span className="text-[10px] bg-[#EF4444]/12 text-[#EF4444] px-2 py-1 rounded-full font-black animate-warning-pulse">
+              🔥 {urgentCount} فوری
+            </span>
+          )}
+          {hotCount > 0 && (
+            <span className="text-[10px] bg-[#F59E0B]/12 text-[#F59E0B] px-2 py-1 rounded-full font-black">
+              📈 {hotCount} داغ
+            </span>
+          )}
+        </div>
       </div>
 
       {/* تب‌ها */}

@@ -4,12 +4,11 @@ import { useState } from 'react';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses } from '@/store/gameStore';
 import BusinessCard from '@/components/business/BusinessCard';
 import NewBusinessModal from '@/components/business/NewBusinessModal';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Plus } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Users, Zap, Lock } from 'lucide-react';
 
 export default function BusinessPage() {
   const businesses = useGameStore((s) => s.businesses);
+  const player = useGameStore((s) => s.player);
   const [showNewBiz, setShowNewBiz] = useState(false);
 
   const totalRevenue = businesses.reduce((sum, b) => sum + calcEffectiveRevenue(b), 0);
@@ -17,71 +16,168 @@ export default function BusinessPage() {
   const totalProfit = totalRevenue - totalExpenses;
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
 
+  // Empire mood
+  const mood =
+    businesses.length === 0
+      ? null
+      : totalProfit > 0
+        ? { label: 'سودده', color: '#22C55E', bg: 'rgba(34,197,94,0.10)', icon: '📈' }
+        : totalProfit === 0
+          ? { label: 'لب مرز', color: '#F59E0B', bg: 'rgba(245,158,11,0.10)', icon: '⚠️' }
+          : { label: 'ضررده', color: '#EF4444', bg: 'rgba(239,68,68,0.10)', icon: '📉' };
+
+  // Can create new business? (simple level gate example)
+  const maxBusinesses = Math.max(1, Math.floor(player.level / 2) + 1);
+  const canCreate = businesses.length < maxBusinesses;
+
   return (
     <div className="space-y-4 py-4 pb-24">
-      {/* هدر */}
+
+      {/* ---- Header ---- */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black">کسب‌وکارهای من</h1>
-        <Button onClick={() => setShowNewBiz(true)} size="sm">
-          <span className="flex items-center gap-1">
-            <Plus size={16} /> جدید
-          </span>
-        </Button>
+        <div>
+          <h1 className="text-lg font-black">کسب‌وکارهای من</h1>
+          <p className="text-[10px] text-fg-muted mt-0.5">
+            {businesses.length} از {maxBusinesses} شرکت فعال
+          </p>
+        </div>
+        {canCreate && (
+          <button
+            onClick={() => setShowNewBiz(true)}
+            className="flex items-center gap-1.5 text-[11px] font-black text-white bg-gradient-to-l from-[#6366F1] to-[#8B5CF6] px-3 py-2 rounded-full active:scale-95 transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)]"
+          >
+            <Plus size={14} />
+            جدید
+          </button>
+        )}
       </div>
 
-      {/* خلاصه — نوار افقی فشرده با ایموجی */}
-      {businesses.length > 0 && (
-        <div className="flex items-center justify-between bg-surface-card/50 rounded-xl px-3 py-2.5">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs">📈</span>
-            <span className="text-[11px] text-fg-secondary">سود:</span>
-            <span className={`text-[11px] font-fa font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('fa-IR')}
-            </span>
-          </div>
-          <div className="w-px h-4 bg-surface-inset" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs">💸</span>
-            <span className="text-[11px] text-fg-secondary">هزینه:</span>
-            <span className="text-[11px] text-red-400 font-fa font-bold">{totalExpenses.toLocaleString('fa-IR')}</span>
-          </div>
-          <div className="w-px h-4 bg-surface-inset" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs">👥</span>
-            <span className="text-[11px] text-fg-secondary font-bold font-fa">{totalEmployees.toLocaleString('fa-IR')}</span>
-            <span className="text-[11px] text-fg-secondary">نفر</span>
+      {/* ---- Summary Strip ---- */}
+      {businesses.length > 0 && mood && (
+        <div
+          className="rounded-[16px] px-4 py-3 border"
+          style={{ background: mood.bg, borderColor: `${mood.color}25` }}
+        >
+          <div className="flex items-center justify-between">
+            {/* Mood + profit */}
+            <div className="flex items-center gap-2">
+              <span className="text-base">{mood.icon}</span>
+              <div>
+                <p className="text-[8px] text-fg-muted">وضعیت امپراتوری</p>
+                <p className="text-xs font-black" style={{ color: mood.color }}>{mood.label}</p>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-3">
+              <div className="text-center">
+                <p className="text-[8px] text-fg-muted">سود/سیکل</p>
+                <div className="flex items-center gap-0.5">
+                  {totalProfit >= 0
+                    ? <TrendingUp size={10} className="text-[#22C55E]" />
+                    : <TrendingDown size={10} className="text-[#EF4444]" />
+                  }
+                  <p className={`text-[11px] font-black font-fa ${totalProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                    {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('fa-IR')}
+                  </p>
+                </div>
+              </div>
+              <div className="w-px h-6 bg-line-subtle" />
+              <div className="text-center">
+                <p className="text-[8px] text-fg-muted">کارمند</p>
+                <div className="flex items-center gap-0.5 justify-center">
+                  <Users size={10} className="text-fg-faint" />
+                  <p className="text-[11px] font-black font-fa">{totalEmployees}</p>
+                </div>
+              </div>
+              <div className="w-px h-6 bg-line-subtle" />
+              <div className="text-center">
+                <p className="text-[8px] text-fg-muted">هزینه</p>
+                <p className="text-[11px] font-black font-fa text-[#EF4444]">
+                  {totalExpenses.toLocaleString('fa-IR')}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* لیست کسب‌وکارها */}
+      {/* ---- Business List ---- */}
       <div className="space-y-3">
         {businesses.length === 0 ? (
-          <Card className="text-center py-12">
-            <p className="text-4xl mb-3">🚀</p>
-            <p className="text-sm text-fg-secondary font-bold">هنوز کسب‌وکاری ندارید</p>
-            <p className="text-xs text-fg-faint mt-1">اولین کسب‌وکارتان را راه‌اندازی کنید و شروع به کسب درآمد کنید!</p>
-            <div className="mt-5">
-              <Button onClick={() => setShowNewBiz(true)} size="lg">
-                <span className="flex items-center gap-2">
-                  🚀 راه‌اندازی کسب‌وکار
-                </span>
-              </Button>
+          /* ---- Empty state ---- */
+          <div className="text-center py-12 space-y-3">
+            <div className="flex justify-center">
+              <div
+                className="w-20 h-20 rounded-[24px] flex items-center justify-center text-4xl"
+                style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' }}
+              >
+                🚀
+              </div>
             </div>
-          </Card>
-        ) : (
-          <>
-            {businesses.map((biz) => <BusinessCard key={biz.id} business={biz} />)}
-
-            {/* دکمه ساخت کسب‌وکار جدید */}
+            <div>
+              <p className="text-sm font-black">امپراتوری‌ات رو شروع کن</p>
+              <p className="text-[11px] text-fg-muted mt-1">اولین کسب‌وکارت رو راه‌اندازی کن و شروع به کسب درآمد کن!</p>
+            </div>
             <button
               onClick={() => setShowNewBiz(true)}
-              className="w-full border-2 border-dashed border-[#6366F1]/30 hover:border-[#6366F1]/60 rounded-[18px] py-5 transition-all flex items-center justify-center gap-2 text-sm font-black active:scale-[0.97] hover:bg-[#6366F1]/5"
-              style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.03), rgba(139,92,246,0.06))' }}
+              className="inline-flex items-center gap-2 text-sm font-black text-white bg-gradient-to-l from-[#6366F1] to-[#8B5CF6] px-6 py-3 rounded-full active:scale-95 transition-all shadow-[0_4px_20px_rgba(99,102,241,0.35)]"
             >
-              <span className="text-xl">🚀</span>
-              <span className="text-[#6366F1]">راه‌اندازی کسب‌وکار جدید</span>
+              <Zap size={16} />
+              راه‌اندازی کسب‌وکار
             </button>
+          </div>
+        ) : (
+          <>
+            {businesses.map((biz, i) => <BusinessCard key={biz.id} business={biz} index={i} />)}
+
+            {/* ---- Launch Card ---- */}
+            {canCreate ? (
+              <button
+                onClick={() => setShowNewBiz(true)}
+                className="w-full active:scale-[0.98] transition-transform"
+              >
+                <div
+                  className="rounded-[20px] px-4 py-5 flex items-center gap-4 border"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04))',
+                    border: '1px dashed rgba(99,102,241,0.35)',
+                    boxShadow: '0 0 20px rgba(99,102,241,0.06)',
+                  }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-[14px] flex items-center justify-center text-2xl shrink-0"
+                    style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' }}
+                  >
+                    🚀
+                  </div>
+                  <div className="flex-1 text-right">
+                    <p className="text-sm font-black text-[#6366F1]">راه‌اندازی کسب‌وکار جدید</p>
+                    <p className="text-[10px] text-fg-muted mt-0.5">بازار جدیدت رو فتح کن</p>
+                  </div>
+                  <Plus size={18} className="text-[#6366F1] shrink-0" />
+                </div>
+              </button>
+            ) : (
+              /* ---- Locked: max businesses reached ---- */
+              <div
+                className="rounded-[20px] px-4 py-5 flex items-center gap-4 opacity-60"
+                style={{
+                  background: 'rgba(0,0,0,0.04)',
+                  border: '1px dashed rgba(150,150,150,0.25)',
+                }}
+              >
+                <div className="w-12 h-12 rounded-[14px] bg-surface-inset/50 flex items-center justify-center shrink-0">
+                  <Lock size={20} className="text-fg-faint" />
+                </div>
+                <div className="flex-1 text-right">
+                  <p className="text-sm font-black text-fg-muted">کسب‌وکار جدید قفل است</p>
+                  <p className="text-[10px] text-fg-faint mt-0.5">
+                    در LV {(businesses.length) * 2 + 1} باز می‌شود
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

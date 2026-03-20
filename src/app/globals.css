@@ -361,6 +361,34 @@ input, textarea {
   animation: levelup-flash 2s ease-out forwards;
 }
 
+/* Business card stagger entrance */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-enter {
+  animation: card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Progress bar shimmer (active production) */
+@keyframes bar-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-bar-shimmer {
+  background-size: 200% 100%;
+  animation: bar-shimmer 2s linear infinite;
+}
+
+/* Warning pulse — loss state */
+@keyframes warning-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+.animate-warning-pulse {
+  animation: warning-pulse 1.5s ease-in-out infinite;
+}
+
 /* Level-up badge pop */
 @keyframes levelup-pop {
   0% { transform: scale(0); opacity: 0; }

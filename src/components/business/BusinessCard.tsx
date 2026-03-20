@@ -1,60 +1,118 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Business, BusinessTemplate } from '@/types';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, getNextUnlock, calcEcosystemBonus } from '@/store/gameStore';
-import { businessTemplates, getNeighborhood, getCityByNeighborhood, SPECIALTY_MILESTONES } from '@/data/mock';
-import EventBanner from '@/components/hooks/EventBanner';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Business, BusinessType } from '@/types';
+import { useGameStore, calcTotalExpenses } from '@/store/gameStore';
 import Link from 'next/link';
+import { AlertTriangle, CheckCircle, Wrench } from 'lucide-react';
+
+type BizCardState = 'upgradeReady' | 'upgradeInProgress' | 'losing' | 'inventoryWarning' | 'rushHour' | 'normal';
 
 interface BusinessCardProps {
   business: Business;
+  index?: number;
 }
 
-export default function BusinessCard({ business }: BusinessCardProps) {
-  // collectRevenue is now a no-op; auto-sales handle income
-  const allBusinesses = useGameStore((s) => s.businesses);
-  const activeEvents = useGameStore((s) => s.randomEvents.activeEvents);
-  const relevantEvents = activeEvents.filter(
-    (e) => (e.scope === 'global' || e.targetBusinessType === business.type) && e.effect !== 'instant_balance'
-  );
+const STATE_CONFIG: Record<BizCardState, {
+  border: string;
+  shadow?: string;
+  bg?: string;
+  barColor: string;
+  chip?: { label: string; color: string };
+}> = {
+  upgradeReady: {
+    border: 'border-[#22C55E]/50',
+    shadow: '0 0 20px rgba(34,197,94,0.18)',
+    barColor: 'linear-gradient(90deg, #22C55E, #4ADE80, #22C55E)',
+    chip: { label: '✨ ارتقا آماده', color: 'text-[#22C55E]' },
+  },
+  upgradeInProgress: {
+    border: 'border-[#8B5CF6]/30',
+    barColor: 'linear-gradient(90deg, #8B5CF6, #A78BFA, #8B5CF6)',
+    chip: { label: '⚙️ در حال ارتقا', color: 'text-[#8B5CF6]' },
+  },
+  losing: {
+    border: 'border-[#EF4444]/35',
+    bg: 'linear-gradient(135deg, rgba(239,68,68,0.07), rgba(220,38,38,0.03))',
+    barColor: 'linear-gradient(90deg, #EF4444, #F87171, #EF4444)',
+    chip: { label: '📉 ضررده', color: 'text-[#EF4444]' },
+  },
+  inventoryWarning: {
+    border: 'border-[#F59E0B]/35',
+    barColor: 'linear-gradient(90deg, #F59E0B, #FCD34D, #F59E0B)',
+    chip: { label: '⚠️ انبار پر', color: 'text-[#F59E0B]' },
+  },
+  rushHour: {
+    border: 'border-[#EF4444]/30',
+    shadow: '0 0 16px rgba(239,68,68,0.12)',
+    bg: 'linear-gradient(135deg, rgba(239,68,68,0.04), rgba(249,115,22,0.03))',
+    barColor: 'linear-gradient(90deg, #EF4444, #F97316, #EF4444)',
+    chip: { label: '🔥 ساعت طلایی', color: 'text-[#EF4444]' },
+  },
+  normal: {
+    border: 'border-line-subtle',
+    barColor: 'linear-gradient(90deg, #6366F1, #8B5CF6, #6366F1)',
+  },
+};
+
+const BIZ_TYPE_COLORS: Record<BusinessType, { iconBg: string; barColor: string; border: string }> = {
+  farming:     { iconBg: 'linear-gradient(135deg, rgba(22,163,74,0.15), rgba(34,197,94,0.08))',     barColor: 'linear-gradient(90deg, #16A34A, #4ADE80, #16A34A)', border: 'border-[#16A34A]/25' },
+  factory:     { iconBg: 'linear-gradient(135deg, rgba(2,132,199,0.15), rgba(14,165,233,0.08))',    barColor: 'linear-gradient(90deg, #0284C7, #38BDF8, #0284C7)', border: 'border-[#0284C7]/25' },
+  supermarket: { iconBg: 'linear-gradient(135deg, rgba(234,88,12,0.15), rgba(249,115,22,0.08))',    barColor: 'linear-gradient(90deg, #EA580C, #FB923C, #EA580C)', border: 'border-[#EA580C]/25' },
+  restaurant:  { iconBg: 'linear-gradient(135deg, rgba(190,24,93,0.15), rgba(236,72,153,0.08))',    barColor: 'linear-gradient(90deg, #BE185D, #F472B6, #BE185D)', border: 'border-[#BE185D]/25' },
+  app_startup: { iconBg: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(167,139,250,0.08))',  barColor: 'linear-gradient(90deg, #7C3AED, #A78BFA, #7C3AED)', border: 'border-[#7C3AED]/25' },
+  transport:   { iconBg: 'linear-gradient(135deg, rgba(3,105,161,0.15), rgba(56,189,248,0.08))',    barColor: 'linear-gradient(90deg, #0369A1, #7DD3FC, #0369A1)', border: 'border-[#0369A1]/25' },
+};
+
+export default function BusinessCard({ business, index = 0 }: BusinessCardProps) {
+  const router = useRouter();
+  const isRushHourActive = useGameStore((s) => s.isRushHourActive);
+  const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
+
+  const products = useGameStore((s) => s.products);
+  const totalExpenses = calcTotalExpenses(business);
+  // درآمد واقعی: واحد فروش/دقیقه × مدت سیکل (دقیقه) × قیمت بازار
+  const marketProduct = products.find((p) => p.id === business.inventory.productId);
+  const unitPrice = marketProduct?.currentPrice ?? 1000;
+  const revenuePerCycle = Math.round(business.baseSaleRate * (business.cycleDuration / 60) * unitPrice);
+  const netProfit = revenuePerCycle - totalExpenses;
+  const invPct = business.inventory.maxCapacity > 0
+    ? business.inventory.quantity / business.inventory.maxCapacity
+    : 0;
+
+  const rushActive = isRushHourActive();
+  const isUpgrading = business.upgradeStartedAt !== null;
+  const upgradeReady = isUpgrading && business.upgradeEndsAt !== null && Date.now() >= business.upgradeEndsAt;
+  const isLosing = netProfit < 0;
+  const inventoryWarning = invPct >= 0.9;
+
+  const cardState: BizCardState = upgradeReady ? 'upgradeReady'
+    : isUpgrading ? 'upgradeInProgress'
+    : isLosing ? 'losing'
+    : inventoryWarning ? 'inventoryWarning'
+    : rushActive ? 'rushHour'
+    : 'normal';
+
+  const typeColor = BIZ_TYPE_COLORS[business.type];
+  const cfg = cardState === 'normal'
+    ? { ...STATE_CONFIG.normal, border: typeColor.border, barColor: typeColor.barColor }
+    : STATE_CONFIG[cardState];
+
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [collectAnim, setCollectAnim] = useState<number | null>(null);
-
-  const effectiveRevenue = calcEffectiveRevenue(business);
-  const totalExpenses = calcTotalExpenses(business);
-  const netProfit = effectiveRevenue - totalExpenses;
-  const inventoryQty = business.inventory.quantity;
-  const inventoryMax = business.inventory.maxCapacity;
-  const hasInventory = inventoryQty > 0;
-  const template = businessTemplates.find((t) => t.type === business.type);
-  const nextUnlock = template ? getNextUnlock(business, template) : null;
-  const neighborhood = business.neighborhoodId ? getNeighborhood(business.neighborhoodId) : undefined;
-  const specialtyMilestones = SPECIALTY_MILESTONES[business.type];
-  const currentTier = [...specialtyMilestones].reverse().find((m) => business.level >= m.levelThreshold) ?? specialtyMilestones[0];
-  const city = business.neighborhoodId ? getCityByNeighborhood(business.neighborhoodId) : undefined;
-  const trafficMult = neighborhood ? neighborhood.customerTraffic : 1.0;
-  const effectiveCycleDuration = Math.max(10, Math.round(business.cycleDuration / trafficMult));
-  const ecosystemBonus = calcEcosystemBonus(business, allBusinesses);
 
   useEffect(() => {
     const update = () => {
       const elapsed = (Date.now() - business.lastCycleAt) / 1000;
-      const remaining = Math.max(0, effectiveCycleDuration - (elapsed % effectiveCycleDuration));
+      const remaining = Math.max(0, business.cycleDuration - (elapsed % business.cycleDuration));
       setTimeLeft(Math.ceil(remaining));
-      setProgress(((effectiveCycleDuration - remaining) / effectiveCycleDuration) * 100);
+      setProgress(((business.cycleDuration - remaining) / business.cycleDuration) * 100);
     };
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [business.lastCycleAt, effectiveCycleDuration]);
-
-  const handleCollect = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Revenue is now auto-collected via sales system
-  }, []);
+  }, [business.lastCycleAt, business.cycleDuration]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -63,129 +121,102 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   };
 
   return (
-    <div
-      className={`relative rounded-[18px] bg-surface-card/60 border p-4 transition-all duration-300 overflow-hidden ${
-        hasInventory
-          ? 'border-[#22C55E]/30 shadow-[0_0_18px_rgba(34,197,94,0.25)]'
-          : 'border-line-subtle shadow-[var(--shadow-card)]'
-      }`}
+    <Link
+      href={`/business/${business.id}`}
+      className="block active:scale-[0.98] transition-transform animate-card-enter"
+      style={{ animationDelay: `${index * 0.06}s` }}
     >
-      {/* floating collect animation */}
-      {collectAnim !== null && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <span className="text-[#22C55E] font-black text-2xl font-fa animate-collect">
-            +{collectAnim.toLocaleString('fa-IR')}
-          </span>
-        </div>
-      )}
+      <div
+        className={`rounded-[20px] bg-surface-card/60 border p-4 overflow-hidden ${cfg.border}`}
+        style={{ boxShadow: cfg.shadow, background: cfg.bg }}
+      >
+        {/* Row 1: Icon + Name/State + Profit */}
+        <div className="flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-[14px] flex items-center justify-center text-2xl shrink-0"
+            style={{ background: typeColor.iconBg }}
+          >
+            {business.icon}
+          </div>
 
-      <Link href={`/business/${business.id}`} className="block">
-        {/* row 1: icon + name + level + auto badge */}
-        <div className="flex items-center gap-2.5">
-          <span className="text-2xl">{business.icon}</span>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-black text-fg text-sm truncate">{business.name}</h3>
-              <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/15 px-1.5 py-0.5 rounded">
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-black text-fg text-[13px] truncate">{business.name}</h3>
+              <span className="text-[9px] font-black text-white bg-gradient-to-l from-[#6366F1] to-[#8B5CF6] px-1.5 py-0.5 rounded-full shrink-0">
                 LV {business.level}
               </span>
-              <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded-[999px]">
-                {currentTier.icon} {currentTier.name}
-              </span>
-              {ecosystemBonus.count > 0 && (
-                <span className="text-[9px] text-sky-400 font-bold bg-sky-500/10 px-1.5 py-0.5 rounded-[999px]">
-                  🌐 اکوسیستم
-                </span>
-              )}
             </div>
-            {neighborhood && city && (
-              <p className="text-[9px] text-fg-muted mt-0.5">
-                📍 {city.icon} {neighborhood.name}
-              </p>
+            {cfg.chip && (
+              <span className={`text-[9px] font-bold ${cfg.chip.color}`}>{cfg.chip.label}</span>
             )}
           </div>
-          {hasInventory && (
-            <span className="text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded">📦 {inventoryQty}/{inventoryMax}</span>
-          )}
-        </div>
 
-        {/* row 2: REVENUE big + cycle time */}
-        <div className="flex items-baseline gap-3 mt-2.5">
-          <div className="flex items-baseline gap-1">
-            <span className="text-[#22C55E] text-lg font-black font-fa">+{effectiveRevenue.toLocaleString('fa-IR')}</span>
-            <span className="text-[9px] text-fg-muted">/سیکل</span>
+          <div className="text-right shrink-0">
+            <p className={`text-[20px] font-black font-fa leading-none ${netProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+              {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
+            </p>
+            <p className="text-[9px] text-fg-faint">/سیکل</p>
           </div>
-          <span className="text-[10px] text-fg-faint font-fa">⏱ {formatTime(effectiveCycleDuration)}</span>
         </div>
 
-        {/* row 3: production progress bar */}
-        <div className="mt-2.5">
-          <div className="h-1.5 bg-surface-inset/50 rounded-[999px] overflow-hidden">
+        {/* Row 2: Progress bar + timer */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-[9px] text-fg-faint mb-1.5">
+            <span className={rushActive ? 'text-[#EF4444] font-bold' : ''}>
+              {rushActive ? '🔥' : '⏱'} {formatTime(timeLeft)}
+            </span>
+            {inventoryWarning && (
+              <span className="text-[#F59E0B] font-bold flex items-center gap-0.5">
+                <AlertTriangle size={9} /> انبار پر
+              </span>
+            )}
+          </div>
+          <div className="h-2.5 bg-progress-bg rounded-full overflow-hidden">
             <div
-              className="h-full rounded-[999px] transition-all duration-1000"
+              className="h-full rounded-full transition-all duration-1000 animate-bar-shimmer"
               style={{
                 width: `${progress}%`,
-                background: hasInventory
-                  ? 'linear-gradient(90deg, #22C55E, #16A34A)'
-                  : 'linear-gradient(90deg, #6366F1, #8B5CF6)',
-                boxShadow: hasInventory ? '0 0 8px rgba(34,197,94,0.5)' : '0 0 6px rgba(99,102,241,0.3)',
+                background: cfg.barColor,
+                boxShadow: rushActive ? '0 0 8px rgba(239,68,68,0.5)' : undefined,
               }}
             />
           </div>
-          <div className="flex items-center justify-between mt-1 text-[9px]">
-            <span className="text-fg-faint">
-              {hasInventory ? `📦 ${inventoryQty} واحد در انبار` : `⏱ ${formatTime(timeLeft)} تا تولید`}
-            </span>
-          </div>
         </div>
 
-        {/* row 4: stats — employees, expenses, profit */}
-        <div className="flex items-center gap-3 mt-2 text-[10px]">
-          <span className="flex items-center gap-1 text-fg-muted">
-            👥 <span className="font-fa font-bold text-fg-secondary">{business.employees.length}/{business.maxEmployees}</span>
-          </span>
-          <span className="flex items-center gap-1 text-fg-muted">
-            💸 <span className="font-fa font-bold text-[#EF4444]">{totalExpenses.toLocaleString('fa-IR')}</span>
-          </span>
-          <span className="flex items-center gap-1 text-fg-muted">
-            📈 <span className={`font-fa font-bold ${netProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-              {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
-            </span>
-          </span>
-        </div>
-
-        {/* Active events */}
-        {relevantEvents.length > 0 && (
-          <div className="mt-2 space-y-1.5">
-            {relevantEvents.map((evt) => (
-              <EventBanner key={evt.id} event={evt} />
-            ))}
-          </div>
+        {/* Row 3: CTA — only when action needed */}
+        {cardState === 'upgradeReady' && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); completeBusinessUpgrade(business.id); }}
+            className="w-full mt-3 py-3 rounded-[14px] text-[12px] font-black text-white flex items-center justify-center gap-2 active:scale-[0.97] transition-all animate-event-pulse-green"
+            style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)', boxShadow: '0 4px 16px rgba(34,197,94,0.35)' }}
+          >
+            <CheckCircle size={15} />
+            تکمیل ارتقا → LV {business.level + 1}
+          </button>
         )}
 
-        {/* Next Unlock teaser */}
-        {nextUnlock && (
-          <div className="mt-2.5 flex items-center gap-2 bg-[#FBBF24]/5 border border-[#FBBF24]/15 rounded-[12px] px-2.5 py-1.5">
-            <span className="text-sm">{nextUnlock.icon}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] text-[#FBBF24] font-bold truncate">{nextUnlock.name}</p>
-            </div>
-            <span className="text-[9px] text-[#FBBF24]/70 font-fa font-bold shrink-0">LV {nextUnlock.level}</span>
-          </div>
+        {cardState === 'losing' && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/business/${business.id}`); }}
+            className="w-full mt-3 py-3 rounded-[14px] text-[12px] font-black text-white flex items-center justify-center gap-2 active:scale-[0.97] transition-all"
+            style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)', boxShadow: '0 4px 14px rgba(239,68,68,0.3)' }}
+          >
+            <Wrench size={15} />
+            بررسی و حل مشکل
+          </button>
         )}
-      </Link>
 
-      {/* Inventory indicator */}
-      {hasInventory && (
-        <div className="w-full mt-3 py-2 rounded-[999px] font-black text-sm text-white flex flex-col items-center justify-center gap-0.5"
-          style={{
-            background: 'linear-gradient(135deg, #22C55E, #16A34A)',
-            boxShadow: '0 4px 20px rgba(34,197,94,0.45)',
-          }}
-        >
-          <span>📦 انبار: {inventoryQty}/{inventoryMax}</span>
-        </div>
-      )}
-    </div>
+        {cardState === 'inventoryWarning' && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/business/${business.id}`); }}
+            className="w-full mt-3 py-3 rounded-[14px] text-[12px] font-black flex items-center justify-center gap-2 active:scale-[0.97] transition-all"
+            style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: '#F59E0B' }}
+          >
+            <AlertTriangle size={15} />
+            مدیریت انبار
+          </button>
+        )}
+      </div>
+    </Link>
   );
 }

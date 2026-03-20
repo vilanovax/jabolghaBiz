@@ -11,6 +11,7 @@ import { businessTemplates, getOfficeTier, getOfficeName, OFFICE_TIERS, getEmplo
 import {
   ArrowUpCircle, Users, Package, ChevronRight,
   Lock, Unlock, Coins, Building2, X, ChevronUp,
+  TrendingUp, TrendingDown, AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { BusinessProduct, Business, EmployeeRole } from '@/types';
@@ -50,6 +51,9 @@ export default function BusinessDetailPage() {
   const biz = useGameStore((s) => s.businesses.find((b) => b.id === id));
   const allBusinesses = useGameStore((s) => s.businesses);
   const balance = useGameStore((s) => s.player.balance);
+  const isRushHourActive = useGameStore((s) => s.isRushHourActive);
+  const getEventMultiplier = useGameStore((s) => s.getEventMultiplier);
+  const activeEvents = useGameStore((s) => s.randomEvents.activeEvents);
   const upgradeBusiness = useGameStore((s) => s.upgradeBusiness);
   const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
   const upgradeOffice = useGameStore((s) => s.upgradeOffice);
@@ -88,6 +92,28 @@ export default function BusinessDetailPage() {
   const vocab = BUSINESS_VOCABULARY[biz.type];
   const effectiveProduction = calcEffectiveRevenue(biz);
   const totalExpenses = calcTotalExpenses(biz);
+
+  // Rush hour + events
+  const rushActive = isRushHourActive();
+  const eventMult = getEventMultiplier(biz.type);
+  const rushMultiplier = rushActive ? 2 : 1;
+  const totalRevMultiplier = rushMultiplier * eventMult.revenueMultiplier;
+  const boostedProduction = Math.round(effectiveProduction * totalRevMultiplier);
+  const netProfit = boostedProduction - Math.round(totalExpenses * eventMult.expenseMultiplier);
+
+  // Active events affecting this business
+  const relevantEvents = activeEvents.filter(
+    (e) => e.scope === 'global' || e.targetBusinessType === biz.type
+  );
+
+  // Soft collect: inventory >= 90%?
+  const productCapBoost = biz.products.filter((p) => p.unlocked).reduce((s, p) => s + p.capacityBoost, 0);
+  const warehouseBoost = biz.employees.filter((e) => e.role === 'warehouse').reduce((s, e) => {
+    const lm = 1 + ((e.employeeLevel ?? 1) - 1) * 0.5;
+    return s + e.capacityBoost * lm;
+  }, 0);
+  const maxCap = biz.inventory.maxCapacity + warehouseBoost + productCapBoost;
+  const isSoftCollect = biz.inventory.quantity / maxCap >= 0.9;
 
   // نرخ فروش خودکار: پایه + بوست کارمندان فروش
   const effectiveSaleRate = biz.baseSaleRate + biz.employees
@@ -159,20 +185,93 @@ export default function BusinessDetailPage() {
         </div>
       </div>
 
+      {/* ==================== Rush Hour Banner ==================== */}
+      {rushActive && (
+        <div
+          className="rounded-[14px] px-3 py-2 flex items-center gap-2 animate-event-pulse-red"
+          style={{
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(249,115,22,0.15))',
+            border: '1px solid rgba(239,68,68,0.3)',
+          }}
+        >
+          <span className="text-base animate-pulse">🔥</span>
+          <div className="flex-1">
+            <p className="text-[11px] font-black text-[#EF4444]">ساعت طلایی فعاله!</p>
+            <p className="text-[9px] text-fg-muted">تولید ×۲ — الان بهترین زمانه</p>
+          </div>
+          <span className="text-[10px] font-black text-[#EF4444] bg-[#EF4444]/12 px-2 py-1 rounded-full">×۲</span>
+        </div>
+      )}
+
+      {/* ==================== Active Events ==================== */}
+      {relevantEvents.length > 0 && relevantEvents.map((evt) => (
+        <div
+          key={evt.id}
+          className={`rounded-[14px] px-3 py-2 flex items-center gap-2 ${evt.isPositive ? 'animate-event-pulse-green' : 'animate-event-pulse-red'}`}
+          style={{
+            background: evt.isPositive
+              ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04))'
+              : 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04))',
+            border: `1px solid ${evt.isPositive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+          }}
+        >
+          <span className="text-base">{evt.icon}</span>
+          <div className="flex-1 min-w-0">
+            <p className={`text-[11px] font-black truncate ${evt.isPositive ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>{evt.title}</p>
+            <p className="text-[9px] text-fg-muted">
+              {evt.effect === 'revenue_multiplier' ? `درآمد ×${evt.effectValue.toFixed(1)}` : evt.effect === 'expense_multiplier' ? `هزینه ×${evt.effectValue.toFixed(1)}` : ''}
+            </p>
+          </div>
+        </div>
+      ))}
+
+      {/* ==================== Soft Collect Warning ==================== */}
+      {isSoftCollect && (
+        <div className="rounded-[14px] px-3 py-2 flex items-center gap-2 bg-[#F59E0B]/8 border border-[#F59E0B]/25">
+          <AlertTriangle size={16} className="text-[#F59E0B] shrink-0" />
+          <div className="flex-1">
+            <p className="text-[11px] font-black text-[#F59E0B]">انبار تقریباً پر — تولید کند شد</p>
+            <p className="text-[9px] text-fg-muted">سرعت تولید ۵۰٪ کاهش یافت. بفروش تا دوباره سریع بشه.</p>
+          </div>
+        </div>
+      )}
+
       {/* ==================== تولید — تایمر + انبار + فروش ==================== */}
-      <div className="relative rounded-[18px] border border-line-subtle p-4 overflow-hidden transition-all shadow-[var(--shadow-card)]">
+      <div
+        className="relative rounded-[18px] border p-4 overflow-hidden transition-all shadow-[var(--shadow-card)]"
+        style={{
+          borderColor: rushActive ? 'rgba(239,68,68,0.3)' : relevantEvents.some(e => e.isPositive) ? 'rgba(34,197,94,0.25)' : 'var(--line-subtle)',
+          background: rushActive ? 'linear-gradient(135deg, rgba(239,68,68,0.04), transparent)' : undefined,
+        }}
+      >
         <div className="flex items-center justify-center gap-5">
           <ProgressRing
             progress={progress}
             size={80}
             strokeWidth={7}
-            color="#6366F1"
+            color={rushActive ? '#EF4444' : relevantEvents.some(e => e.isPositive) ? '#22C55E' : '#6366F1'}
           >
             <span className="text-sm font-black font-fa">{formatTime(timeLeft)}</span>
-            <span className="text-[7px] text-fg-muted">+{effectiveProduction} {vocab.productUnit}</span>
+            <span className="text-[7px] text-fg-muted">
+              {isSoftCollect ? '⚠️ کند' : rushActive ? '🔥 ×۲' : `+${effectiveProduction}`}
+            </span>
           </ProgressRing>
 
-          <div className="flex flex-col items-start gap-2.5 flex-1 min-w-0">
+          <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
+            {/* Net profit/cycle — مهم‌ترین metric */}
+            <div className="w-full flex items-center justify-between">
+              <span className="text-[9px] text-fg-muted">سود خالص/سیکل</span>
+              <div className="flex items-center gap-1">
+                {netProfit >= 0
+                  ? <TrendingUp size={11} className="text-[#22C55E]" />
+                  : <TrendingDown size={11} className="text-[#EF4444]" />
+                }
+                <span className={`text-sm font-black font-fa ${netProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                  {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
+                </span>
+              </div>
+            </div>
+
             {/* نوار انبار */}
             <div className="w-full space-y-1">
               <div className="flex items-center justify-between text-[9px]">
@@ -188,14 +287,19 @@ export default function BusinessDetailPage() {
                 />
               </div>
             </div>
-            {/* نرخ تولید */}
-            <p className="text-[10px] text-fg-muted">
-              ⚙️ {vocab.production}: <span className="text-[#6366F1] font-bold font-fa">{effectiveProduction} {vocab.productUnit}/سیکل</span>
-            </p>
-            {/* نرخ فروش خودکار */}
-            <p className="text-[10px] text-fg-muted">
-              🛒 {vocab.autoSale}: <span className="text-[#22C55E] font-bold font-fa">{effectiveSaleRate} {vocab.productUnit}/دقیقه</span>
-            </p>
+
+            {/* تولید + فروش */}
+            <div className="flex items-center gap-3 text-[9px]">
+              <span className="text-fg-muted">
+                ⚙️ <span className="text-[#6366F1] font-bold font-fa">
+                  {isSoftCollect ? `${Math.round(effectiveProduction * 0.5)}` : effectiveProduction}
+                </span> /سیکل
+              </span>
+              <span className="text-fg-faint">·</span>
+              <span className="text-fg-muted">
+                🛒 <span className="text-[#22C55E] font-bold font-fa">{effectiveSaleRate}</span> /دقیقه
+              </span>
+            </div>
           </div>
         </div>
       </div>
