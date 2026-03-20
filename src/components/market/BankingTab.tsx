@@ -38,8 +38,8 @@ export default function BankingTab() {
         </div>
       </div>
 
-      {/* Bank cards */}
-      {bankTemplates.map((bank) => {
+      {/* Bank card — یک بانک */}
+      {bankTemplates.slice(0, 1).map((bank) => {
         const activeLoan = banking.loans.find((l) => l.bankId === bank.id);
         const activeDeposit = banking.deposits.find((d) => d.bankId === bank.id);
 
