@@ -35,9 +35,9 @@ export const mockPlayer: PlayerProfile = {
   reputation: 72,
   balance: 150_000,
   stats: {
-    happiness: 75,
-    hunger: 60,
-    energy: 80,
+    happiness: 85,
+    hunger: 15,
+    energy: 90,
     intelligence: 65,
     experience: 45,
   },
@@ -824,25 +824,25 @@ export const mockLeaderboard: LeaderboardEntry[] = [
 
 // ==================== LIFE ACTIONS ====================
 
-// کاهش خودکار stat‌ها هر ۵ دقیقه
-export const STAT_DECAY_INTERVAL = 5 * 60 * 1000; // 5 min
+// کاهش خودکار stat‌ها هر ۱۰ دقیقه
+export const STAT_DECAY_INTERVAL = 10 * 60 * 1000; // 10 min
 export const STAT_DECAY_AMOUNTS: Partial<Record<keyof PlayerStats, number>> = {
-  energy: -3,
-  hunger: 4,       // گرسنگی بالا میره (بد)
-  happiness: -2,
+  energy: -2,
+  hunger: 2,       // گرسنگی بالا میره (بد)
+  happiness: -1,
 };
 
 // ضریب‌های stat روی گیم‌پلی
 export const STAT_GAMEPLAY_EFFECTS = {
-  // energy < 20 → سیکل ۲۵٪ کندتر | energy > 80 → سیکل ۱۰٪ سریعتر
+  // energy < 20 → سیکل ۱۵٪ کندتر | energy > 80 → سیکل ۱۰٪ سریعتر
   energyCycleMultiplier: (energy: number) =>
-    energy < 20 ? 0.75 : energy > 80 ? 1.1 : 1.0,
-  // happiness > 70 → +۱۰٪ درآمد | happiness < 30 → -۱۵٪ درآمد
+    energy < 20 ? 0.85 : energy > 80 ? 1.1 : 1.0,
+  // happiness > 70 → +۱۰٪ درآمد | happiness < 30 → -۱۰٪ درآمد
   happinessRevenueMultiplier: (happiness: number) =>
-    happiness > 70 ? 1.1 : happiness < 30 ? 0.85 : 1.0,
-  // hunger > 80 → -۱۰٪ درآمد (خیلی گرسنه)
+    happiness > 70 ? 1.1 : happiness < 30 ? 0.90 : 1.0,
+  // hunger > 80 → -۵٪ درآمد (خیلی گرسنه)
   hungerRevenueMultiplier: (hunger: number) =>
-    hunger > 80 ? 0.9 : 1.0,
+    hunger > 80 ? 0.95 : 1.0,
   // intelligence > 70 → -۵٪ هزینه ارتقا
   intelligenceUpgradeDiscount: (intelligence: number) =>
     intelligence > 70 ? 0.95 : 1.0,

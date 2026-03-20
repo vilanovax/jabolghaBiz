@@ -74,19 +74,19 @@ export default function LifePage() {
       {stats.energy < 20 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[#3B82F6]/8 border border-[#3B82F6]/20 text-[11px] text-[#3B82F6] font-bold">
           <AlertTriangle size={13} />
-          انرژی پایینه — سرعت تولید ۲۵٪ کمتره
+          انرژی پایینه — سرعت تولید ۱۵٪ کمتره
         </div>
       )}
       {stats.hunger > 80 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[#F59E0B]/8 border border-[#F59E0B]/20 text-[11px] text-[#F59E0B] font-bold">
           <AlertTriangle size={13} />
-          خیلی گرسنه‌ای — درآمد ۱۰٪ کمتره
+          خیلی گرسنه‌ای — درآمد ۵٪ کمتره
         </div>
       )}
       {stats.happiness < 30 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[#EC4899]/8 border border-[#EC4899]/20 text-[11px] text-[#EC4899] font-bold">
           <AlertTriangle size={13} />
-          ناراحتی — درآمد ۱۵٪ کمتره
+          ناراحتی — درآمد ۱۰٪ کمتره
         </div>
       )}
 

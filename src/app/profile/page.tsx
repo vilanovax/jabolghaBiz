@@ -36,19 +36,19 @@ const STAT_DISPLAY = [
   {
     key: 'energy' as const, label: 'انرژی', icon: '⚡',
     color: '#facc15', bg: 'rgba(250,204,21,0.1)',
-    isWarn: (v: number) => v < 20, warnEffect: 'تولید -25%',
+    isWarn: (v: number) => v < 20, warnEffect: 'تولید -15%',
     barPct: (v: number) => v,
   },
   {
     key: 'happiness' as const, label: 'شادی', icon: '😊',
     color: '#f472b6', bg: 'rgba(244,114,182,0.1)',
-    isWarn: (v: number) => v < 30, warnEffect: 'درآمد -15%',
+    isWarn: (v: number) => v < 30, warnEffect: 'درآمد -10%',
     barPct: (v: number) => v,
   },
   {
     key: 'hunger' as const, label: 'گرسنگی', icon: '🍔',
     color: '#fb923c', bg: 'rgba(251,146,60,0.1)',
-    isWarn: (v: number) => v > 80, warnEffect: 'درآمد -10%',
+    isWarn: (v: number) => v > 80, warnEffect: 'درآمد -5%',
     barPct: (v: number) => 100 - v,
   },
 ];
@@ -102,10 +102,10 @@ export default function ProfilePage() {
     const effects: { label: string; positive: boolean }[] = [];
     const s = player.stats;
     if (s.energy > 80)    effects.push({ label: '+10% سرعت تولید', positive: true });
-    if (s.energy < 20)    effects.push({ label: '-25% سرعت تولید', positive: false });
+    if (s.energy < 20)    effects.push({ label: '-15% سرعت تولید', positive: false });
     if (s.happiness > 70) effects.push({ label: '+10% درآمد', positive: true });
-    if (s.happiness < 30) effects.push({ label: '-15% درآمد', positive: false });
-    if (s.hunger > 80)    effects.push({ label: '-10% درآمد', positive: false });
+    if (s.happiness < 30) effects.push({ label: '-10% درآمد', positive: false });
+    if (s.hunger > 80)    effects.push({ label: '-5% درآمد', positive: false });
     return effects;
   }, [player.stats]);
 
