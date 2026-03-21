@@ -764,10 +764,10 @@ export const businessTemplates: BusinessTemplate[] = [
 export const mockBusinesses: Business[] = [
   {
     id: 'biz-1', ownerId: 'player-1', name: 'داده‌پردازان نوین', type: 'app_startup', level: 2, icon: '📱',
-    baseProductionRate: 2, baseSaleRate: 1, cycleDuration: 180, lastCycleAt: Date.now() - 100_000,
+    baseProductionRate: 3, baseSaleRate: 1.5, cycleDuration: 160, lastCycleAt: Date.now() - 100_000,
     inventory: { productId: 'prod-8', quantity: 0, maxCapacity: 15 },
     fractionalProduced: 0, fractionalSold: 0,
-    expenses: 1_000, upgradeCost: 75_000,
+    expenses: 900, upgradeCost: 54_000,
     officeLevel: 1, maxEmployees: 3, maxProducts: 1, maxLevel: 20,
     employees: [{
       id: 'he-1', templateId: 'emp-as-1', name: 'برنامه‌نویس', role: 'production', roleName: 'برنامه‌نویس',
@@ -790,14 +790,14 @@ export const mockBusinesses: Business[] = [
 // ==================== PRODUCTS ====================
 
 export const mockProducts: Product[] = [
-  { id: 'prod-1', name: 'گندم', category: 'raw_material', icon: '🌾', basePrice: 10, currentPrice: 12, supply: 500, demand: 450, baseSupply: 500, baseDemand: 450, priceHistory: [10, 11, 9, 12, 11, 13, 12] },
-  { id: 'prod-2', name: 'آرد', category: 'processed', icon: '🫘', basePrice: 25, currentPrice: 28, supply: 300, demand: 350, baseSupply: 300, baseDemand: 350, priceHistory: [25, 26, 24, 27, 28, 30, 28] },
-  { id: 'prod-3', name: 'نان', category: 'finished_good', icon: '🍞', basePrice: 50, currentPrice: 55, supply: 200, demand: 280, baseSupply: 200, baseDemand: 280, priceHistory: [50, 48, 52, 53, 55, 54, 55] },
-  { id: 'prod-4', name: 'گوجه', category: 'raw_material', icon: '🍅', basePrice: 8, currentPrice: 7, supply: 600, demand: 400, baseSupply: 600, baseDemand: 400, priceHistory: [8, 9, 7, 6, 7, 8, 7] },
-  { id: 'prod-5', name: 'شیر', category: 'raw_material', icon: '🥛', basePrice: 15, currentPrice: 18, supply: 250, demand: 320, baseSupply: 250, baseDemand: 320, priceHistory: [15, 16, 17, 16, 18, 17, 18] },
-  { id: 'prod-6', name: 'پنیر', category: 'processed', icon: '🧀', basePrice: 40, currentPrice: 45, supply: 150, demand: 200, baseSupply: 150, baseDemand: 200, priceHistory: [40, 42, 38, 43, 44, 46, 45] },
-  { id: 'prod-7', name: 'پیتزا', category: 'food', icon: '🍕', basePrice: 80, currentPrice: 85, supply: 100, demand: 180, baseSupply: 100, baseDemand: 180, priceHistory: [80, 78, 82, 83, 85, 84, 85] },
-  { id: 'prod-8', name: 'اپلیکیشن موبایل', category: 'tech', icon: '📱', basePrice: 200, currentPrice: 220, supply: 50, demand: 120, baseSupply: 50, baseDemand: 120, priceHistory: [200, 210, 190, 215, 220, 225, 220] },
+  { id: 'prod-1', name: 'گندم', category: 'raw_material', icon: '🌾', basePrice: 420, currentPrice: 440, supply: 500, demand: 450, baseSupply: 500, baseDemand: 450, priceHistory: [420, 410, 430, 440, 425, 445, 440] },
+  { id: 'prod-2', name: 'آرد', category: 'processed', icon: '🫘', basePrice: 800, currentPrice: 820, supply: 300, demand: 350, baseSupply: 300, baseDemand: 350, priceHistory: [800, 790, 810, 820, 800, 830, 820] },
+  { id: 'prod-3', name: 'نان', category: 'finished_good', icon: '🍞', basePrice: 600, currentPrice: 620, supply: 200, demand: 280, baseSupply: 200, baseDemand: 280, priceHistory: [600, 590, 610, 620, 605, 625, 620] },
+  { id: 'prod-4', name: 'گوجه', category: 'raw_material', icon: '🍅', basePrice: 100, currentPrice: 90, supply: 600, demand: 400, baseSupply: 600, baseDemand: 400, priceHistory: [100, 110, 95, 85, 90, 95, 90] },
+  { id: 'prod-5', name: 'شیر', category: 'raw_material', icon: '🥛', basePrice: 180, currentPrice: 200, supply: 250, demand: 320, baseSupply: 250, baseDemand: 320, priceHistory: [180, 185, 175, 190, 200, 195, 200] },
+  { id: 'prod-6', name: 'پنیر', category: 'processed', icon: '🧀', basePrice: 400, currentPrice: 420, supply: 150, demand: 200, baseSupply: 150, baseDemand: 200, priceHistory: [400, 390, 410, 415, 420, 410, 420] },
+  { id: 'prod-7', name: 'پیتزا', category: 'food', icon: '🍕', basePrice: 450, currentPrice: 465, supply: 100, demand: 180, baseSupply: 100, baseDemand: 180, priceHistory: [450, 440, 455, 460, 465, 455, 465] },
+  { id: 'prod-8', name: 'اپلیکیشن موبایل', category: 'tech', icon: '📱', basePrice: 450, currentPrice: 470, supply: 50, demand: 120, baseSupply: 50, baseDemand: 120, priceHistory: [450, 440, 460, 465, 470, 460, 470] },
 ];
 
 // ==================== MARKET LISTINGS ====================

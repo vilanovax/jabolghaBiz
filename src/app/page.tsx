@@ -23,9 +23,18 @@ export default function HomePage() {
   const claimMissionReward = useGameStore((s) => s.claimMissionReward);
   const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
 
-  const totalRevenue = businesses.reduce((sum, b) => sum + calcEffectiveRevenue(b), 0);
+  // درآمد تخمینی هر سیکل = min(تولید, فروش) × قیمت بازار
+  const totalRevenueMoney = businesses.reduce((sum, b) => {
+    const prod = products.find((p) => p.id === b.inventory.productId);
+    const price = prod?.currentPrice ?? 0;
+    const unitsPerCycle = Math.min(
+      calcEffectiveRevenue(b),
+      b.baseSaleRate * (b.cycleDuration / 60)
+    );
+    return sum + Math.round(unitsPerCycle * price);
+  }, 0);
   const totalExpenses = businesses.reduce((sum, b) => sum + calcTotalExpenses(b), 0);
-  const totalProfit = totalRevenue - totalExpenses;
+  const totalProfit = totalRevenueMoney - totalExpenses;
   const totalEmployees = businesses.reduce((sum, b) => sum + b.employees.length, 0);
   const empireValue = calcEmpireValue(player, businesses);
   const totalInventory = businesses.reduce((sum, b) => sum + b.inventory.quantity, 0);
@@ -306,7 +315,7 @@ export default function HomePage() {
           { icon: <Briefcase size={14} className="text-[#818cf8]" />, value: `${businesses.length}`, label: 'شرکت', bg: 'bg-[#6366F1]/8' },
           { icon: <Users size={14} className="text-[#60A5FA]" />, value: `${totalEmployees}`, label: 'نیرو', bg: 'bg-[#3B82F6]/8' },
           { icon: <ShoppingCart size={14} className="text-[#34d399]" />, value: `${totalInventory}`, label: 'انبار', bg: 'bg-[#22C55E]/8' },
-          { icon: <Wallet size={14} className="text-[#F59E0B]" />, value: `${totalRevenue.toLocaleString('fa-IR')}`, label: 'درآمد/سیکل', bg: 'bg-[#F59E0B]/8' },
+          { icon: <Wallet size={14} className="text-[#F59E0B]" />, value: `${totalRevenueMoney.toLocaleString('fa-IR')}`, label: 'درآمد/سیکل', bg: 'bg-[#F59E0B]/8' },
         ].map((s, i) => (
           <div key={i} className={`${s.bg} rounded-[14px] p-2.5 text-center`}>
             <div className="flex justify-center mb-1">{s.icon}</div>
@@ -360,7 +369,10 @@ export default function HomePage() {
           </div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
             {businesses.map((biz) => {
-              const net = calcEffectiveRevenue(biz) - calcTotalExpenses(biz);
+              const bizProd = products.find((p) => p.id === biz.inventory.productId);
+              const bizPrice = bizProd?.currentPrice ?? 0;
+              const bizUnitsPerCycle = Math.min(calcEffectiveRevenue(biz), biz.baseSaleRate * (biz.cycleDuration / 60));
+              const net = Math.round(bizUnitsPerCycle * bizPrice) - calcTotalExpenses(biz);
               const invPct = Math.round((biz.inventory.quantity / biz.inventory.maxCapacity) * 100);
               const isUpgrading = biz.upgradeStartedAt !== null;
               const isLosing = net < 0;

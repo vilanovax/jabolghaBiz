@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
-import { Settings, Coins, Volume2, Bell, Globe, Info, Sun, Moon } from 'lucide-react';
+import { Settings, Coins, Volume2, Bell, Globe, Info, Sun, Moon, RotateCcw } from 'lucide-react';
 
 const currencyOptions = ['تومان', 'ریال', 'دلار', 'یورو', 'سکه'];
 
@@ -11,6 +12,13 @@ export default function SettingsPage() {
   const setCurrency = useGameStore((s) => s.setCurrency);
   const theme = useGameStore((s) => s.theme);
   const setTheme = useGameStore((s) => s.setTheme);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const handleReset = () => {
+    if (!confirmReset) { setConfirmReset(true); return; }
+    localStorage.removeItem('jabolgha-save');
+    window.location.reload();
+  };
 
   return (
     <div className="space-y-5 py-4">
@@ -106,6 +114,28 @@ export default function SettingsPage() {
           </div>
           <span className="text-xs text-fg-secondary bg-surface-card px-3 py-1 rounded-full">فارسی</span>
         </div>
+      </Card>
+
+      {/* ریست بازی */}
+      <Card className="space-y-3">
+        <div className="flex items-center gap-2">
+          <RotateCcw size={18} className="text-red-400" />
+          <h2 className="font-bold text-sm">ریست بازی</h2>
+        </div>
+        <p className="text-[10px] text-fg-muted">
+          تمام پیشرفت‌ها پاک می‌شه و بازی از اول شروع میشه.
+        </p>
+        <button
+          onClick={handleReset}
+          onBlur={() => setConfirmReset(false)}
+          className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
+            confirmReset
+              ? 'bg-red-500 text-white'
+              : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+          }`}
+        >
+          {confirmReset ? '⚠️ مطمئنی؟ دوباره بزن تأیید کنی' : 'ریست کامل بازی'}
+        </button>
       </Card>
 
       {/* درباره */}
