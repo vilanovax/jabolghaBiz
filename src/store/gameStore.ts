@@ -993,7 +993,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   },
 
   decayStats: () => {
-    const { life } = get();
+    const { life, businesses } = get();
     const now = Date.now();
     if (now - life.lastStatDecayAt < STAT_DECAY_INTERVAL) return;
 
@@ -1007,6 +1007,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         const statKey = key as keyof PlayerStats;
         const delta = (value as number) * periods;
         newStats[statKey] = Math.max(0, Math.min(100, newStats[statKey] + delta));
+      }
+      // شادی passive از داشتن کسب‌وکار — هر شرکت +0.5 شادی/دوره (حداکثر +3)
+      const passiveHappiness = Math.min(businesses.length * 0.5, 3) * periods;
+      if (passiveHappiness > 0) {
+        newStats.happiness = Math.min(100, newStats.happiness + passiveHappiness);
       }
       return {
         player: { ...state.player, stats: newStats },

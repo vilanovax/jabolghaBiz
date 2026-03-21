@@ -42,19 +42,24 @@ export default function LifePage() {
         {STATS.map((s) => {
           const value = stats[s.key];
           const barPct = s.key === 'hunger' ? 100 - value : value;
-          const isWarn = s.key === 'energy' ? value < 30
-            : s.key === 'hunger' ? value > 70
+          const isWarn = s.key === 'energy' ? value < 20
+            : s.key === 'hunger' ? value > 80
             : value < 30;
+          const isBoost = s.key === 'energy' ? value > 80
+            : s.key === 'hunger' ? false
+            : value > 70;
+          const borderColor = isWarn ? `${s.color}60` : isBoost ? '#22C55E60' : `${s.color}25`;
+          const bg = isWarn ? `${s.color}15` : isBoost ? 'rgba(34,197,94,0.08)' : s.bg;
           return (
             <div
               key={s.key}
               className="rounded-[18px] p-3 text-center"
-              style={{ background: s.bg, border: `1px solid ${s.color}25` }}
+              style={{ background: bg, border: `1px solid ${borderColor}` }}
             >
               <span className="text-2xl">{s.icon}</span>
               <p
                 className={`text-[22px] font-black font-fa leading-none mt-1 ${isWarn ? 'animate-warning-pulse' : ''}`}
-                style={{ color: s.color }}
+                style={{ color: isBoost ? '#22C55E' : s.color }}
               >
                 {value}
               </p>
@@ -62,33 +67,49 @@ export default function LifePage() {
               <div className="h-1.5 bg-progress-bg rounded-full overflow-hidden mt-2">
                 <div
                   className="h-full rounded-full transition-all"
-                  style={{ width: `${barPct}%`, backgroundColor: s.color }}
+                  style={{ width: `${barPct}%`, backgroundColor: isBoost ? '#22C55E' : isWarn ? '#EF4444' : s.color }}
                 />
               </div>
+              {isBoost && <p className="text-[7px] text-[#22C55E] font-bold mt-1">● بوست فعال</p>}
+              {isWarn && <p className="text-[7px] text-[#EF4444] font-bold mt-1">● جریمه فعال</p>}
             </div>
           );
         })}
       </div>
 
-      {/* ---- هشدارهای فعال ---- */}
-      {stats.energy < 20 && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[#3B82F6]/8 border border-[#3B82F6]/20 text-[11px] text-[#3B82F6] font-bold">
-          <AlertTriangle size={13} />
-          انرژی پایینه — سرعت تولید ۱۵٪ کمتره
-        </div>
-      )}
-      {stats.hunger > 80 && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[#F59E0B]/8 border border-[#F59E0B]/20 text-[11px] text-[#F59E0B] font-bold">
-          <AlertTriangle size={13} />
-          خیلی گرسنه‌ای — درآمد ۵٪ کمتره
-        </div>
-      )}
-      {stats.happiness < 30 && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[#EC4899]/8 border border-[#EC4899]/20 text-[11px] text-[#EC4899] font-bold">
-          <AlertTriangle size={13} />
-          ناراحتی — درآمد ۱۰٪ کمتره
-        </div>
-      )}
+      {/* ---- وضعیت فعال (مثبت + منفی) ---- */}
+      <div className="flex flex-wrap gap-1.5">
+        {stats.energy > 80 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/20 text-[10px] text-[#22C55E] font-bold">
+            ⚡ سرعت تولید +۱۰٪
+          </div>
+        )}
+        {stats.happiness > 70 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#EC4899]/10 border border-[#EC4899]/20 text-[10px] text-[#EC4899] font-bold">
+            😊 درآمد +۱۰٪
+          </div>
+        )}
+        {stats.energy < 20 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#3B82F6]/8 border border-[#3B82F6]/20 text-[10px] text-[#3B82F6] font-bold">
+            <AlertTriangle size={11} /> سرعت تولید ۱۵٪ کمتره
+          </div>
+        )}
+        {stats.hunger > 80 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#F59E0B]/8 border border-[#F59E0B]/20 text-[10px] text-[#F59E0B] font-bold">
+            <AlertTriangle size={11} /> درآمد ۵٪ کمتره
+          </div>
+        )}
+        {stats.happiness < 30 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#EC4899]/8 border border-[#EC4899]/20 text-[10px] text-[#EC4899] font-bold">
+            <AlertTriangle size={11} /> درآمد ۱۰٪ کمتره
+          </div>
+        )}
+        {stats.energy >= 20 && stats.energy <= 80 && stats.hunger <= 80 && stats.happiness >= 30 && stats.energy <= 80 && stats.happiness <= 70 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface-card/50 border border-line-subtle text-[10px] text-fg-muted">
+            ⚖️ وضعیت عادی — هیچ افکت فعالی نیست
+          </div>
+        )}
+      </div>
 
       {/* ---- اکشن‌ها — گرید ۲ ستونه ---- */}
       <div className="grid grid-cols-2 gap-2">
