@@ -5,26 +5,25 @@ import TopBar from './TopBar';
 import BottomNav from './BottomNav';
 import { useGameTick } from '@/hooks/useGameTick';
 import { useGameStore } from '@/store/gameStore';
-import { X, CheckCircle2, Circle } from 'lucide-react';
+import { X, CheckCircle2, Sparkles, Gift } from 'lucide-react';
 import DailyBonusModal from '@/components/hooks/DailyBonusModal';
 import EventModal from '@/components/hooks/EventModal';
 import AchievementToast from '@/components/achievements/AchievementToast';
 import LevelUpOverlay from '@/components/hooks/LevelUpOverlay';
 import FloatingRewardLayer from '@/components/ui/FloatingReward';
-
-const dailyTasks = [
-  { text: 'یک کارمند جدید استخدام کن', done: false },
-  { text: 'یک کسب‌وکار را ارتقا بده', done: false },
-  { text: 'محصولی در بازار بفروش', done: true },
-];
+import OnboardingScreen from '@/components/onboarding/OnboardingScreen';
 
 export default function GameShell({ children }: { children: ReactNode }) {
   useGameTick();
 
   const theme = useGameStore((s) => s.theme);
+  const onboardingComplete = useGameStore((s) => s.onboardingComplete);
   const canClaimDailyBonus = useGameStore((s) => s.canClaimDailyBonus);
   const pendingEventId = useGameStore((s) => s.randomEvents.pendingEventId);
   const dismissPendingEvent = useGameStore((s) => s.dismissPendingEvent);
+  const missions = useGameStore((s) => s.missions);
+  const claimMissionReward = useGameStore((s) => s.claimMissionReward);
+  const refreshMissions = useGameStore((s) => s.refreshMissions);
   const [hydrated, setHydrated] = useState(false);
   const [showMissions, setShowMissions] = useState(false);
   const [showDailyBonus, setShowDailyBonus] = useState(false);
@@ -48,6 +47,11 @@ export default function GameShell({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
+  // ریفرش ماموریت‌ها بعد از hydrate
+  useEffect(() => {
+    if (hydrated && onboardingComplete) refreshMissions();
+  }, [hydrated, onboardingComplete, refreshMissions]);
+
   if (!hydrated) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -56,7 +60,13 @@ export default function GameShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const doneCount = dailyTasks.filter((t) => t.done).length;
+  if (!onboardingComplete) {
+    return <OnboardingScreen />;
+  }
+
+  const dailyMissions = missions.activeMissions.filter((m) => m.type === 'daily');
+  const doneCount = dailyMissions.filter((m) => m.completed).length;
+  const totalDaily = dailyMissions.length;
 
   return (
     <div className="min-h-screen bg-surface text-fg">
@@ -99,7 +109,7 @@ export default function GameShell({ children }: { children: ReactNode }) {
                   <div className="flex items-center gap-2">
                     <h2 className="text-sm font-black">ماموریت‌های روزانه</h2>
                     <span className="text-[9px] bg-surface-card text-fg-muted px-2 py-0.5 rounded-full font-bold font-fa">
-                      {doneCount}/{dailyTasks.length}
+                      {doneCount}/{totalDaily}
                     </span>
                   </div>
                   <button
@@ -113,37 +123,70 @@ export default function GameShell({ children }: { children: ReactNode }) {
 
               {/* لیست ماموریت‌ها */}
               <div className="px-4 py-3 space-y-2">
-                {dailyTasks.map((task, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-3 border ${
-                      task.done
-                        ? 'bg-surface-card/40 border-line/30'
-                        : 'bg-surface-card/60 border-line/50'
-                    }`}
-                  >
-                    {task.done ? (
-                      <CheckCircle2 size={18} className="text-accent-positive shrink-0" />
-                    ) : (
-                      <Circle size={18} className="text-fg-faint shrink-0" />
-                    )}
-                    <span className={`text-xs font-medium ${task.done ? 'text-fg-muted line-through' : 'text-fg-secondary'}`}>
-                      {task.text}
-                    </span>
-                  </div>
-                ))}
+                {dailyMissions.length === 0 ? (
+                  <p className="text-[11px] text-fg-muted text-center py-4">ماموریت روزانه‌ای موجود نیست</p>
+                ) : (
+                  dailyMissions.map((m) => {
+                    const isClaimable = m.completed && !m.claimed;
+                    const isDone = m.claimed;
+                    return (
+                      <div
+                        key={m.id}
+                        className={`flex items-center gap-3 rounded-xl px-3 py-3 border ${
+                          isDone
+                            ? 'bg-surface-card/40 border-line/30'
+                            : isClaimable
+                            ? 'bg-[#F59E0B]/5 border-[#F59E0B]/30'
+                            : 'bg-surface-card/60 border-line/50'
+                        }`}
+                      >
+                        <span className="text-lg shrink-0">{isDone ? '✅' : m.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`text-xs font-medium block ${isDone ? 'text-fg-muted line-through' : 'text-fg-secondary'}`}>
+                            {m.title}
+                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-1 rounded-full bg-progress-bg overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${isDone ? 'bg-accent-positive' : isClaimable ? 'bg-[#F59E0B]' : 'bg-[#3B82F6]'}`}
+                                style={{ width: `${Math.min(100, (m.progress / m.target) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-[9px] text-fg-faint font-fa">{m.progress}/{m.target}</span>
+                          </div>
+                        </div>
+                        {isClaimable ? (
+                          <button
+                            onClick={() => claimMissionReward(m.id)}
+                            className="shrink-0 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#EF4444] text-white text-[10px] font-bold flex items-center gap-1 active:scale-95 transition-transform"
+                          >
+                            <Gift size={11} />
+                            جایزه
+                          </button>
+                        ) : isDone ? (
+                          <CheckCircle2 size={16} className="text-accent-positive shrink-0" />
+                        ) : (
+                          <div className="shrink-0 flex items-center gap-0.5 text-[10px] text-fg-faint">
+                            <Sparkles size={10} />
+                            <span className="font-fa">{m.reward.toLocaleString('fa-IR')}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* پیشرفت کلی */}
               <div className="px-4 py-3 border-t border-line/50">
                 <div className="flex items-center justify-between text-[11px] mb-1.5">
                   <span className="text-fg-muted">پیشرفت روزانه</span>
-                  <span className="text-fg-secondary font-fa font-bold">{doneCount}/{dailyTasks.length}</span>
+                  <span className="text-fg-secondary font-fa font-bold">{doneCount}/{totalDaily}</span>
                 </div>
                 <div className="h-2 bg-progress-bg rounded-full overflow-hidden">
                   <div
                     className="h-full bg-accent-positive rounded-full transition-all"
-                    style={{ width: `${(doneCount / dailyTasks.length) * 100}%` }}
+                    style={{ width: `${totalDaily > 0 ? (doneCount / totalDaily) * 100 : 0}%` }}
                   />
                 </div>
               </div>

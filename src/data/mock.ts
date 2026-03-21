@@ -1049,8 +1049,13 @@ export const WEEKLY_MISSIONS: MissionTemplate[] = [
 ];
 
 export const ONE_TIME_MISSIONS: MissionTemplate[] = [
+  // ── ماموریت‌های شروع (آموزشی) ──
   { id: 'otm-first-biz', title: 'اولین قدم', description: 'اولین شرکتت رو بساز', icon: '🎯', type: 'one_time', condition: 'create_business', target: 1, reward: 10_000, xpReward: 10 },
+  { id: 'otm-first-collect', title: 'اولین درآمد', description: 'یک بار درآمد جمع کن', icon: '💸', type: 'one_time', condition: 'collect_revenue', target: 1, reward: 5_000, xpReward: 5 },
   { id: 'otm-hire-first', title: 'اولین استخدام', description: 'اولین نیرو رو استخدام کن', icon: '🤝', type: 'one_time', condition: 'hire_employee', target: 1, reward: 8_000, xpReward: 5 },
+  { id: 'otm-first-sell', title: 'اولین فروش', description: 'یک واحد محصول بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 1, reward: 5_000, xpReward: 5 },
+  { id: 'otm-life-energy', title: 'استراحت لازمه!', description: 'انرژیت رو بالای ۹۵ نگه دار', icon: '⚡', type: 'one_time', condition: 'reach_stat_energy', target: 95, reward: 5_000, xpReward: 5 },
+  // ── ماموریت‌های رشد ──
   { id: 'otm-upgrade-5', title: 'رشد پایدار', description: 'یک شرکت رو به سطح ۵ برسون', icon: '📈', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, xpReward: 15 },
   { id: 'otm-upgrade-10', title: 'شرکت قدرتمند', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '💪', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 60_000, xpReward: 30 },
   { id: 'otm-3-biz', title: 'امپراتوری کوچک', description: '۳ شرکت همزمان داشته باش', icon: '🏢', type: 'one_time', condition: 'own_businesses', target: 3, reward: 50_000, xpReward: 25 },

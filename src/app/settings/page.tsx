@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import Card from '@/components/ui/Card';
-import { Settings, Coins, Volume2, Bell, Globe, Info, Sun, Moon, RotateCcw } from 'lucide-react';
+import { Settings, Coins, Volume2, Bell, Globe, Info, Sun, Moon, RotateCcw, Play } from 'lucide-react';
 
 const currencyOptions = ['تومان', 'ریال', 'دلار', 'یورو', 'سکه'];
 
@@ -116,14 +116,14 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* ریست بازی */}
+      {/* شروع از اول */}
       <Card className="space-y-3">
         <div className="flex items-center gap-2">
-          <RotateCcw size={18} className="text-red-400" />
-          <h2 className="font-bold text-sm">ریست بازی</h2>
+          <Play size={18} className="text-amber-400" />
+          <h2 className="font-bold text-sm">شروع از اول</h2>
         </div>
         <p className="text-[10px] text-fg-muted">
-          تمام پیشرفت‌ها پاک می‌شه و بازی از اول شروع میشه.
+          بازی از ابتدا شروع میشه و صفحه خوشامدگویی دوباره نشون داده میشه.
         </p>
         <button
           onClick={handleReset}
@@ -131,10 +131,10 @@ export default function SettingsPage() {
           className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
             confirmReset
               ? 'bg-red-500 text-white'
-              : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+              : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
           }`}
         >
-          {confirmReset ? '⚠️ مطمئنی؟ دوباره بزن تأیید کنی' : 'ریست کامل بازی'}
+          {confirmReset ? '⚠️ مطمئنی؟ همه پیشرفت‌ها پاک میشه' : 'شروع دوباره بازی'}
         </button>
       </Card>
 

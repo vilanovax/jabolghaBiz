@@ -83,6 +83,54 @@ import {
   getManagerUpgradeDuration,
 } from '@/data/mock';
 
+// ==================== Level System ====================
+
+/** XP مورد نیاز برای رسیدن به لول بعدی */
+export function xpForLevel(level: number): number {
+  // لول ۱→۲: ۱۰۰, لول ۵→۶: ۱۸۰, لول ۱۰→۱۱: ۲۸۰, لول ۲۰→۲۱: ۴۸۰
+  return Math.round(80 + level * 20);
+}
+
+/** جایزه پولی لول آپ */
+export function levelUpReward(newLevel: number): number {
+  // لول ۲: ۵k, لول ۵: ۱۲.۵k, لول ۱۰: ۲۵k, لول ۲۰: ۵۰k
+  return Math.round(newLevel * 2_500);
+}
+
+/** آنلاک‌های هر لول (برای نمایش در overlay) */
+export function getUnlocksForLevel(level: number): string[] {
+  const unlocks: string[] = [];
+  // بانک‌ها
+  if (level === 1)  unlocks.push('بانک آرامش');
+  if (level === 3)  unlocks.push('بانک فرصت');
+  if (level === 5)  unlocks.push('بانک اطلس');
+  // مدیرها
+  if (level === 3)  unlocks.push('مدیرهای معمولی');
+  if (level === 8)  unlocks.push('مدیرهای کمیاب');
+  if (level === 15) unlocks.push('مدیرهای حماسی');
+  // اسلات مدیر
+  if (level === 10) unlocks.push('اسلات دوم مدیر');
+  // رقبا
+  if (level === 3)  unlocks.push('رقیب: حاج‌آقا بازاری');
+  if (level === 5)  unlocks.push('رقیب: خانم کارآفرین');
+  if (level === 8)  unlocks.push('رقیب: آقای ملک‌پور');
+  if (level === 10) unlocks.push('رقیب: سلطان دیجیتال');
+  if (level === 13) unlocks.push('رقیب: جناب سرمایه‌دار');
+  // دفتر
+  if (level === 8)  unlocks.push('دفتر سطح ۲');
+  if (level === 14) unlocks.push('دفتر سطح ۳');
+  if (level === 18) unlocks.push('دفتر سطح ۴');
+  // عنوان‌ها
+  if (level === 5)  unlocks.push('عنوان: کارآفرین نوپا');
+  if (level === 10) unlocks.push('عنوان: کارآفرین باتجربه');
+  if (level === 15) unlocks.push('عنوان: مدیر موفق');
+  if (level === 20) unlocks.push('عنوان: تاجر حرفه‌ای');
+  if (level === 30) unlocks.push('عنوان: غول اقتصادی');
+  if (level === 40) unlocks.push('عنوان: سلطان بازار');
+  if (level === 50) unlocks.push('عنوان: امپراتور تجارت');
+  return unlocks;
+}
+
 // ==================== Helper Functions ====================
 
 // محاسبه نرخ تولید واقعی (واحد در هر سیکل) — بوست کارمندان تولید + محصولات
@@ -423,6 +471,11 @@ interface GameState {
 
   activeTab: string;
   setActiveTab: (tab: string) => void;
+
+  addXp: (amount: number) => void;
+
+  onboardingComplete: boolean;
+  completeOnboarding: (username: string, avatar: string, firstBizType: BusinessType) => void;
 }
 
 export const useGameStore = create<GameState>()(persist((set, get) => ({
@@ -498,6 +551,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...state.player, balance: state.player.balance - template.startCost },
     }));
 
+    get().addXp(8); // XP: ساخت کسب‌وکار
     get().progressMission('create_business', 1);
     get().progressMission('own_businesses', get().businesses.length);
     // per-type dispatch for specialty missions
@@ -555,6 +609,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       missions: { ...state.missions, totalUpgrades: (state.missions.totalUpgrades ?? 0) + 1 },
     }));
 
+    get().addXp(5); // XP: ارتقای کسب‌وکار
     get().progressMission('upgrade_business', 1);
     const allBiz = get().businesses;
     const maxLevel = Math.max(...allBiz.map((b) => b.level));
@@ -757,6 +812,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...state.player, balance: state.player.balance - nextTier.upgradeCost },
     }));
 
+    get().addXp(12); // XP: ارتقای دفتر
     get().progressMission('upgrade_office', 1);
     get().checkAchievements();
   },
@@ -806,6 +862,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...state.player, balance: state.player.balance - template.hireCost },
     }));
 
+    get().addXp(4); // XP: استخدام نیرو
     get().progressMission('hire_employee', 1);
     const totalEmp = get().businesses.reduce((s, b) => s + b.employees.length, 0);
     get().progressMission('total_employees', totalEmp);
@@ -909,6 +966,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...state.player, balance: state.player.balance - prod.unlockCost },
     }));
 
+    get().addXp(6); // XP: آنلاک محصول
     get().progressMission('unlock_product', 1);
     get().checkAchievements();
   },
@@ -969,9 +1027,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     const lastUsed = life.lastActionAt[actionId] || 0;
     if (Date.now() - lastUsed < action.cooldownMs) return false;
 
-    // اعمال افکت‌ها
+    // اعمال افکت‌ها (XP جدا از سیستم addXp مدیریت میشه)
+    const xpGain = (action.effect as Record<string, number>).experience ?? 0;
     const newStats = { ...player.stats };
     for (const [key, value] of Object.entries(action.effect)) {
+      if (key === 'experience') continue; // XP از addXp
       const statKey = key as keyof PlayerStats;
       newStats[statKey] = Math.max(0, Math.min(100, newStats[statKey] + (value as number)));
     }
@@ -988,6 +1048,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       },
     }));
 
+    if (xpGain > 0) get().addXp(xpGain);
     get().checkAchievements();
     return true;
   },
@@ -1140,6 +1201,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     });
 
     if (isComplete) {
+      get().addXp(7); // XP: تکمیل سفارش ویژه
       get().progressMission('complete_special_order', 1);
       get().progressMission('earn_total', payment);
       get().progressMission('reach_balance', get().player.balance);
@@ -1785,12 +1847,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       ? [...missions.completedMissionIds, mission.templateId]
       : missions.completedMissionIds;
 
-    const newExperience = mission.xpReward > 0
-      ? player.stats.experience + mission.xpReward
-      : player.stats.experience;
-    const didLevelUp = newExperience >= 100;
-    const finalExperience = didLevelUp ? newExperience - 100 : Math.min(newExperience, 99);
-
     set({
       missions: {
         ...missions,
@@ -1801,16 +1857,16 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: {
         ...player,
         balance: player.balance + mission.reward,
-        level: didLevelUp ? player.level + 1 : player.level,
-        stats: mission.xpReward > 0
-          ? { ...player.stats, experience: Math.max(0, finalExperience) }
-          : player.stats,
       },
     });
+    // XP از طریق سیستم مرکزی addXp (لول آپ + جایزه خودکار)
+    if (mission.xpReward > 0) {
+      get().addXp(mission.xpReward);
+    }
     get().addFloatingReward({
       amount: mission.reward,
       label: mission.xpReward > 0 ? `+${mission.xpReward} XP` : undefined,
-      subtitle: didLevelUp ? `🎉 سطح ${player.level + 1} باز شد!` : 'ماموریت تکمیل شد',
+      subtitle: 'ماموریت تکمیل شد',
     });
   },
 
@@ -2654,9 +2710,87 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
+
+  addXp: (amount) => {
+    if (amount <= 0) return;
+    const { player } = get();
+    const required = xpForLevel(player.level);
+    const newXp = player.stats.experience + amount;
+    const didLevelUp = newXp >= required;
+    const newLevel = didLevelUp ? player.level + 1 : player.level;
+    const finalXp = didLevelUp ? newXp - required : newXp;
+    const reward = didLevelUp ? levelUpReward(newLevel) : 0;
+
+    set((state) => ({
+      player: {
+        ...state.player,
+        level: newLevel,
+        balance: state.player.balance + reward,
+        stats: { ...state.player.stats, experience: Math.min(finalXp, xpForLevel(newLevel) - 1) },
+      },
+    }));
+
+    if (didLevelUp) {
+      get().progressMission('reach_player_level', newLevel);
+      get().checkAchievements();
+      get().refreshMissions();
+    }
+  },
+
+  onboardingComplete: false,
+  completeOnboarding: (username, avatar, firstBizType) => {
+    const template = get().businessTemplates.find((t) => t.type === firstBizType);
+    if (!template) return;
+
+    const startOffice = getOfficeTier(1);
+    const newBiz: Business = {
+      id: `biz-${Date.now()}`,
+      ownerId: 'player-1',
+      name: template.defaultName,
+      type: template.type,
+      level: 1,
+      icon: template.icon,
+      baseProductionRate: template.baseProductionRate,
+      baseSaleRate: template.baseSaleRate,
+      cycleDuration: template.cycleDuration,
+      lastCycleAt: Date.now(),
+      inventory: { productId: template.productId, quantity: 0, maxCapacity: template.baseInventoryCapacity },
+      expenses: template.baseExpenses,
+      upgradeCost: 5_000,
+      employees: [],
+      products: [],
+      officeLevel: 1,
+      maxEmployees: startOffice?.maxEmployees ?? template.maxEmployees,
+      maxProducts: startOffice?.maxProducts ?? template.maxProducts,
+      maxLevel: template.maxLevel,
+      initialEquipment: template.initialEquipment,
+      upgradeStartedAt: null,
+      upgradeEndsAt: null,
+      fractionalProduced: 0,
+      fractionalSold: 0,
+    };
+
+    set((state) => ({
+      onboardingComplete: true,
+      player: {
+        ...state.player,
+        username,
+        avatar,
+        level: 1,
+        balance: 50_000 - template.startCost,
+        reputation: 0,
+        stats: { happiness: 85, hunger: 15, energy: 90, intelligence: 65, experience: 0 },
+      },
+      businesses: [newBiz],
+    }));
+
+    // فعال‌سازی ماموریت‌ها بعد از شروع بازی
+    get().progressMission('create_business', 1);
+    get().refreshMissions();
+  },
 }), {
   name: 'jabolgha-save',
-  version: 8,
+  version: 9,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -2789,6 +2923,10 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         });
       }
     }
+    // v9: existing saves already completed onboarding
+    if (version < 9) {
+      state.onboardingComplete = true;
+    }
     return state;
   },
   partialize: (state) => ({
@@ -2808,5 +2946,6 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     rivals: state.rivals,
     supermarketStates: state.supermarketStates,
     managers: state.managers,
+    onboardingComplete: state.onboardingComplete,
   }),
 }));

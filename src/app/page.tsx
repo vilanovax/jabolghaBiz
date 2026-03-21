@@ -1,10 +1,10 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue, xpForLevel, getUnlocksForLevel } from '@/store/gameStore';
 import {
   Briefcase, Users, ShoppingCart, Wallet,
-  TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft,
+  TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft, Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import RushHourBanner from '@/components/hooks/RushHourBanner';
@@ -325,6 +325,9 @@ export default function HomePage() {
         ))}
       </div>
 
+      {/* ===================== Next Unlock ===================== */}
+      <NextUnlockCard level={player.level} xp={player.stats.experience} />
+
       {/* ===================== Action Center ===================== */}
       {actions.length > 0 && (
         <div className="space-y-2">
@@ -490,6 +493,63 @@ export default function HomePage() {
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== Next Unlock Card ====================
+function NextUnlockCard({ level, xp }: { level: number; xp: number }) {
+  // پیدا کردن اولین لولی که آنلاک داره
+  const nextUnlocks = useMemo(() => {
+    for (let l = level + 1; l <= level + 15; l++) {
+      const unlocks = getUnlocksForLevel(l);
+      if (unlocks.length > 0) return { targetLevel: l, unlocks };
+    }
+    return null;
+  }, [level]);
+
+  if (!nextUnlocks) return null;
+
+  const required = xpForLevel(level);
+  const xpPct = Math.min(100, Math.round((xp / required) * 100));
+  const levelsAway = nextUnlocks.targetLevel - level;
+
+  return (
+    <div
+      className="rounded-[16px] border border-[#8B5CF6]/15 bg-[#8B5CF6]/5 p-3.5"
+      style={{ boxShadow: '0 0 16px rgba(139,92,246,0.06)' }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <Lock size={13} className="text-[#8B5CF6]" />
+          <span className="text-[11px] font-black text-[#8B5CF6]">
+            {levelsAway === 1 ? 'آنلاک بعدی' : `${levelsAway} سطح تا آنلاک`}
+          </span>
+        </div>
+        <span className="text-[9px] font-bold text-fg-faint font-fa">سطح {nextUnlocks.targetLevel}</span>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-2.5">
+        {nextUnlocks.unlocks.map((u, i) => (
+          <span
+            key={i}
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#8B5CF6]/10 text-[#a78bfa]"
+          >
+            🔓 {u}
+          </span>
+        ))}
+      </div>
+
+      {/* Mini XP bar */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 rounded-full bg-progress-bg overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] transition-all"
+            style={{ width: `${xpPct}%` }}
+          />
+        </div>
+        <span className="text-[8px] text-fg-faint font-fa font-bold shrink-0">{xp}/{required} XP</span>
       </div>
     </div>
   );

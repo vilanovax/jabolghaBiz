@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useGameStore, calcEmpireValue } from '@/store/gameStore';
 import MoneyDisplay from '@/components/ui/MoneyDisplay';
 import { Shield, Briefcase, Trophy, Award, Lock, Star, ChevronLeft } from 'lucide-react';
+import { xpForLevel, getUnlocksForLevel } from '@/store/gameStore';
 import Link from 'next/link';
 import type { AchievementRarity, Achievement } from '@/types';
 
@@ -81,9 +82,18 @@ export default function ProfilePage() {
   const unlockedAchievements = achievements.filter((a) => a.unlockedAt);
   const lockedCount = achievements.length - totalUnlocked;
 
-  const xpForNext = 100;
-  const currentXp = Math.min(player.stats.experience, 99);
-  const xpPct = currentXp;
+  const xpForNext = xpForLevel(player.level);
+  const currentXp = Math.min(player.stats.experience, xpForNext);
+  const xpPct = Math.round((currentXp / xpForNext) * 100);
+
+  // آنلاک بعدی
+  const nextUnlockInfo = useMemo(() => {
+    for (let l = player.level + 1; l <= player.level + 15; l++) {
+      const unlocks = getUnlocksForLevel(l);
+      if (unlocks.length > 0) return { targetLevel: l, unlocks };
+    }
+    return null;
+  }, [player.level]);
 
   const playerTitle = getPlayerTitle(player.level);
   const glowColor = getAvatarGlow(player.level);
@@ -222,6 +232,18 @@ export default function ProfilePage() {
               </div>
               <p className="text-[8px] text-fg-faint mt-0.5 text-center">{Math.ceil(xpForNext - currentXp)} XP تا سطح بعد</p>
             </div>
+
+            {/* آنلاک بعدی */}
+            {nextUnlockInfo && (
+              <div className="w-full max-w-[280px] mt-2.5 flex flex-wrap justify-center gap-1">
+                <span className="text-[8px] text-fg-faint font-bold">سطح {nextUnlockInfo.targetLevel}:</span>
+                {nextUnlockInfo.unlocks.map((u, i) => (
+                  <span key={i} className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#8B5CF6]/10 text-[#a78bfa]">
+                    🔓 {u}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
