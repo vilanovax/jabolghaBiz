@@ -2651,7 +2651,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
 }), {
   name: 'jabolgha-save',
-  version: 7,
+  version: 8,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -2769,6 +2769,19 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           activeSlots: [null, null],
           maxSlots: 1,
         };
+      }
+    }
+    if (version < 8) {
+      // قیمت‌ها به مقیاس واقعی رسیدن — products رو از mock جدید بارگذاری می‌کنیم
+      state.products = mockProducts.map((p) => ({ ...p }));
+      // baseSaleRate ممکنه در businesses قدیمی نباشه یا خیلی کم باشه
+      if (Array.isArray(state.businesses)) {
+        state.businesses = (state.businesses as Record<string, unknown>[]).map((biz) => {
+          if (!('baseSaleRate' in biz) || (biz.baseSaleRate as number) < 0.5) {
+            biz.baseSaleRate = 1.5;
+          }
+          return biz;
+        });
       }
     }
     return state;

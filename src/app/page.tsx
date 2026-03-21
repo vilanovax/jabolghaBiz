@@ -450,7 +450,9 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-2 gap-1.5">
           {topProducts.map((prod) => {
-            const changePct = ((prod.currentPrice - prod.basePrice) / prod.basePrice) * 100;
+            const currentPrice = prod.currentPrice ?? prod.basePrice ?? 0;
+            const basePrice = prod.basePrice ?? 0;
+            const changePct = basePrice > 0 ? ((currentPrice - basePrice) / basePrice) * 100 : 0;
             const isUp = changePct >= 0;
             const isSignificant = Math.abs(changePct) >= 15;
             return (
@@ -465,7 +467,7 @@ export default function HomePage() {
                     <p className="text-[10px] font-bold truncate">{prod.name}</p>
                     <div className="flex items-center gap-1">
                       <span className="text-accent-money font-fa text-[10px] font-bold">
-                        {prod.currentPrice.toLocaleString('fa-IR')}
+                        {currentPrice.toLocaleString('fa-IR')}
                       </span>
                       <span className={`text-[9px] font-bold ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                         {isUp ? '+' : ''}{changePct.toFixed(0)}%
