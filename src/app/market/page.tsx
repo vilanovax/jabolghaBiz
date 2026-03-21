@@ -8,13 +8,27 @@ import AcceptedOrderCard from '@/components/market/AcceptedOrderCard';
 import BankingTab from '@/components/market/BankingTab';
 import { TrendingUp, ClipboardList, Package, Landmark } from 'lucide-react';
 
+// کسب‌وکار تولیدکننده هر محصول
+const PRODUCT_PRODUCER: Record<string, { icon: string; name: string }> = {
+  'prod-1': { icon: '🌾', name: 'مزرعه' },
+  'prod-2': { icon: '🏭', name: 'کارخانه' },
+  'prod-3': { icon: '🏪', name: 'هایپرمارکت' },
+  'prod-6': { icon: '🚛', name: 'حمل‌ونقل' },
+  'prod-7': { icon: '🍽️', name: 'رستوران' },
+  'prod-8': { icon: '📱', name: 'استارتاپ' },
+};
+
 type Tab = 'orders' | 'my_orders' | 'prices' | 'banking';
 
 export default function MarketPage() {
   const products = useGameStore((s) => s.products);
   const orderBoard = useGameStore((s) => s.orderBoard);
   const banking = useGameStore((s) => s.banking);
+  const businesses = useGameStore((s) => s.businesses);
   const [tab, setTab] = useState<Tab>('orders');
+
+  // محصولاتی که کسب‌وکار من تولید می‌کند
+  const myProductIds = new Set(businesses.map((b) => b.inventory.productId));
 
   // Sort products: hot (>20% change) first
   const sortedProducts = [...products].sort((a, b) => {
@@ -149,10 +163,24 @@ export default function MarketPage() {
 
       {/* ==================== قیمت‌ها ==================== */}
       {tab === 'prices' && (
-        <div className="grid grid-cols-2 gap-2">
-          {sortedProducts.map((product) => (
-            <ProductPriceCard key={product.id} product={product} />
-          ))}
+        <div className="space-y-3">
+          <p className="text-[10px] text-fg-muted">
+            💡 فروش بیشتر شما → عرضه بیشتر → قیمت کاهش می‌یابد
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {sortedProducts.map((product) => {
+              const producer = PRODUCT_PRODUCER[product.id];
+              const isMine = myProductIds.has(product.id);
+              return (
+                <ProductPriceCard
+                  key={product.id}
+                  product={product}
+                  producerLabel={producer ? `${producer.icon} ${producer.name}` : undefined}
+                  isMyProduct={isMine}
+                />
+              );
+            })}
+          </div>
         </div>
       )}
 

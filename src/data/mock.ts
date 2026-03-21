@@ -706,8 +706,8 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'app_startup', defaultName: 'داده‌پردازان', icon: '📱',
     description: 'شرکت برنامه‌نویسی. با یک برنامه‌نویس ساده و تجهیزات سخت‌افزاری شروع کنید.',
-    startCost: 50_000, baseProductionRate: 2, baseSaleRate: 1, baseInventoryCapacity: 15,
-    productId: 'prod-8', cycleDuration: 180, baseExpenses: 1_000,
+    startCost: 40_000, baseProductionRate: 3, baseSaleRate: 1.5, baseInventoryCapacity: 15,
+    productId: 'prod-8', cycleDuration: 160, baseExpenses: 900,
     maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'لپتاپ و میز کار',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
@@ -742,17 +742,17 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'supermarket', defaultName: 'هایپرمارکت', icon: '🏪',
     description: 'فروش مستقیم محصولات. حجم بالا، درآمد پایدار.',
-    startCost: 70_000, baseProductionRate: 6, baseSaleRate: 4, baseInventoryCapacity: 50,
-    productId: 'prod-3', cycleDuration: 90, baseExpenses: 1_500,
+    startCost: 75_000, baseProductionRate: 5, baseSaleRate: 3, baseInventoryCapacity: 45,
+    productId: 'prod-3', cycleDuration: 100, baseExpenses: 1_800,
     maxEmployees: 6, maxProducts: 5, maxLevel: 20,
     initialEquipment: 'قفسه‌ها و صندوق فروش',
     availableEmployees: supermarketEmployees, availableProducts: supermarketProducts,
   },
   {
     type: 'transport', defaultName: 'حمل‌ونقل سریع', icon: '🚛',
-    description: 'جابجایی کالا بین کسب‌وکارها. ضروری برای زنجیره تأمین.',
-    startCost: 150_000, baseProductionRate: 3, baseSaleRate: 2, baseInventoryCapacity: 60,
-    productId: 'prod-6', cycleDuration: 300, baseExpenses: 4_000,
+    description: 'جابجایی کالا بین کسب‌وکارها. بیشترین ظرفیت انبار و درآمد بالا در بلندمدت.',
+    startCost: 100_000, baseProductionRate: 5, baseSaleRate: 3, baseInventoryCapacity: 80,
+    productId: 'prod-6', cycleDuration: 200, baseExpenses: 2_500,
     maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'یک کامیون و راننده',
     availableEmployees: transportEmployees, availableProducts: transportProducts,
@@ -790,14 +790,14 @@ export const mockBusinesses: Business[] = [
 // ==================== PRODUCTS ====================
 
 export const mockProducts: Product[] = [
-  { id: 'prod-1', name: 'گندم', category: 'raw_material', icon: '🌾', basePrice: 10, currentPrice: 12, supply: 500, demand: 450, priceHistory: [10, 11, 9, 12, 11, 13, 12] },
-  { id: 'prod-2', name: 'آرد', category: 'processed', icon: '🫘', basePrice: 25, currentPrice: 28, supply: 300, demand: 350, priceHistory: [25, 26, 24, 27, 28, 30, 28] },
-  { id: 'prod-3', name: 'نان', category: 'finished_good', icon: '🍞', basePrice: 50, currentPrice: 55, supply: 200, demand: 280, priceHistory: [50, 48, 52, 53, 55, 54, 55] },
-  { id: 'prod-4', name: 'گوجه', category: 'raw_material', icon: '🍅', basePrice: 8, currentPrice: 7, supply: 600, demand: 400, priceHistory: [8, 9, 7, 6, 7, 8, 7] },
-  { id: 'prod-5', name: 'شیر', category: 'raw_material', icon: '🥛', basePrice: 15, currentPrice: 18, supply: 250, demand: 320, priceHistory: [15, 16, 17, 16, 18, 17, 18] },
-  { id: 'prod-6', name: 'پنیر', category: 'processed', icon: '🧀', basePrice: 40, currentPrice: 45, supply: 150, demand: 200, priceHistory: [40, 42, 38, 43, 44, 46, 45] },
-  { id: 'prod-7', name: 'پیتزا', category: 'food', icon: '🍕', basePrice: 80, currentPrice: 85, supply: 100, demand: 180, priceHistory: [80, 78, 82, 83, 85, 84, 85] },
-  { id: 'prod-8', name: 'اپلیکیشن موبایل', category: 'tech', icon: '📱', basePrice: 200, currentPrice: 220, supply: 50, demand: 120, priceHistory: [200, 210, 190, 215, 220, 225, 220] },
+  { id: 'prod-1', name: 'گندم', category: 'raw_material', icon: '🌾', basePrice: 10, currentPrice: 12, supply: 500, demand: 450, baseSupply: 500, baseDemand: 450, priceHistory: [10, 11, 9, 12, 11, 13, 12] },
+  { id: 'prod-2', name: 'آرد', category: 'processed', icon: '🫘', basePrice: 25, currentPrice: 28, supply: 300, demand: 350, baseSupply: 300, baseDemand: 350, priceHistory: [25, 26, 24, 27, 28, 30, 28] },
+  { id: 'prod-3', name: 'نان', category: 'finished_good', icon: '🍞', basePrice: 50, currentPrice: 55, supply: 200, demand: 280, baseSupply: 200, baseDemand: 280, priceHistory: [50, 48, 52, 53, 55, 54, 55] },
+  { id: 'prod-4', name: 'گوجه', category: 'raw_material', icon: '🍅', basePrice: 8, currentPrice: 7, supply: 600, demand: 400, baseSupply: 600, baseDemand: 400, priceHistory: [8, 9, 7, 6, 7, 8, 7] },
+  { id: 'prod-5', name: 'شیر', category: 'raw_material', icon: '🥛', basePrice: 15, currentPrice: 18, supply: 250, demand: 320, baseSupply: 250, baseDemand: 320, priceHistory: [15, 16, 17, 16, 18, 17, 18] },
+  { id: 'prod-6', name: 'پنیر', category: 'processed', icon: '🧀', basePrice: 40, currentPrice: 45, supply: 150, demand: 200, baseSupply: 150, baseDemand: 200, priceHistory: [40, 42, 38, 43, 44, 46, 45] },
+  { id: 'prod-7', name: 'پیتزا', category: 'food', icon: '🍕', basePrice: 80, currentPrice: 85, supply: 100, demand: 180, baseSupply: 100, baseDemand: 180, priceHistory: [80, 78, 82, 83, 85, 84, 85] },
+  { id: 'prod-8', name: 'اپلیکیشن موبایل', category: 'tech', icon: '📱', basePrice: 200, currentPrice: 220, supply: 50, demand: 120, baseSupply: 50, baseDemand: 120, priceHistory: [200, 210, 190, 215, 220, 225, 220] },
 ];
 
 // ==================== MARKET LISTINGS ====================
@@ -1017,15 +1017,15 @@ export const EVENT_CONFIG = {
 // ==================== EMPLOYEE UPGRADE ====================
 
 // مدت زمان ارتقای نیرو (بر حسب میلی‌ثانیه)
-// L1→L2: 15 دقیقه, L2→L3: 30 دقیقه
+// L1→L2: 8 دقیقه, L2→L3: 16min — سقف ۴۵ دقیقه
 export function getEmployeeUpgradeDuration(currentLevel: number): number {
-  return currentLevel * 15 * 60 * 1000; // 15min × سطح فعلی
+  return Math.min(currentLevel * 8, 45) * 60 * 1000;
 }
 
 // مدت زمان ارتقای شرکت (بر حسب میلی‌ثانیه)
-// هر سطح ۱۰ دقیقه بیشتر: LV1→2: 10min, LV2→3: 20min, LV5→6: 50min
+// LV1→2: 5min, LV5→6: 25min, LV10→11: 50min — سقف ۶۰ دقیقه
 export function getBusinessUpgradeDuration(currentLevel: number): number {
-  return currentLevel * 10 * 60 * 1000; // 10min × سطح فعلی
+  return Math.min(currentLevel * 5, 60) * 60 * 1000;
 }
 
 // ==================== MISSIONS ====================
@@ -1768,8 +1768,8 @@ export const SUPERMARKET_CONFIG = {
 // ---------- ثابت‌های مدیران ----------
 
 export const MANAGER_CONFIG = {
-  upgradeCostMultiplier: 2,         // هزینه ارتقا = hireCost × 2^level
-  upgradeDurationMinutes: 20,       // هر لول × 20 دقیقه
+  upgradeCostMultiplier: 1.5,       // هزینه ارتقا = hireCost × 1.5^level
+  upgradeDurationMinutes: 12,       // هر لول × 12 دقیقه
   levelPassiveBoost: 0.15,          // هر لول +15% به passive
   salaryPerLevelMultiplier: 1.3,    // حقوق × 1.3 هر لول
   slot2UnlockLevel: 10,             // لول آنلاک اسلات دوم

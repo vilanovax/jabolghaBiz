@@ -81,9 +81,9 @@ export default function ProfilePage() {
   const unlockedAchievements = achievements.filter((a) => a.unlockedAt);
   const lockedCount = achievements.length - totalUnlocked;
 
-  const xpForNext = player.level * 100;
-  const currentXp = player.stats.experience;
-  const xpPct = Math.min(100, (currentXp / xpForNext) * 100);
+  const xpForNext = 100;
+  const currentXp = Math.min(player.stats.experience, 99);
+  const xpPct = currentXp;
 
   const playerTitle = getPlayerTitle(player.level);
   const glowColor = getAvatarGlow(player.level);

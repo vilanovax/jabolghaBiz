@@ -13,6 +13,8 @@ const categoryLabels: Record<string, string> = {
 
 interface ProductPriceCardProps {
   product: Product;
+  producerLabel?: string;
+  isMyProduct?: boolean;
 }
 
 function MiniSparkline({ data, isUp }: { data: number[]; isUp: boolean }) {
@@ -53,7 +55,7 @@ function MiniSparkline({ data, isUp }: { data: number[]; isUp: boolean }) {
   );
 }
 
-export default function ProductPriceCard({ product }: ProductPriceCardProps) {
+export default function ProductPriceCard({ product, producerLabel, isMyProduct }: ProductPriceCardProps) {
   const priceDiff = product.currentPrice - product.basePrice;
   const pricePct = ((priceDiff / product.basePrice) * 100).toFixed(0);
   const isUp = priceDiff >= 0;
@@ -112,6 +114,18 @@ export default function ProductPriceCard({ product }: ProductPriceCardProps) {
           {demandIcon} {demandLabel}
         </span>
       </div>
+
+      {/* Row 4: Producer info */}
+      {producerLabel && (
+        <div className={`mt-1.5 flex items-center gap-1 rounded-full px-2 py-0.5 w-fit text-[8px] font-bold ${
+          isMyProduct
+            ? 'bg-[#4F46E5]/15 text-[#4F46E5]'
+            : 'bg-surface-card/60 text-fg-faint'
+        }`}>
+          {isMyProduct && <span>✦</span>}
+          {producerLabel}
+        </div>
+      )}
     </div>
   );
 }

@@ -541,8 +541,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           ? {
               ...b,
               level: b.level + 1,
-              baseProductionRate: Math.round(b.baseProductionRate * 1.22),
-              upgradeCost: Math.round(b.upgradeCost * 1.5),
+              baseProductionRate: Math.round(b.baseProductionRate * 1.2),
+              upgradeCost: Math.round(b.upgradeCost * 1.35),
               upgradeStartedAt: null,
               upgradeEndsAt: null,
             }
@@ -576,6 +576,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       const producedByType: Partial<Record<BusinessType, number>> = {};
       const soldByType: Partial<Record<BusinessType, number>> = {};
       const earnedByType: Partial<Record<BusinessType, number>> = {};
+      const soldByProduct: Record<string, number> = {};
       const { stats } = state.player;
       const energyCycleMult = STAT_GAMEPLAY_EFFECTS.energyCycleMultiplier(stats.energy);
       const happinessRevMult = STAT_GAMEPLAY_EFFECTS.happinessRevenueMultiplier(stats.happiness);
@@ -643,6 +644,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           newQuantity -= actualSold;
           totalSold += actualSold;
           soldByType[biz.type] = (soldByType[biz.type] ?? 0) + actualSold;
+          soldByProduct[biz.inventory.productId] = (soldByProduct[biz.inventory.productId] ?? 0) + actualSold;
           // Calculate income
           const marketProduct = state.products.find((p) => p.id === biz.inventory.productId);
           const unitPrice = marketProduct ? marketProduct.currentPrice : 1000;
@@ -706,9 +708,18 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         }),
       };
 
+      // Update product supply based on actual sales (more sold = higher supply in market)
+      const updatedProducts = Object.keys(soldByProduct).length > 0
+        ? state.products.map((p) => {
+            const soldAmt = soldByProduct[p.id] ?? 0;
+            return soldAmt > 0 ? { ...p, supply: p.supply + soldAmt } : p;
+          })
+        : state.products;
+
       return {
         businesses: updatedBiz,
         managers: updatedManagers,
+        products: updatedProducts,
         player: balanceAdd > 0
           ? { ...state.player, balance: state.player.balance + balanceAdd }
           : state.player,
@@ -1017,21 +1028,22 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     const activeRivals = get().rivals.rivals.filter((r) => r.active);
     set((state) => ({
       products: state.products.map((prod) => {
-        // تغییر تصادفی ±5-15%
-        const changePercent = (Math.random() * 0.10 + 0.05) * (Math.random() > 0.5 ? 1 : -1);
-        const newPrice = Math.max(
+        // قیمت بر اساس نسبت تقاضا به عرضه (اقتصاد واقعی)
+        // هرچه فروش بیشتر → عرضه بالا → قیمت پایین‌تر
+        const ratio = prod.demand / Math.max(1, prod.supply);
+        const targetPrice = Math.round(prod.basePrice * Math.pow(ratio, 0.4));
+        const clampedTarget = Math.max(
           Math.round(prod.basePrice * 0.5),
-          Math.min(
-            Math.round(prod.basePrice * 2.0),
-            Math.round(prod.currentPrice * (1 + changePercent))
-          )
+          Math.min(Math.round(prod.basePrice * 1.8), targetPrice)
         );
+        // حرکت نرم قیمت (30% به سمت هدف)
+        const newPrice = Math.round(prod.currentPrice + (clampedTarget - prod.currentPrice) * 0.3);
 
-        // تغییر عرضه و تقاضا
-        let supplyChange = Math.round((Math.random() - 0.5) * 50);
-        let demandChange = Math.round((Math.random() - 0.5) * 50);
+        // بازگشت تدریجی عرضه/تقاضا به مقدار پایه (بازار جذب می‌کند)
+        let supplyChange = Math.round((prod.baseSupply - prod.supply) * 0.15);
+        let demandChange = Math.round((prod.baseDemand - prod.demand) * 0.15);
 
-        // تاثیر رقبا روی عرضه و تقاضا
+        // تاثیر رقبا روی بازار
         for (const rival of activeRivals) {
           if (Math.random() < rival.marketInfluence * 0.3) {
             const shift = Math.round((Math.random() - 0.5) * RIVAL_CONFIG.marketShiftRange * rival.marketInfluence);
@@ -1768,6 +1780,12 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       ? [...missions.completedMissionIds, mission.templateId]
       : missions.completedMissionIds;
 
+    const newExperience = mission.xpReward > 0
+      ? player.stats.experience + mission.xpReward
+      : player.stats.experience;
+    const didLevelUp = newExperience >= 100;
+    const finalExperience = didLevelUp ? newExperience - 100 : Math.min(newExperience, 99);
+
     set({
       missions: {
         ...missions,
@@ -1778,15 +1796,16 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: {
         ...player,
         balance: player.balance + mission.reward,
+        level: didLevelUp ? player.level + 1 : player.level,
         stats: mission.xpReward > 0
-          ? { ...player.stats, experience: Math.min(100, player.stats.experience + mission.xpReward) }
+          ? { ...player.stats, experience: Math.max(0, finalExperience) }
           : player.stats,
       },
     });
     get().addFloatingReward({
       amount: mission.reward,
       label: mission.xpReward > 0 ? `+${mission.xpReward} XP` : undefined,
-      subtitle: 'ماموریت تکمیل شد',
+      subtitle: didLevelUp ? `🎉 سطح ${player.level + 1} باز شد!` : 'ماموریت تکمیل شد',
     });
   },
 

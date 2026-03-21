@@ -238,6 +238,8 @@ export interface Product {
   currentPrice: number;
   supply: number;
   demand: number;
+  baseSupply: number;
+  baseDemand: number;
   priceHistory: number[];
 }
 

@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue } from '@/store/gameStore';
-import MoneyDisplay from '@/components/ui/MoneyDisplay';
 import {
   Briefcase, Users, ShoppingCart, Wallet,
   TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft,
@@ -112,32 +111,193 @@ export default function HomePage() {
   return (
     <div className="space-y-4 py-3 pb-24">
 
-      {/* ===================== Balance Hero ===================== */}
-      <div className="relative text-center py-6">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-64 h-64 rounded-full bg-[#F59E0B]/10 blur-[90px]" />
-        </div>
-        <p className="text-[10px] text-fg-muted tracking-widest relative">موجودی کل</p>
-        <div className="relative mt-2 animate-money-glow">
-          <span className="text-3xl font-black font-fa text-accent-money">
-            {new Intl.NumberFormat('fa-IR').format(player.balance)} <span className="text-xl">تومان</span>
-          </span>
-        </div>
-        <div className="flex items-center justify-center gap-4 mt-2.5 relative">
-          <div className="flex items-center gap-1 text-[10px]">
-            {totalProfit >= 0
-              ? <ArrowUpRight size={13} className="text-[#22C55E]" />
-              : <ArrowDownRight size={13} className="text-[#EF4444]" />
-            }
-            <MoneyDisplay amount={totalProfit} size="sm" showSign />
-            <span className="text-fg-faint">/سیکل</span>
+      {/* ===================== Balance Hero — Credit Card ===================== */}
+      <div className="relative w-full" style={{ perspective: '1200px' }}>
+        <div
+          className="relative w-full rounded-[22px] overflow-hidden"
+          style={{
+            aspectRatio: '1.586',
+            background: 'linear-gradient(135deg, #0D0B1E 0%, #1B1640 45%, #0E1729 100%)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.07)',
+          }}
+        >
+          {/* Dot grid texture */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(200,169,110,0.18) 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+              opacity: 0.35,
+            }}
+          />
+
+          {/* Diagonal shimmer stripe */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(110deg, transparent 30%, rgba(200,169,110,0.055) 48%, rgba(255,220,120,0.03) 52%, transparent 68%)',
+            }}
+          />
+
+          {/* Top edge gold line */}
+          <div
+            className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(200,169,110,0.55) 40%, rgba(232,201,126,0.7) 60%, transparent 95%)' }}
+          />
+
+          {/* Glow blob center */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              top: '30%', left: '50%', transform: 'translate(-50%,-50%)',
+              width: '60%', height: '80%',
+              background: 'radial-gradient(ellipse, rgba(139,92,246,0.12) 0%, transparent 70%)',
+              filter: 'blur(20px)',
+            }}
+          />
+
+          <div className="absolute inset-0 flex flex-col justify-between p-5" dir="rtl">
+
+            {/* ── Row 1: Chip + Logo ── */}
+            <div className="flex items-start justify-between">
+              {/* EMV Chip */}
+              <div
+                className="rounded-[5px] flex-shrink-0"
+                style={{
+                  width: 36, height: 28,
+                  background: 'linear-gradient(145deg, #D4A843 0%, #F0D070 35%, #B8882E 65%, #E2C060 100%)',
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.4)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: 'linear-gradient(rgba(0,0,0,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.18) 1px, transparent 1px)',
+                  backgroundSize: '9px 7px',
+                }} />
+                <div style={{
+                  position: 'absolute', top: '35%', left: '25%', right: '25%', bottom: '35%',
+                  background: 'rgba(0,0,0,0.12)', borderRadius: 2,
+                }} />
+              </div>
+
+              {/* Network logo — two overlapping circles + brand */}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-[8px] font-black tracking-[0.18em] uppercase"
+                  style={{ color: 'rgba(200,169,110,0.45)' }}
+                >
+                  JABOLGH
+                </span>
+                <div className="flex">
+                  <div
+                    className="w-6 h-6 rounded-full"
+                    style={{ background: 'rgba(200,169,110,0.55)', boxShadow: '0 0 8px rgba(200,169,110,0.3)' }}
+                  />
+                  <div
+                    className="w-6 h-6 rounded-full -mr-3"
+                    style={{ background: 'rgba(160,120,60,0.45)', boxShadow: '0 0 8px rgba(160,120,60,0.2)' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Row 2: Balance (center) ── */}
+            <div className="text-center">
+              <p
+                className="text-[8px] tracking-[0.25em] uppercase mb-1"
+                style={{ color: 'rgba(200,169,110,0.42)', letterSpacing: '0.22em' }}
+              >
+                موجودی کل
+              </p>
+              <p
+                className="font-black font-fa leading-none"
+                style={{
+                  fontSize: 'clamp(22px, 7vw, 30px)',
+                  color: '#EDD07A',
+                  textShadow: '0 0 24px rgba(200,169,110,0.45), 0 2px 4px rgba(0,0,0,0.5)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {new Intl.NumberFormat('fa-IR').format(player.balance)}
+                <span
+                  className="font-fa"
+                  style={{ fontSize: 'clamp(12px, 3.5vw, 16px)', color: 'rgba(200,169,110,0.55)', marginRight: 6 }}
+                >
+                  تومان
+                </span>
+              </p>
+
+              {/* Profit row */}
+              <div className="flex items-center justify-center gap-2.5 mt-2">
+                <div className="flex items-center gap-1">
+                  {totalProfit >= 0
+                    ? <ArrowUpRight size={11} style={{ color: '#4ade80' }} />
+                    : <ArrowDownRight size={11} style={{ color: '#f87171' }} />
+                  }
+                  <span
+                    className="text-[10px] font-black font-fa"
+                    style={{ color: totalProfit >= 0 ? '#4ade80' : '#f87171' }}
+                  >
+                    {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('fa-IR')}
+                  </span>
+                  <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.25)' }}>/سیکل</span>
+                </div>
+                <div
+                  className="h-2.5 w-px"
+                  style={{ background: 'rgba(200,169,110,0.2)' }}
+                />
+                <span className="text-[9px] font-fa" style={{ color: 'rgba(200,169,110,0.38)' }}>
+                  ارزش {empireValue.toLocaleString('fa-IR')}
+                </span>
+              </div>
+            </div>
+
+            {/* ── Row 3: Name + Level ── */}
+            <div className="flex items-end justify-between">
+              <div>
+                <p
+                  className="text-[7px] tracking-widest mb-0.5 uppercase"
+                  style={{ color: 'rgba(200,169,110,0.35)', letterSpacing: '0.18em' }}
+                >
+                  صاحب کارت
+                </p>
+                <p
+                  className="text-[13px] font-black tracking-wide"
+                  style={{ color: 'rgba(255,255,255,0.82)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+                >
+                  {player.username}
+                </p>
+              </div>
+
+              <div
+                className="flex flex-col items-center px-3 py-1.5 rounded-[10px]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(200,169,110,0.12), rgba(200,169,110,0.04))',
+                  border: '1px solid rgba(200,169,110,0.18)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                }}
+              >
+                <span className="text-[7px] tracking-wider uppercase" style={{ color: 'rgba(200,169,110,0.4)' }}>
+                  سطح
+                </span>
+                <span className="text-[18px] font-black font-fa leading-tight" style={{ color: '#C8A96E' }}>
+                  {player.level}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="w-px h-3 bg-line-subtle" />
-          <div className="flex items-center gap-1 text-[10px] text-fg-faint">
-            <span className="font-fa">{empireValue.toLocaleString('fa-IR')}</span>
-            <span>ارزش</span>
-          </div>
         </div>
+
+        {/* Card reflection / bottom glow */}
+        <div
+          className="absolute -bottom-3 left-6 right-6 h-4 rounded-b-[22px] pointer-events-none"
+          style={{
+            background: 'linear-gradient(180deg, rgba(139,92,246,0.15), transparent)',
+            filter: 'blur(8px)',
+          }}
+        />
       </div>
 
       {/* ===================== Empire Stats Grid ===================== */}
