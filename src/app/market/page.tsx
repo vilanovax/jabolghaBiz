@@ -162,27 +162,57 @@ export default function MarketPage() {
       )}
 
       {/* ==================== قیمت‌ها ==================== */}
-      {tab === 'prices' && (
-        <div className="space-y-3">
-          <p className="text-[10px] text-fg-muted">
-            💡 فروش بیشتر شما → عرضه بیشتر → قیمت کاهش می‌یابد
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {sortedProducts.map((product) => {
-              const producer = PRODUCT_PRODUCER[product.id];
-              const isMine = myProductIds.has(product.id);
-              return (
-                <ProductPriceCard
-                  key={product.id}
-                  product={product}
-                  producerLabel={producer ? `${producer.icon} ${producer.name}` : undefined}
-                  isMyProduct={isMine}
-                />
-              );
-            })}
+      {tab === 'prices' && (() => {
+        const myProducts = sortedProducts.filter((p) => myProductIds.has(p.id));
+        const otherProducts = sortedProducts.filter((p) => !myProductIds.has(p.id));
+
+        return (
+          <div className="space-y-4">
+            {/* محصولات من — اول */}
+            {myProducts.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-fg-secondary mb-2 flex items-center gap-1.5">
+                  ⭐ محصولات شرکت‌های من
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {myProducts.map((product) => {
+                    const producer = PRODUCT_PRODUCER[product.id];
+                    return (
+                      <ProductPriceCard
+                        key={product.id}
+                        product={product}
+                        producerLabel={producer ? `${producer.icon} ${producer.name}` : undefined}
+                        isMyProduct
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* بقیه محصولات */}
+            {otherProducts.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-fg-secondary mb-2 flex items-center gap-1.5">
+                  📊 سایر محصولات بازار
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {otherProducts.map((product) => {
+                    const producer = PRODUCT_PRODUCER[product.id];
+                    return (
+                      <ProductPriceCard
+                        key={product.id}
+                        product={product}
+                        producerLabel={producer ? `${producer.icon} ${producer.name}` : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ==================== بانک ==================== */}
       {tab === 'banking' && <BankingTab />}

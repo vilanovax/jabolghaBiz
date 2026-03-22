@@ -311,13 +311,21 @@ export interface LifeAction {
   category: LifeActionCategory;
   cost: number;
   cooldownMs: number;          // زمان انتظار تا استفاده بعدی (ms)
+  durationMs: number;          // مدت انجام اکشن (ms) — صفر = فوری
   effect: Partial<PlayerStats>;
   requiredLevel?: number;
+}
+
+export interface ActiveLifeAction {
+  actionId: string;
+  startedAt: number;
+  endsAt: number;
 }
 
 export interface LifeState {
   lastActionAt: Record<string, number>;   // actionId → timestamp آخرین استفاده
   lastStatDecayAt: number;                // timestamp آخرین کاهش خودکار
+  activeAction: ActiveLifeAction | null;  // اکشن در حال انجام
 }
 
 export interface HomeItem {

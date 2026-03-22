@@ -414,6 +414,7 @@ interface GameState {
   // Life System
   life: LifeState;
   performLifeAction: (actionId: string) => boolean;  // returns success
+  completeLifeAction: () => void;
   decayStats: () => void;
   getActionCooldownLeft: (actionId: string) => number; // ms left
 
@@ -636,6 +637,32 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
   tickBusinesses: () => {
     const now = Date.now();
+
+    // ── خودکار تکمیل ارتقاها ──
+    const { businesses } = get();
+    for (const biz of businesses) {
+      // ارتقای شرکت
+      if (biz.upgradeStartedAt && biz.upgradeEndsAt && now >= biz.upgradeEndsAt) {
+        get().completeBusinessUpgrade(biz.id);
+        get().addFloatingReward({ amount: 0, label: `✨ ${biz.name}`, subtitle: `ارتقا به LV ${biz.level + 1} تکمیل شد!` });
+      }
+      // ارتقای نیروها
+      for (const emp of biz.employees) {
+        if (emp.upgradeStartedAt && emp.upgradeEndsAt && now >= emp.upgradeEndsAt) {
+          get().completeEmployeeUpgrade(biz.id, emp.id);
+          get().addFloatingReward({ amount: 0, label: `⬆ ${emp.name}`, subtitle: `ارتقا به L${emp.employeeLevel + 1}` });
+        }
+      }
+    }
+    // ارتقای مدیرها
+    const { managers } = get();
+    for (const mgr of managers.hiredManagers) {
+      if (mgr.upgradeStartedAt && mgr.upgradeEndsAt && now >= mgr.upgradeEndsAt) {
+        get().completeManagerUpgrade(mgr.id);
+        get().addFloatingReward({ amount: 0, label: `👔 ${mgr.name}`, subtitle: `ارتقا به L${mgr.level + 1}` });
+      }
+    }
+
     set((state) => {
       let balanceAdd = 0;
       let totalProduced = 0;
@@ -728,11 +755,13 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           // Ecosystem (natural demand) revenue bonus
           const totalRevMult = productRevMult + chainBonus + ecosystem.revenueBonus;
           const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult * mgrBoosts.revenueMultiplier * boostMult);
-          // Subtract expenses proportional to elapsed time
+          // هزینه‌ها فقط به اندازه سیکل‌های تکمیل‌شده (نه کل elapsed)
           const totalExpenses = calcTotalExpenses(biz);
-          const expensePerSec = totalExpenses / biz.cycleDuration;
-          const expenseCost = Math.round(expensePerSec * elapsed * eventMult.expenseMultiplier);
-          const netIncome = Math.max(0, income - expenseCost);
+          const activeCycles = Math.max(completedCycles, 1);
+          const expenseCost = Math.round(totalExpenses * activeCycles * eventMult.expenseMultiplier);
+          // هزینه نمی‌تونه بیشتر از درآمد + ۲۰٪ باشه (جلوگیری از ضرر بی‌نهایت offline)
+          const cappedExpense = Math.min(expenseCost, Math.round(income * 1.2));
+          const netIncome = Math.max(0, income - cappedExpense);
           balanceAdd += netIncome;
           earnedByType[biz.type] = (earnedByType[biz.type] ?? 0) + netIncome;
         }
@@ -1023,6 +1052,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   life: {
     lastActionAt: {},
     lastStatDecayAt: Date.now(),
+    activeAction: null,
   },
 
   performLifeAction: (actionId) => {
@@ -1032,38 +1062,80 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
     // چک سطح
     if (action.requiredLevel && player.level < action.requiredLevel) return false;
-
     // چک پول
     if (player.balance < action.cost) return false;
-
     // چک کولداون
     const lastUsed = life.lastActionAt[actionId] || 0;
     if (Date.now() - lastUsed < action.cooldownMs) return false;
+    // چک اکشن فعال
+    if (life.activeAction && life.activeAction.endsAt > Date.now()) return false;
 
-    // اعمال افکت‌ها (XP جدا از سیستم addXp مدیریت میشه)
+    const now = Date.now();
+    const duration = action.durationMs ?? 0;
+
+    if (duration > 0) {
+      // شروع اکشن — پول کسر، اثر بعداً
+      set((state) => ({
+        player: { ...state.player, balance: state.player.balance - action.cost },
+        life: {
+          ...state.life,
+          activeAction: { actionId, startedAt: now, endsAt: now + duration },
+        },
+      }));
+    } else {
+      // اکشن فوری (بدون duration) — مثل قبل
+      const xpGain = (action.effect as Record<string, number>).experience ?? 0;
+      const newStats = { ...player.stats };
+      for (const [key, value] of Object.entries(action.effect)) {
+        if (key === 'experience') continue;
+        const statKey = key as keyof PlayerStats;
+        newStats[statKey] = Math.max(0, Math.min(100, newStats[statKey] + (value as number)));
+      }
+      set((state) => ({
+        player: { ...state.player, balance: state.player.balance - action.cost, stats: newStats },
+        life: { ...state.life, lastActionAt: { ...state.life.lastActionAt, [actionId]: now } },
+      }));
+      if (xpGain > 0) get().addXp(xpGain);
+      get().checkAchievements();
+    }
+    return true;
+  },
+
+  /** تکمیل خودکار اکشن زندگی — صدا زده میشه از tick */
+  completeLifeAction: () => {
+    const { life, player } = get();
+    if (!life.activeAction) return;
+    if (Date.now() < life.activeAction.endsAt) return;
+
+    const action = LIFE_ACTIONS.find((a) => a.id === life.activeAction!.actionId);
+    if (!action) { set((s) => ({ life: { ...s.life, activeAction: null } })); return; }
+
     const xpGain = (action.effect as Record<string, number>).experience ?? 0;
     const newStats = { ...player.stats };
     for (const [key, value] of Object.entries(action.effect)) {
-      if (key === 'experience') continue; // XP از addXp
+      if (key === 'experience') continue;
       const statKey = key as keyof PlayerStats;
       newStats[statKey] = Math.max(0, Math.min(100, newStats[statKey] + (value as number)));
     }
 
     set((state) => ({
-      player: {
-        ...state.player,
-        balance: state.player.balance - action.cost,
-        stats: newStats,
-      },
+      player: { ...state.player, stats: newStats },
       life: {
         ...state.life,
-        lastActionAt: { ...state.life.lastActionAt, [actionId]: Date.now() },
+        activeAction: null,
+        lastActionAt: { ...state.life.lastActionAt, [action.id]: Date.now() },
       },
     }));
 
     if (xpGain > 0) get().addXp(xpGain);
     get().checkAchievements();
-    return true;
+
+    // نمایش نتیجه
+    const mainEffect = Object.entries(action.effect)
+      .filter(([k]) => k !== 'experience')
+      .map(([k, v]) => `${k === 'hunger' ? '🍔' : k === 'energy' ? '⚡' : k === 'happiness' ? '😊' : '🧠'} ${(v as number) > 0 ? '+' : ''}${v}`)
+      .join(' ');
+    get().addFloatingReward({ amount: 0, label: `${action.icon} ${action.name}`, subtitle: mainEffect });
   },
 
   decayStats: () => {

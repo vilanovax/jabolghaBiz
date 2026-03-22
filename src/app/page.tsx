@@ -366,6 +366,17 @@ export default function HomePage() {
       )}
 
       {/* ===================== Businesses ===================== */}
+      {businesses.length === 0 && (
+        <Link
+          href="/business"
+          className="block rounded-[18px] border border-dashed border-[#6366F1]/30 p-5 text-center active:scale-[0.98] transition-transform"
+          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04))' }}
+        >
+          <span className="text-3xl">🚀</span>
+          <p className="text-sm font-black mt-2">اولین شرکتت رو بساز!</p>
+          <p className="text-[10px] text-fg-muted mt-1">برو به بخش کسب‌وکار و شروع کن</p>
+        </Link>
+      )}
       {businesses.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">

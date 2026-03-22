@@ -853,76 +853,76 @@ export const LIFE_ACTIONS: LifeAction[] = [
   // غذا
   {
     id: 'eat-sandwich', name: 'ساندویچ', icon: '🥪', description: 'یه ساندویچ ساده',
-    category: 'food', cost: 200, cooldownMs: 5 * 60 * 1000,
+    category: 'food', cost: 200, cooldownMs: 5 * 60 * 1000, durationMs: 8_000,
     effect: { hunger: -20, energy: 5 },
   },
   {
     id: 'eat-kebab', name: 'چلوکباب', icon: '🍖', description: 'یه پرس چلوکباب مفصل',
-    category: 'food', cost: 800, cooldownMs: 12 * 60 * 1000,
+    category: 'food', cost: 800, cooldownMs: 12 * 60 * 1000, durationMs: 15_000,
     effect: { hunger: -50, happiness: 10, energy: 10 },
   },
   {
     id: 'eat-pizza', name: 'پیتزا', icon: '🍕', description: 'پیتزا مخصوص',
-    category: 'food', cost: 500, cooldownMs: 8 * 60 * 1000,
+    category: 'food', cost: 500, cooldownMs: 8 * 60 * 1000, durationMs: 10_000,
     effect: { hunger: -35, happiness: 8 },
   },
   // استراحت
   {
     id: 'rest-nap', name: 'چرت کوتاه', icon: '😴', description: '۲۰ دقیقه استراحت',
-    category: 'rest', cost: 0, cooldownMs: 6 * 60 * 1000,
+    category: 'rest', cost: 0, cooldownMs: 6 * 60 * 1000, durationMs: 12_000,
     effect: { energy: 15 },
   },
   {
     id: 'rest-sleep', name: 'خواب کامل', icon: '🛏️', description: 'یه خواب حسابی',
-    category: 'rest', cost: 0, cooldownMs: 20 * 60 * 1000,
+    category: 'rest', cost: 0, cooldownMs: 20 * 60 * 1000, durationMs: 25_000,
     effect: { energy: 40, happiness: 5 },
   },
   {
     id: 'rest-cafe', name: 'کافه', icon: '☕', description: 'یه قهوه توی کافه',
-    category: 'rest', cost: 300, cooldownMs: 6 * 60 * 1000,
+    category: 'rest', cost: 300, cooldownMs: 6 * 60 * 1000, durationMs: 10_000,
     effect: { energy: 12, happiness: 8 },
   },
   // آموزش
   {
     id: 'edu-book', name: 'مطالعه کتاب', icon: '📖', description: 'یه ساعت مطالعه',
-    category: 'education', cost: 0, cooldownMs: 30 * 60 * 1000,
+    category: 'education', cost: 0, cooldownMs: 30 * 60 * 1000, durationMs: 20_000,
     effect: { intelligence: 8, energy: -10 },
   },
   {
     id: 'edu-course', name: 'دوره آنلاین', icon: '💻', description: 'شرکت در دوره آموزشی',
-    category: 'education', cost: 2_000, cooldownMs: 60 * 60 * 1000,
+    category: 'education', cost: 2_000, cooldownMs: 60 * 60 * 1000, durationMs: 30_000,
     effect: { intelligence: 20, experience: 10, energy: -15 },
   },
   {
     id: 'edu-podcast', name: 'پادکست', icon: '🎧', description: 'گوش دادن به پادکست کسب‌وکار',
-    category: 'education', cost: 0, cooldownMs: 20 * 60 * 1000,
+    category: 'education', cost: 0, cooldownMs: 20 * 60 * 1000, durationMs: 15_000,
     effect: { intelligence: 5, experience: 3 },
   },
   // ورزش
   {
     id: 'fit-walk', name: 'پیاده‌روی', icon: '🚶', description: 'نیم ساعت قدم زدن',
-    category: 'fitness', cost: 0, cooldownMs: 8 * 60 * 1000,
+    category: 'fitness', cost: 0, cooldownMs: 8 * 60 * 1000, durationMs: 12_000,
     effect: { energy: 10, happiness: 5, hunger: 10 },
   },
   {
     id: 'fit-gym', name: 'باشگاه', icon: '💪', description: 'یه ساعت ورزش',
-    category: 'fitness', cost: 500, cooldownMs: 18 * 60 * 1000,
+    category: 'fitness', cost: 500, cooldownMs: 18 * 60 * 1000, durationMs: 20_000,
     effect: { energy: -10, happiness: 15, hunger: 15 },
   },
   // سرگرمی
   {
     id: 'fun-movie', name: 'سینما', icon: '🎬', description: 'رفتن سینما',
-    category: 'entertainment', cost: 600, cooldownMs: 20 * 60 * 1000,
+    category: 'entertainment', cost: 600, cooldownMs: 20 * 60 * 1000, durationMs: 20_000,
     effect: { happiness: 25, energy: -5 },
   },
   {
     id: 'fun-game', name: 'بازی ویدیویی', icon: '🎮', description: 'یه ساعت بازی',
-    category: 'entertainment', cost: 0, cooldownMs: 10 * 60 * 1000,
+    category: 'entertainment', cost: 0, cooldownMs: 10 * 60 * 1000, durationMs: 15_000,
     effect: { happiness: 15, energy: -8 },
   },
   {
     id: 'fun-park', name: 'پارک', icon: '🌳', description: 'گردش در پارک',
-    category: 'entertainment', cost: 0, cooldownMs: 8 * 60 * 1000,
+    category: 'entertainment', cost: 0, cooldownMs: 8 * 60 * 1000, durationMs: 10_000,
     effect: { happiness: 12, energy: 5 },
   },
 ];

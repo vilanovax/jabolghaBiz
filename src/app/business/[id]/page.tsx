@@ -67,6 +67,7 @@ export default function BusinessDetailPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showOfficeSheet, setShowOfficeSheet] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -81,10 +82,42 @@ export default function BusinessDetailPage() {
   }, [biz]);
 
   if (!biz) {
+    // اگه شرکتی داره، redirect به اولین شرکت
+    const firstBiz = useGameStore.getState().businesses[0];
     return (
-      <div className="py-20 text-center">
-        <p className="text-fg-secondary">کسب‌وکار یافت نشد</p>
-        <Link href="/business" className="text-accent-primary text-sm mt-2 inline-block">بازگشت</Link>
+      <div className="py-16 text-center space-y-4">
+        <div className="flex justify-center">
+          <div
+            className="w-20 h-20 rounded-[24px] flex items-center justify-center text-4xl"
+            style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' }}
+          >
+            🏢
+          </div>
+        </div>
+        <div>
+          <p className="text-lg font-black">کسب‌وکار پیدا نشد!</p>
+          <p className="text-[11px] text-fg-muted mt-1">
+            {firstBiz ? 'بزن بریم سراغ شرکتت' : 'اول باید یه شرکت بسازی'}
+          </p>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          {firstBiz ? (
+            <Link
+              href={`/business/${firstBiz.id}`}
+              className="inline-flex items-center gap-2 text-sm font-black text-white bg-gradient-to-l from-[#6366F1] to-[#8B5CF6] px-6 py-3 rounded-full active:scale-95 transition-all shadow-[0_4px_20px_rgba(99,102,241,0.35)]"
+            >
+              {firstBiz.icon} برو به {firstBiz.name}
+            </Link>
+          ) : (
+            <Link
+              href="/business"
+              className="inline-flex items-center gap-2 text-sm font-black text-white bg-gradient-to-l from-[#6366F1] to-[#8B5CF6] px-6 py-3 rounded-full active:scale-95 transition-all shadow-[0_4px_20px_rgba(99,102,241,0.35)]"
+            >
+              🚀 ساخت اولین شرکت
+            </Link>
+          )}
+          <Link href="/" className="text-[10px] text-fg-muted">← برگشت به خانه</Link>
+        </div>
       </div>
     );
   }
@@ -251,66 +284,174 @@ export default function BusinessDetailPage() {
         </div>
       )}
 
-      {/* ==================== درآمد — ساده و شفاف ==================== */}
-      <div
-        className="relative rounded-[22px] border p-4 overflow-hidden transition-all"
-        style={{
-          borderColor: rushActive ? 'rgba(239,68,68,0.3)' : relevantEvents.some(e => e.isPositive) ? 'rgba(34,197,94,0.25)' : 'var(--line-subtle)',
-          background: rushActive ? 'linear-gradient(135deg, rgba(239,68,68,0.04), transparent)' : 'var(--surface-card-40)',
-        }}
-      >
-        {/* ردیف اصلی: تایمر + درآمد */}
-        <div className="flex items-center gap-4">
-          <ProgressRing
-            progress={progress}
-            size={76}
-            strokeWidth={7}
-            color={rushActive ? '#EF4444' : relevantEvents.some(e => e.isPositive) ? '#22C55E' : '#6366F1'}
+      {/* ==================== چرخه تولید — محصول‌محور ==================== */}
+      <div className="space-y-3">
+
+        {/* کارت محصول — "من چی می‌سازم" */}
+        {marketProduct && (
+          <div
+            className="rounded-[20px] border overflow-hidden"
+            style={{
+              borderColor: rushActive ? 'rgba(239,68,68,0.3)' : 'var(--line-subtle)',
+              background: rushActive ? 'linear-gradient(135deg, rgba(239,68,68,0.04), transparent)' : 'var(--surface-card-40)',
+            }}
           >
-            <span className="text-[13px] font-black font-fa">{formatTime(timeLeft)}</span>
-            <span className="text-[7px] text-fg-muted">{rushActive ? '🔥 ×۲' : 'تا تولید'}</span>
-          </ProgressRing>
+            {/* هدر محصول */}
+            <div className="px-4 pt-4 pb-2 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-[16px] bg-[#F59E0B]/10 border border-[#F59E0B]/20 flex items-center justify-center text-3xl">
+                {marketProduct.icon}
+              </div>
+              <div className="flex-1">
+                <p className="text-[13px] font-black">{marketProduct.name}</p>
+                <p className="text-[9px] text-fg-muted">{vocab.production}</p>
+              </div>
+              <div className="text-left">
+                <p className="text-[8px] text-fg-faint">قیمت بازار</p>
+                <p className="text-[15px] font-black font-fa text-accent-money">{unitPrice.toLocaleString('fa-IR')} <span className="text-[9px] text-fg-faint">ت</span></p>
+              </div>
+            </div>
 
-          <div className="flex-1 min-w-0">
-            {/* سود در دقیقه — مهم‌ترین عدد */}
-            <p className="text-[9px] text-fg-muted mb-0.5">💰 درآمد هر دقیقه</p>
-            <p className={`text-[22px] font-black font-fa leading-none ${profitPerMin >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-              {profitPerMin >= 0 ? '+' : ''}{profitPerMin.toLocaleString('fa-IR')}
-              <span className="text-[10px] text-fg-muted mr-1">تومان</span>
-            </p>
+            {/* تایمر + تولید هر سیکل */}
+            <div className="px-4 py-3 flex items-center gap-4">
+              <ProgressRing
+                progress={progress}
+                size={68}
+                strokeWidth={6}
+                color={rushActive ? '#EF4444' : relevantEvents.some(e => e.isPositive) ? '#22C55E' : '#6366F1'}
+              >
+                <span className="text-[12px] font-black font-fa">{formatTime(timeLeft)}</span>
+                <span className="text-[7px] text-fg-muted">{rushActive ? '🔥 ×۲' : `تا ${vocab.cycle}`}</span>
+              </ProgressRing>
 
-            {/* جزئیات کوچک */}
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[8px] text-fg-faint bg-surface-card/60 px-1.5 py-0.5 rounded-full">
-                📦 هر سیکل {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
-              </span>
-              {profitMarginPct > 0 && (
-                <span className="text-[8px] text-[#F59E0B] bg-[#F59E0B]/8 px-1.5 py-0.5 rounded-full">
-                  +{profitMarginPct}% حاشیه
-                </span>
-              )}
+              <div className="flex-1 grid grid-cols-2 gap-2">
+                <div className="rounded-[12px] bg-[#6366F1]/8 p-2 text-center">
+                  <p className="text-[8px] text-fg-muted">⚙️ هر {vocab.cycle}</p>
+                  <p className="text-[14px] font-black font-fa text-[#6366F1]">{effectiveProduction}</p>
+                  <p className="text-[7px] text-fg-faint">{vocab.productUnit}</p>
+                </div>
+                <div className="rounded-[12px] bg-[#22C55E]/8 p-2 text-center">
+                  <p className="text-[8px] text-fg-muted">🛒 فروش</p>
+                  <p className="text-[14px] font-black font-fa text-[#22C55E]">{effectiveSaleRate}</p>
+                  <p className="text-[7px] text-fg-faint">/دقیقه</p>
+                </div>
+              </div>
+            </div>
+
+            {/* خلاصه مالی */}
+            <div className="px-4 py-3 border-t border-line-subtle/20 grid grid-cols-3 gap-2" style={{ background: 'rgba(0,0,0,0.02)' }}>
+              <div className="text-center">
+                <p className="text-[8px] text-fg-faint">💰 درآمد/دقیقه</p>
+                <p className="text-[12px] font-black font-fa text-[#22C55E]">+{incomePerMin.toLocaleString('fa-IR')}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[8px] text-fg-faint">💸 هزینه/دقیقه</p>
+                <p className="text-[12px] font-black font-fa text-[#EF4444]">-{expensePerMin.toLocaleString('fa-IR')}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[8px] text-fg-faint">📊 سود خالص</p>
+                <p className={`text-[12px] font-black font-fa ${profitPerMin >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                  {profitPerMin >= 0 ? '+' : ''}{profitPerMin.toLocaleString('fa-IR')}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* انبار — ساده */}
-        <div className="mt-3 pt-3 border-t border-line-subtle/30">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] text-fg-muted">📦 {vocab.inventoryName}</span>
-            <span className="text-[9px] font-fa font-bold" style={{ color: inventoryColor }}>
-              {Math.round(inventoryPercent)}%
-            </span>
+        {/* انبار — کلیک‌پذیر */}
+        <button
+          onClick={() => setShowInventory(true)}
+          className="w-full rounded-[16px] border border-line-subtle bg-surface-card/40 p-3 text-right active:opacity-70 transition-opacity"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">📦</span>
+              <span className="text-[10px] font-bold">{vocab.inventoryName}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black font-fa" style={{ color: inventoryColor }}>
+                {biz.inventory.quantity}/{effectiveCapacity}
+              </span>
+              <span className="text-[8px] text-fg-faint">›</span>
+            </div>
           </div>
-          <div className="h-2 rounded-full bg-progress-bg overflow-hidden">
+          <div className="h-3 rounded-full bg-progress-bg overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${Math.min(100, inventoryPercent)}%`, backgroundColor: inventoryColor }}
             />
           </div>
-          {isSoftCollect && (
-            <p className="text-[8px] text-[#F59E0B] font-bold mt-1">⚠️ انبار پره — تولید کند شده</p>
-          )}
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[8px] text-fg-faint">
+              {isSoftCollect ? '⚠️ پره — تولید کند شده' : `ارزش: ${(biz.inventory.quantity * unitPrice).toLocaleString('fa-IR')} ت`}
+            </span>
+            <span className="text-[8px] text-fg-faint font-fa">{Math.round(inventoryPercent)}%</span>
+          </div>
+        </button>
+      </div>
+
+      {/* ==================== بیلان مالی — شفاف ==================== */}
+      <div className="rounded-[16px] border border-line-subtle bg-surface-card/30 p-3 space-y-2">
+        <p className="text-[10px] font-bold text-fg-secondary flex items-center gap-1">📋 بیلان مالی (هر {vocab.cycle})</p>
+
+        {/* درآمد */}
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-fg-muted flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#22C55E] inline-block" />
+            فروش {marketProduct?.name ?? vocab.productUnit}
+          </span>
+          <span className="font-black font-fa text-[#22C55E]">+{incomePerCycle.toLocaleString('fa-IR')} ت</span>
         </div>
+
+        {/* هزینه‌ها — تفکیک */}
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-fg-muted flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#EF4444] inline-block" />
+            هزینه عملیات
+          </span>
+          <span className="font-bold font-fa text-[#EF4444]">-{biz.expenses.toLocaleString('fa-IR')} ت</span>
+        </div>
+        {(() => {
+          const officeTierObj = getOfficeTier(biz.officeLevel ?? 1);
+          const rent = officeTierObj.rent;
+          const salaries = biz.employees.reduce((s, e) => s + e.salary, 0);
+          return (
+            <>
+              {rent > 0 && (
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-fg-muted flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-[#F59E0B] inline-block" />
+                    اجاره دفتر
+                  </span>
+                  <span className="font-bold font-fa text-[#F59E0B]">-{rent.toLocaleString('fa-IR')} ت</span>
+                </div>
+              )}
+              {salaries > 0 && (
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-fg-muted flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-[#8B5CF6] inline-block" />
+                    حقوق نیروها ({biz.employees.length} نفر)
+                  </span>
+                  <span className="font-bold font-fa text-[#8B5CF6]">-{salaries.toLocaleString('fa-IR')} ت</span>
+                </div>
+              )}
+            </>
+          );
+        })()}
+
+        {/* خط جداکننده + سود خالص */}
+        <div className="border-t border-line-subtle/30 pt-2 flex items-center justify-between">
+          <span className="text-[11px] font-black">سود خالص</span>
+          <span className={`text-[13px] font-black font-fa ${netProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+            {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')} ت
+          </span>
+        </div>
+
+        {/* نکته اگه ضررده */}
+        {netProfit < 0 && (
+          <p className="text-[8px] text-[#EF4444] font-bold bg-[#EF4444]/8 rounded-lg px-2 py-1">
+            💡 نکته: نیرو استخدام کن تا تولید بیشتر بشه، یا نیروی اضافی رو حذف کن
+          </p>
+        )}
       </div>
 
       {/* ==================== تب‌ها ==================== */}
@@ -473,6 +614,153 @@ export default function BusinessDetailPage() {
             );
           })()}
         </div>
+        );
+      })()}
+
+      {/* ==================== باتن‌شیت انبار ==================== */}
+      {showInventory && (() => {
+        const qty = biz.inventory.quantity;
+        const cap = effectiveCapacity;
+        const pct = cap > 0 ? Math.round((qty / cap) * 100) : 0;
+        const baseCapacity = biz.inventory.maxCapacity;
+        const totalValue = qty * unitPrice;
+        const prodPerMin = effectiveProduction / (biz.cycleDuration / 60);
+        const salePerMin = effectiveSaleRate;
+        const netFlowPerMin = prodPerMin - salePerMin;
+        const minsToFull = netFlowPerMin > 0 ? Math.round((cap - qty) / netFlowPerMin) : 0;
+        const minsToEmpty = netFlowPerMin < 0 ? Math.round(qty / Math.abs(netFlowPerMin)) : 0;
+
+        const fillColor = pct >= 90 ? '#EF4444' : pct >= 50 ? '#3B82F6' : '#22C55E';
+
+        return (
+          <>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setShowInventory(false)} />
+            <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+              <div className="max-w-lg mx-auto bg-surface-elevated rounded-t-3xl border-t border-x border-line overflow-hidden">
+                {/* Handle */}
+                <div className="flex flex-col items-center pt-3 pb-2 px-4 border-b border-line/50">
+                  <div className="w-10 h-1 rounded-full bg-fg-faint/30 mb-3" />
+                  <div className="flex items-center justify-between w-full">
+                    <h2 className="text-sm font-black flex items-center gap-1.5">📦 {vocab.inventoryName}</h2>
+                    <button onClick={() => setShowInventory(false)} className="p-1.5 rounded-full hover:bg-surface-card text-fg-muted">
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="px-4 py-4 space-y-4">
+                  {/* نوار بزرگ انبار */}
+                  <div>
+                    <div className="flex items-end justify-between mb-2">
+                      <div>
+                        <p className="text-[10px] text-fg-muted">موجودی فعلی</p>
+                        <p className="text-[28px] font-black font-fa leading-none" style={{ color: fillColor }}>
+                          {qty}
+                          <span className="text-[12px] text-fg-faint mr-1">/ {cap}</span>
+                        </p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[10px] text-fg-muted">ارزش انبار</p>
+                        <p className="text-[16px] font-black font-fa text-[#F59E0B]">
+                          {totalValue.toLocaleString('fa-IR')}
+                          <span className="text-[9px] text-fg-faint mr-1">ت</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="h-4 rounded-full bg-progress-bg overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${Math.min(100, pct)}%`, backgroundColor: fillColor }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[8px] text-fg-faint">۰</span>
+                      <span className="text-[9px] font-black font-fa" style={{ color: fillColor }}>{pct}%</span>
+                      <span className="text-[8px] text-fg-faint">{cap}</span>
+                    </div>
+                  </div>
+
+                  {/* جریان ورود/خروج */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-[14px] bg-[#6366F1]/8 p-3 text-center">
+                      <p className="text-lg">⚙️</p>
+                      <p className="text-[14px] font-black font-fa text-[#6366F1]">+{prodPerMin.toFixed(1)}</p>
+                      <p className="text-[8px] text-fg-muted">تولید/دقیقه</p>
+                    </div>
+                    <div className="rounded-[14px] bg-[#22C55E]/8 p-3 text-center">
+                      <p className="text-lg">🛒</p>
+                      <p className="text-[14px] font-black font-fa text-[#22C55E]">-{salePerMin.toFixed(1)}</p>
+                      <p className="text-[8px] text-fg-muted">فروش/دقیقه</p>
+                    </div>
+                  </div>
+
+                  {/* پیش‌بینی */}
+                  <div className="rounded-[14px] border border-line-subtle p-3">
+                    <p className="text-[10px] font-bold text-fg-secondary mb-2">🔮 پیش‌بینی</p>
+                    {netFlowPerMin > 0 ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-fg-muted">تا پر شدن انبار</span>
+                        <span className="text-[11px] font-black font-fa text-[#3B82F6]">
+                          {minsToFull > 60 ? `${Math.round(minsToFull / 60)} ساعت` : `${minsToFull} دقیقه`}
+                        </span>
+                      </div>
+                    ) : netFlowPerMin < 0 ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-fg-muted">تا خالی شدن انبار</span>
+                        <span className="text-[11px] font-black font-fa text-[#F59E0B]">
+                          {minsToEmpty > 60 ? `${Math.round(minsToEmpty / 60)} ساعت` : `${minsToEmpty} دقیقه`}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-fg-muted">⚖️ تولید و فروش متعادله</p>
+                    )}
+                    {pct >= 90 && (
+                      <p className="text-[9px] text-[#EF4444] font-bold mt-2">⚠️ انبار تقریباً پره — تولید ۵۰٪ کندتر شده!</p>
+                    )}
+                  </div>
+
+                  {/* جزئیات ظرفیت */}
+                  <div className="rounded-[14px] border border-line-subtle p-3">
+                    <p className="text-[10px] font-bold text-fg-secondary mb-2">📊 جزئیات ظرفیت</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[9px]">
+                        <span className="text-fg-muted">ظرفیت پایه</span>
+                        <span className="font-bold font-fa">{baseCapacity}</span>
+                      </div>
+                      {warehouseBoost > 0 && (
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-[#F59E0B]">📦 بوست انباردار</span>
+                          <span className="font-bold font-fa text-[#F59E0B]">+{Math.round(warehouseBoost)}</span>
+                        </div>
+                      )}
+                      {productCapBoost > 0 && (
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-[#8B5CF6]">🔓 بوست محصولات</span>
+                          <span className="font-bold font-fa text-[#8B5CF6]">+{productCapBoost}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between text-[10px] pt-1 border-t border-line-subtle/30">
+                        <span className="font-bold">مجموع ظرفیت</span>
+                        <span className="font-black font-fa">{cap}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* محصول */}
+                  {marketProduct && (
+                    <div className="flex items-center gap-3 rounded-[14px] bg-surface-card/40 p-3 border border-line-subtle/30">
+                      <span className="text-2xl">{marketProduct.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-[11px] font-bold">{marketProduct.name}</p>
+                        <p className="text-[9px] text-fg-muted">قیمت بازار</p>
+                      </div>
+                      <p className="text-[14px] font-black font-fa text-accent-money">{unitPrice.toLocaleString('fa-IR')} ت</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         );
       })()}
 
@@ -644,134 +932,181 @@ export default function BusinessDetailPage() {
       )}
 
       {/* ==================== تب نیروها ==================== */}
-      {tab === 'employees' && (
-        <div className="space-y-3">
+      {tab === 'employees' && (() => {
+        const ROLE_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string; effectLabel: (v: number) => string }> = {
+          production: { label: 'تولیدکننده', icon: '⚙️', color: '#6366F1', bg: 'rgba(99,102,241,0.08)', effectLabel: (v) => `+${v} تولید/سیکل` },
+          sales:      { label: 'فروشنده', icon: '🛒', color: '#22C55E', bg: 'rgba(34,197,94,0.08)', effectLabel: (v) => `+${v} فروش/دقیقه` },
+          warehouse:  { label: 'انباردار', icon: '📦', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', effectLabel: (v) => `+${v} ظرفیت انبار` },
+        };
+        const TIER_CONFIG: Record<string, { label: string; border: string; glow: string }> = {
+          worker:    { label: '', border: 'border-line/30', glow: '' },
+          senior:    { label: 'ارشد', border: 'border-[#3B82F6]/30', glow: '' },
+          expert:    { label: 'متخصص', border: 'border-[#8B5CF6]/40', glow: '0 0 8px rgba(139,92,246,0.1)' },
+          legendary: { label: 'افسانه‌ای', border: 'border-[#F59E0B]/40', glow: '0 0 12px rgba(245,158,11,0.15)' },
+        };
+
+        const getBoostValue = (emp: { role: string; productionBoost?: number; salesBoost?: number; capacityBoost?: number }, lvl: number) => {
+          const mult = 1 + (lvl - 1) * 0.5;
+          if (emp.role === 'production') return Math.round((emp.productionBoost ?? 0) * mult);
+          if (emp.role === 'sales') return Math.round((emp.salesBoost ?? 0) * mult);
+          return Math.round((emp.capacityBoost ?? 0) * mult);
+        };
+
+        const getMoneyEffect = (emp: { role: string; productionBoost?: number; salesBoost?: number }, lvl: number) => {
+          const mult = 1 + (lvl - 1) * 0.5;
+          if (emp.role === 'production') return Math.round((emp.productionBoost ?? 0) * mult * unitPrice);
+          if (emp.role === 'sales') return Math.round((emp.salesBoost ?? 0) * mult * unitPrice);
+          return 0;
+        };
+
+        return (
+        <div className="space-y-4">
+          {/* خلاصه تیم */}
+          <div className="flex gap-2">
+            {Object.entries(ROLE_CONFIG).map(([role, cfg]) => {
+              const count = biz.employees.filter((e) => e.role === role).length;
+              return (
+                <div key={role} className="flex-1 rounded-[14px] p-2.5 text-center" style={{ background: cfg.bg }}>
+                  <span className="text-lg">{cfg.icon}</span>
+                  <p className="text-[15px] font-black font-fa mt-0.5" style={{ color: cfg.color }}>{count}</p>
+                  <p className="text-[8px] text-fg-muted">{cfg.label}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* نیروهای فعلی */}
           {biz.employees.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold mb-2 text-fg-secondary">نیروهای فعلی</p>
-              <div className="space-y-1.5">
+              <p className="text-[10px] font-bold mb-2 text-fg-secondary flex items-center gap-1.5">
+                👥 تیم فعلی
+                <span className="text-[9px] font-fa text-fg-faint">{biz.employees.length}/{biz.maxEmployees}</span>
+              </p>
+              <div className="space-y-2">
                 {biz.employees.map((emp) => {
                   const canUpgrade = emp.employeeLevel < emp.maxUpgradeLevel;
                   const isUpgrading = emp.upgradeStartedAt !== null && emp.upgradeEndsAt !== null;
                   const upgradeReady = isUpgrading && Date.now() >= (emp.upgradeEndsAt ?? 0);
                   const upgCost = canUpgrade ? emp.baseHireCost * Math.pow(2, emp.employeeLevel) : 0;
                   const canAffordUpg = balance >= upgCost;
-                  const levelBoost = 1 + (emp.employeeLevel - 1) * 0.5;
+                  const boostVal = getBoostValue(emp, emp.employeeLevel);
+                  const moneyEffect = getMoneyEffect(emp, emp.employeeLevel);
+                  const roleCfg = ROLE_CONFIG[emp.role] ?? ROLE_CONFIG.production;
+                  const tierCfg = TIER_CONFIG[(emp as unknown as { tier?: string }).tier ?? 'worker'] ?? TIER_CONFIG.worker;
 
-                  // محاسبه زمان باقی‌مانده ارتقا
-                  const upgradeTimeLeft = isUpgrading && !upgradeReady
-                    ? Math.max(0, (emp.upgradeEndsAt ?? 0) - Date.now())
-                    : 0;
-                  const upgradeTotalDuration = isUpgrading
-                    ? (emp.upgradeEndsAt ?? 0) - (emp.upgradeStartedAt ?? 0)
-                    : 1;
-                  const upgradeProgress = isUpgrading
-                    ? Math.min(100, ((upgradeTotalDuration - upgradeTimeLeft) / upgradeTotalDuration) * 100)
-                    : 0;
+                  const upgradeTimeLeft = isUpgrading && !upgradeReady ? Math.max(0, (emp.upgradeEndsAt ?? 0) - Date.now()) : 0;
+                  const upgradeTotalDuration = isUpgrading ? (emp.upgradeEndsAt ?? 0) - (emp.upgradeStartedAt ?? 0) : 1;
+                  const upgradeProgress = isUpgrading ? Math.min(100, ((upgradeTotalDuration - upgradeTimeLeft) / upgradeTotalDuration) * 100) : 0;
                   const upgMinsLeft = Math.floor(upgradeTimeLeft / 60000);
                   const upgSecsLeft = Math.floor((upgradeTimeLeft % 60000) / 1000);
-
-                  // مدت زمان ارتقا (برای نمایش قبل شروع)
-                  const upgradeDurationMs = canUpgrade ? getEmployeeUpgradeDuration(emp.employeeLevel) : 0;
-                  const upgradeDurationMins = Math.round(upgradeDurationMs / 60000);
+                  const upgradeDurationMins = canUpgrade ? Math.round(getEmployeeUpgradeDuration(emp.employeeLevel) / 60000) : 0;
 
                   return (
-                    <div key={emp.id} className={`rounded-[18px] px-3 py-2.5 border ${
-                      isUpgrading
-                        ? upgradeReady
-                          ? 'bg-[#22C55E]/10 border-[#22C55E]/30 shadow-[0_0_10px_rgba(34,197,94,0.15)]'
-                          : 'bg-[#8B5CF6]/10 border-[#8B5CF6]/30'
-                        : 'bg-surface-card/60 border-line/30'
-                    }`}>
-                      <div className="flex items-center gap-2.5">
-                        <div className="relative">
-                          <span className="text-lg">{emp.icon}</span>
-                          {isUpgrading && !upgradeReady && (
-                            <span className="absolute -bottom-1 -right-1 text-[10px] animate-spin">⏳</span>
-                          )}
-                          {upgradeReady && (
-                            <span className="absolute -bottom-1 -right-1 text-[10px] animate-bounce">✨</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-xs font-bold truncate">{emp.name}</p>
-                            {emp.maxUpgradeLevel > 1 && (
-                              <span className="text-[8px] bg-accent-primary/15 text-accent-primary px-1.5 py-0.5 rounded-[999px] font-bold shrink-0">L{emp.employeeLevel}</span>
-                            )}
-                            {isUpgrading && !upgradeReady && (
-                              <span className="text-[8px] bg-[#8B5CF6]/15 text-[#8B5CF6] px-1.5 py-0.5 rounded-[999px] font-bold shrink-0 animate-pulse">
-                                در حال ارتقا
-                              </span>
-                            )}
-                            {upgradeReady && (
-                              <span className="text-[8px] bg-[#22C55E]/15 text-[#22C55E] px-1.5 py-0.5 rounded-[999px] font-bold shrink-0 animate-pulse">
-                                آماده!
-                              </span>
-                            )}
+                    <div
+                      key={emp.id}
+                      className={`rounded-[18px] border overflow-hidden ${tierCfg.border}`}
+                      style={{ boxShadow: tierCfg.glow }}
+                    >
+                      <div className="px-3.5 py-3">
+                        <div className="flex items-center gap-3">
+                          {/* آواتار + نقش */}
+                          <div className="relative">
+                            <div className="w-11 h-11 rounded-[14px] flex items-center justify-center text-2xl" style={{ background: roleCfg.bg }}>
+                              {emp.icon}
+                            </div>
+                            <div
+                              className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] border-2 border-surface"
+                              style={{ background: roleCfg.color }}
+                            >
+                              <span className="text-white text-[8px] font-black">L{emp.employeeLevel}</span>
+                            </div>
                           </div>
-                          <p className="text-[9px] text-fg-muted">
-                            {emp.role === 'production' && emp.productionBoost > 0 && (
-                              <span className="text-[#22C55E]">+{Math.round(emp.productionBoost * levelBoost)} واحد/سیکل </span>
-                            )}
-                            {emp.role === 'sales' && emp.salesBoost > 0 && (
-                              <span className="text-[#22C55E]">+{Math.round(emp.salesBoost * levelBoost)} واحد/دقیقه </span>
-                            )}
-                            {emp.role === 'warehouse' && emp.capacityBoost > 0 && (
-                              <span className="text-[#22C55E]">+{Math.round(emp.capacityBoost * levelBoost)} ظرفیت </span>
-                            )}
-                            <span className="font-fa text-fg-faint">{emp.salary.toLocaleString('fa-IR')}/سیکل</span>
-                          </p>
-                        </div>
 
-                        {/* دکمه‌ها */}
-                        {upgradeReady ? (
-                          <button
-                            onClick={() => completeEmployeeUpgrade(biz.id, emp.id)}
-                            className="shrink-0 bg-[#22C55E] hover:bg-emerald-400 text-white px-3 py-1.5 rounded-[999px] text-[9px] font-bold active:scale-95 transition-all shadow-[0_2px_8px_rgba(34,197,94,0.3)]"
-                          >
-                            ✨ تکمیل
-                          </button>
-                        ) : isUpgrading ? (
-                          <div className="shrink-0 text-center">
-                            <p className="text-[10px] font-bold text-[#8B5CF6] font-mono">
-                              {upgMinsLeft}:{upgSecsLeft.toString().padStart(2, '0')}
-                            </p>
+                          {/* اطلاعات */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-[12px] font-black truncate">{emp.name}</p>
+                              {tierCfg.label && (
+                                <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: `${roleCfg.color}15`, color: roleCfg.color }}>
+                                  {tierCfg.label}
+                                </span>
+                              )}
+                              {isUpgrading && !upgradeReady && (
+                                <span className="text-[7px] bg-[#8B5CF6]/15 text-[#8B5CF6] px-1.5 py-0.5 rounded-full font-bold animate-pulse">⏳</span>
+                              )}
+                              {upgradeReady && (
+                                <span className="text-[7px] bg-[#22C55E]/15 text-[#22C55E] px-1.5 py-0.5 rounded-full font-bold animate-pulse">✨ آماده</span>
+                              )}
+                            </div>
+                            {/* اثر اصلی — به زبان ساده */}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[9px] font-bold" style={{ color: roleCfg.color }}>
+                                {roleCfg.icon} {roleCfg.effectLabel(boostVal)}
+                              </span>
+                              {moneyEffect > 0 && (
+                                <span className="text-[8px] text-fg-faint">≈ +{moneyEffect.toLocaleString('fa-IR')} ت/سیکل</span>
+                              )}
+                            </div>
                           </div>
-                        ) : canUpgrade ? (
-                          <button
-                            onClick={() => upgradeEmployee(biz.id, emp.id)}
-                            disabled={!canAffordUpg}
-                            className="shrink-0 bg-[#8B5CF6] hover:bg-violet-400 disabled:opacity-40 text-white px-2.5 py-1.5 rounded-[999px] text-[9px] font-bold active:scale-95 transition-all"
-                          >
-                            <span>⬆ L{emp.employeeLevel + 1}</span>
-                            <span className="block text-[7px] opacity-70 font-fa">{upgradeDurationMins} دقیقه</span>
-                          </button>
-                        ) : (
-                          <span className="text-[#22C55E] text-xs shrink-0">✅</span>
-                        )}
+
+                          {/* دکمه */}
+                          {upgradeReady ? (
+                            <button
+                              onClick={() => completeEmployeeUpgrade(biz.id, emp.id)}
+                              className="shrink-0 bg-[#22C55E] text-white px-3 py-2 rounded-xl text-[10px] font-bold active:scale-95 transition-all shadow-[0_2px_8px_rgba(34,197,94,0.3)]"
+                            >
+                              ✨ تکمیل
+                            </button>
+                          ) : isUpgrading ? (
+                            <div className="shrink-0 text-center min-w-[48px]">
+                              <p className="text-[11px] font-black text-[#8B5CF6] font-mono">{upgMinsLeft}:{upgSecsLeft.toString().padStart(2, '0')}</p>
+                            </div>
+                          ) : canUpgrade ? (
+                            <button
+                              onClick={() => upgradeEmployee(biz.id, emp.id)}
+                              disabled={!canAffordUpg}
+                              className="shrink-0 bg-[#8B5CF6] disabled:opacity-40 text-white px-3 py-2 rounded-xl text-[10px] font-bold active:scale-95 transition-all"
+                            >
+                              <span>⬆ L{emp.employeeLevel + 1}</span>
+                            </button>
+                          ) : (
+                            <span className="text-[#22C55E] text-sm shrink-0">✅ MAX</span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* نوار پیشرفت ارتقا */}
-                      {isUpgrading && (
-                        <div className="mt-2">
+                      {/* نوار ارتقا / سطح */}
+                      {isUpgrading ? (
+                        <div className="px-3.5 pb-2">
                           <div className="h-1.5 rounded-full bg-progress-bg overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ${
-                                upgradeReady
-                                  ? 'bg-[#22C55E] animate-pulse'
-                                  : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1]'
-                              }`}
+                              className={`h-full rounded-full transition-all duration-1000 ${upgradeReady ? 'bg-[#22C55E] animate-pulse' : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1]'}`}
                               style={{ width: `${upgradeProgress}%` }}
                             />
                           </div>
                         </div>
-                      )}
+                      ) : emp.maxUpgradeLevel > 1 ? (
+                        <div className="px-3.5 pb-2">
+                          <div className="flex gap-1">
+                            {Array.from({ length: emp.maxUpgradeLevel }).map((_, i) => (
+                              <div
+                                key={i}
+                                className="flex-1 h-1.5 rounded-full"
+                                style={{
+                                  background: i < emp.employeeLevel ? roleCfg.color : 'var(--progress-bg)',
+                                  opacity: i < emp.employeeLevel ? 1 : 0.3,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
 
-                      {/* نوار سطح (فقط وقتی ارتقا در حال انجام نیست) */}
-                      {!isUpgrading && emp.maxUpgradeLevel > 1 && (
-                        <div className="mt-1.5"><ProgressBar value={emp.employeeLevel} max={emp.maxUpgradeLevel} color="upgrade" /></div>
-                      )}
+                      {/* حقوق — نوار پایین */}
+                      <div className="px-3.5 py-1.5 border-t border-line-subtle/20 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.02)' }}>
+                        <span className="text-[8px] text-fg-faint">💰 حقوق</span>
+                        <span className="text-[8px] font-bold font-fa text-fg-muted">{emp.salary.toLocaleString('fa-IR')} تومان/سیکل</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -779,58 +1114,98 @@ export default function BusinessDetailPage() {
             </div>
           )}
 
-          <p className="text-[10px] font-bold text-fg-secondary">درخت رشد ({biz.employees.length}/{biz.maxEmployees})</p>
-          {biz.employees.length >= biz.maxEmployees && (biz.officeLevel ?? 1) < OFFICE_TIERS.length && (
-            <p className="text-[9px] text-accent-gold bg-accent-gold/10 rounded-[12px] px-2 py-1.5 flex items-center gap-1">
-              <Building2 size={12} /> ظرفیت پر — دفتر را ارتقا دهید
+          {/* استخدام جدید */}
+          <div>
+            <p className="text-[10px] font-bold mb-2 text-fg-secondary flex items-center gap-1.5">
+              ➕ استخدام نیرو
+              <span className="text-[9px] font-fa text-fg-faint">{biz.employees.length}/{biz.maxEmployees} ظرفیت</span>
             </p>
-          )}
-          <div className="space-y-1.5">
-            {template?.availableEmployees.map((et) => {
-              const alreadyHired = biz.employees.some((e) => e.templateId === et.id);
-              const isLocked = biz.level < et.unlockLevel;
-              const capacityFull = biz.employees.length >= biz.maxEmployees;
-              const canAfford = balance >= et.hireCost;
-              if (alreadyHired) return null;
-              return (
-                <div key={et.id} className={`flex items-center gap-2.5 rounded-[18px] px-3 py-2.5 border ${isLocked ? 'bg-surface-elevated/40 border-line/30 opacity-50' : 'bg-surface-card/40 border-line/30'}`}>
-                  <span className={`text-lg ${isLocked ? 'grayscale' : ''}`}>{et.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className={`text-xs font-bold truncate ${isLocked ? 'text-fg-muted' : ''}`}>{et.name}</p>
-                      {et.tier === 'legendary' && !isLocked && (
-                        <span className="text-[8px] bg-accent-gold/15 text-accent-gold px-1.5 py-0.5 rounded-[999px] font-bold">افسانه‌ای</span>
-                      )}
+            {biz.employees.length >= biz.maxEmployees && (biz.officeLevel ?? 1) < OFFICE_TIERS.length && (
+              <div className="mb-2 rounded-[12px] px-3 py-2 bg-[#F59E0B]/8 border border-[#F59E0B]/20 flex items-center gap-2">
+                <Building2 size={14} className="text-[#F59E0B] shrink-0" />
+                <p className="text-[9px] font-bold text-[#F59E0B]">ظرفیت تیم پره — دفتر رو ارتقا بده!</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              {template?.availableEmployees.map((et) => {
+                const alreadyHired = biz.employees.some((e) => e.templateId === et.id);
+                const isLocked = biz.level < et.unlockLevel;
+                const capacityFull = biz.employees.length >= biz.maxEmployees;
+                const canAfford = balance >= et.hireCost;
+                if (alreadyHired) return null;
+
+                const roleCfg = ROLE_CONFIG[et.role] ?? ROLE_CONFIG.production;
+                const tierCfg = TIER_CONFIG[et.tier ?? 'worker'] ?? TIER_CONFIG.worker;
+                const boostVal = getBoostValue(et, 1);
+                const moneyEffect = getMoneyEffect(et, 1);
+
+                return (
+                  <div
+                    key={et.id}
+                    className={`rounded-[18px] border overflow-hidden transition-all ${
+                      isLocked ? 'opacity-40 ' + tierCfg.border : tierCfg.border
+                    }`}
+                    style={{ boxShadow: isLocked ? '' : tierCfg.glow }}
+                  >
+                    <div className="px-3.5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-[14px] flex items-center justify-center text-2xl" style={{ background: isLocked ? 'rgba(0,0,0,0.05)' : roleCfg.bg }}>
+                          <span className={isLocked ? 'grayscale' : ''}>{et.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-[12px] font-black truncate">{et.name}</p>
+                            <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: `${roleCfg.color}15`, color: roleCfg.color }}>
+                              {roleCfg.label}
+                            </span>
+                            {tierCfg.label && (
+                              <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full bg-[#F59E0B]/10 text-[#F59E0B]">{tierCfg.label}</span>
+                            )}
+                          </div>
+                          {isLocked ? (
+                            <p className="text-[9px] text-fg-faint mt-0.5">🔒 سطح {et.unlockLevel} شرکت لازمه</p>
+                          ) : (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[9px] font-bold" style={{ color: roleCfg.color }}>
+                                {roleCfg.icon} {roleCfg.effectLabel(boostVal)}
+                              </span>
+                              {moneyEffect > 0 && (
+                                <span className="text-[8px] text-fg-faint">≈ +{moneyEffect.toLocaleString('fa-IR')} ت</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {isLocked ? (
+                          <div className="shrink-0 text-center">
+                            <Lock size={14} className="text-fg-faint mx-auto" />
+                            <p className="text-[8px] text-fg-faint mt-0.5 font-fa">LV {et.unlockLevel}</p>
+                          </div>
+                        ) : capacityFull ? (
+                          <span className="text-[9px] text-fg-muted shrink-0 bg-surface-card px-2 py-1 rounded-lg">ظرفیت پر</span>
+                        ) : (
+                          <button
+                            onClick={() => hireEmployee(biz.id, et)}
+                            disabled={!canAfford}
+                            className="shrink-0 bg-[#4F46E5] disabled:opacity-40 text-white px-3 py-2 rounded-xl text-[10px] font-bold active:scale-95 transition-all"
+                          >
+                            <span className="font-fa">{et.hireCost.toLocaleString('fa-IR')}</span>
+                            <span className="block text-[7px] opacity-70">استخدام</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[9px] text-fg-muted">
-                      {isLocked ? (
-                        <span className="text-fg-faint">🔒 LV {et.unlockLevel}</span>
-                      ) : (
-                        <>
-                          {et.role === 'production' && et.productionBoost && <span className="text-[#22C55E]">+{et.productionBoost} واحد/سیکل </span>}
-                          {et.role === 'sales' && et.salesBoost && <span className="text-[#22C55E]">+{et.salesBoost} واحد/دقیقه </span>}
-                          {et.role === 'warehouse' && et.capacityBoost && <span className="text-[#22C55E]">+{et.capacityBoost} ظرفیت </span>}
-                          {et.expenseReduction && <span className="text-accent-info">هزینه -{(et.expenseReduction * 100).toFixed(0)}% </span>}
-                          <span className="font-fa text-fg-faint">{et.salary.toLocaleString('fa-IR')}/سیکل</span>
-                        </>
-                      )}
-                    </p>
+                    {/* توضیح */}
+                    <div className="px-3.5 py-1.5 border-t border-line-subtle/20" style={{ background: 'rgba(0,0,0,0.02)' }}>
+                      <p className="text-[8px] text-fg-faint">{et.description}</p>
+                    </div>
                   </div>
-                  {isLocked ? (
-                    <span className="text-[9px] text-fg-faint shrink-0 flex items-center gap-0.5"><Lock size={10} /> LV{et.unlockLevel}</span>
-                  ) : capacityFull ? (
-                    <span className="text-[9px] text-fg-muted shrink-0">پر</span>
-                  ) : (
-                    <button onClick={() => hireEmployee(biz.id, et)} disabled={!canAfford} className="shrink-0 bg-[#4F46E5] hover:bg-[#6366F1] disabled:opacity-40 text-white px-3 py-1.5 rounded-[999px] text-[10px] font-bold active:scale-95 transition-all">
-                      <span className="font-fa">{et.hireCost.toLocaleString('fa-IR')}</span>
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ==================== تب محصولات ==================== */}
       {tab === 'products' && (
