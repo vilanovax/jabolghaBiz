@@ -43,8 +43,8 @@ const STARTER_BUSINESSES: {
   desc: string;
   cost: number;
 }[] = [
-  { type: 'farming', icon: '🌾', name: 'مزرعه', desc: 'ارزان‌ترین شروع، تولید سریع', cost: 30_000 },
-  { type: 'app_startup', icon: '📱', name: 'استارتاپ', desc: 'نرم‌افزار بساز، آینده دیجیتال', cost: 40_000 },
+  { type: 'farming', icon: '🌾', name: 'مزرعه', desc: 'ارزان‌ترین شروع، تولید سریع', cost: 20_000 },
+  { type: 'app_startup', icon: '📱', name: 'استارتاپ', desc: 'نرم‌افزار بساز، آینده دیجیتال', cost: 30_000 },
   { type: 'supermarket', icon: '🏪', name: 'سوپرمارکت', desc: 'فروش مستقیم، درآمد پایدار', cost: 75_000 },
   { type: 'restaurant', icon: '🍽️', name: 'رستوران', desc: 'حاشیه سود بالا', cost: 80_000 },
 ];
@@ -232,11 +232,11 @@ export default function OnboardingScreen() {
         {step === 'business' && (
           <div className="w-full flex flex-col items-center gap-4 animate-fade-in">
             <h1 className="text-2xl font-black text-white leading-tight">اولین کسب‌وکارت</h1>
-            <p className="text-sm text-white/50">با ۵۰,۰۰۰ تومن شروع می‌کنی — کدوم رو می‌خوای؟</p>
+            <p className="text-sm text-white/50">با ۸۰,۰۰۰ تومن شروع می‌کنی — کدوم رو می‌خوای؟</p>
 
             <div className="w-full space-y-2 mt-1">
               {STARTER_BUSINESSES.map((b) => {
-                const affordable = b.cost <= 50_000;
+                const affordable = b.cost <= 80_000;
                 const selected = selectedBiz === b.type;
                 return (
                   <button

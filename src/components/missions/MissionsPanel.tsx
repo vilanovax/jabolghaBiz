@@ -130,10 +130,18 @@ export default function MissionsPanel() {
     refreshMissions();
   }, [refreshMissions]);
 
-  const dailyMissions = missions.activeMissions.filter((m) => m.type === 'daily');
-  const weeklyMissions = missions.activeMissions.filter((m) => m.type === 'weekly');
-  const oneTimeMissions = missions.activeMissions.filter((m) => m.type === 'one_time' && !m.claimed && !m.businessTypeFilter);
-  const specialtyMissions = missions.activeMissions.filter((m) => m.businessTypeFilter && !m.claimed);
+  const dailyMissions = missions.activeMissions
+    .filter((m) => m.type === 'daily')
+    .sort((a, b) => (a.claimed ? 1 : 0) - (b.claimed ? 1 : 0));
+  const weeklyMissions = missions.activeMissions
+    .filter((m) => m.type === 'weekly')
+    .sort((a, b) => (a.claimed ? 1 : 0) - (b.claimed ? 1 : 0));
+  const oneTimeMissions = missions.activeMissions
+    .filter((m) => m.type === 'one_time' && !m.businessTypeFilter)
+    .sort((a, b) => (a.claimed ? 1 : 0) - (b.claimed ? 1 : 0));
+  const specialtyMissions = missions.activeMissions
+    .filter((m) => m.businessTypeFilter)
+    .sort((a, b) => (a.claimed ? 1 : 0) - (b.claimed ? 1 : 0));
 
   // Group specialty by business type
   const specialtyByType = specialtyMissions.reduce<Record<string, ActiveMission[]>>((acc, m) => {

@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ProgressBar from '@/components/ui/ProgressBar';
 import ProgressRing from '@/components/ui/ProgressRing';
-import { businessTemplates, getOfficeTier, getOfficeName, OFFICE_TIERS, getEmployeeUpgradeDuration, getBusinessUpgradeDuration, BUSINESS_VOCABULARY, SPECIALTY_MILESTONES } from '@/data/mock';
+import { businessTemplates, getOfficeTier, getOfficeName, OFFICE_TIERS, getEmployeeUpgradeDuration, getBusinessUpgradeDuration, BUSINESS_VOCABULARY, SPECIALTY_MILESTONES, BOOST_ITEMS } from '@/data/mock';
 import {
   ArrowUpCircle, Users, Package, ChevronRight,
   Lock, Unlock, Coins, Building2, X, ChevronUp,
@@ -61,6 +61,7 @@ export default function BusinessDetailPage() {
   const upgradeEmployee = useGameStore((s) => s.upgradeEmployee);
   const completeEmployeeUpgrade = useGameStore((s) => s.completeEmployeeUpgrade);
   const unlockProduct = useGameStore((s) => s.unlockProduct);
+  const useUpgradeSpeedUp = useGameStore((s) => s.useUpgradeSpeedUp);
 
   const [tab, setTab] = useState<Tab>('overview');
   const [timeLeft, setTimeLeft] = useState(0);
@@ -99,7 +100,11 @@ export default function BusinessDetailPage() {
   const rushMultiplier = rushActive ? 2 : 1;
   const totalRevMultiplier = rushMultiplier * eventMult.revenueMultiplier;
   const boostedProduction = Math.round(effectiveProduction * totalRevMultiplier);
-  const netProfit = boostedProduction - Math.round(totalExpenses * eventMult.expenseMultiplier);
+
+  // قیمت بازار محصول این شرکت
+  const products = useGameStore((s) => s.products);
+  const marketProduct = products.find((p) => p.id === biz.inventory.productId);
+  const unitPrice = marketProduct?.currentPrice ?? 0;
 
   // Active events affecting this business
   const relevantEvents = activeEvents.filter(
@@ -142,6 +147,16 @@ export default function BusinessDetailPage() {
     .reduce((sum, p) => sum + (p.revenueMultiplier ?? 0), 0);
   const profitMarginPct = Math.round(productRevMult * 100);
   const ecosystemBonus = calcEcosystemBonus(biz, allBusinesses);
+
+  // درآمد به تومان — ساده و شفاف
+  const incomePerMin = Math.round(effectiveSaleRate * unitPrice * totalRevMultiplier * (1 + productRevMult));
+  const expensePerMin = Math.round(totalExpenses * eventMult.expenseMultiplier * (60 / biz.cycleDuration));
+  const profitPerMin = incomePerMin - expensePerMin;
+  const incomePerCycle = Math.round(
+    Math.min(effectiveProduction, effectiveSaleRate * (biz.cycleDuration / 60)) * unitPrice * totalRevMultiplier * (1 + productRevMult)
+  );
+  const expensePerCycle = Math.round(totalExpenses * eventMult.expenseMultiplier);
+  const netProfit = incomePerCycle - expensePerCycle;
 
   const nextBaseProduction = Math.round(biz.baseProductionRate * 1.15);
   const nextUpgradeCost = Math.round(biz.upgradeCost * 1.5);
@@ -236,71 +251,65 @@ export default function BusinessDetailPage() {
         </div>
       )}
 
-      {/* ==================== تولید — تایمر + انبار + فروش ==================== */}
+      {/* ==================== درآمد — ساده و شفاف ==================== */}
       <div
-        className="relative rounded-[18px] border p-4 overflow-hidden transition-all shadow-[var(--shadow-card)]"
+        className="relative rounded-[22px] border p-4 overflow-hidden transition-all"
         style={{
           borderColor: rushActive ? 'rgba(239,68,68,0.3)' : relevantEvents.some(e => e.isPositive) ? 'rgba(34,197,94,0.25)' : 'var(--line-subtle)',
-          background: rushActive ? 'linear-gradient(135deg, rgba(239,68,68,0.04), transparent)' : undefined,
+          background: rushActive ? 'linear-gradient(135deg, rgba(239,68,68,0.04), transparent)' : 'var(--surface-card-40)',
         }}
       >
-        <div className="flex items-center justify-center gap-5">
+        {/* ردیف اصلی: تایمر + درآمد */}
+        <div className="flex items-center gap-4">
           <ProgressRing
             progress={progress}
-            size={80}
+            size={76}
             strokeWidth={7}
             color={rushActive ? '#EF4444' : relevantEvents.some(e => e.isPositive) ? '#22C55E' : '#6366F1'}
           >
-            <span className="text-sm font-black font-fa">{formatTime(timeLeft)}</span>
-            <span className="text-[7px] text-fg-muted">
-              {isSoftCollect ? '⚠️ کند' : rushActive ? '🔥 ×۲' : `+${effectiveProduction}`}
-            </span>
+            <span className="text-[13px] font-black font-fa">{formatTime(timeLeft)}</span>
+            <span className="text-[7px] text-fg-muted">{rushActive ? '🔥 ×۲' : 'تا تولید'}</span>
           </ProgressRing>
 
-          <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
-            {/* Net profit/cycle — مهم‌ترین metric */}
-            <div className="w-full flex items-center justify-between">
-              <span className="text-[9px] text-fg-muted">سود خالص/سیکل</span>
-              <div className="flex items-center gap-1">
-                {netProfit >= 0
-                  ? <TrendingUp size={11} className="text-[#22C55E]" />
-                  : <TrendingDown size={11} className="text-[#EF4444]" />
-                }
-                <span className={`text-sm font-black font-fa ${netProfit >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                  {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
-                </span>
-              </div>
-            </div>
+          <div className="flex-1 min-w-0">
+            {/* سود در دقیقه — مهم‌ترین عدد */}
+            <p className="text-[9px] text-fg-muted mb-0.5">💰 درآمد هر دقیقه</p>
+            <p className={`text-[22px] font-black font-fa leading-none ${profitPerMin >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+              {profitPerMin >= 0 ? '+' : ''}{profitPerMin.toLocaleString('fa-IR')}
+              <span className="text-[10px] text-fg-muted mr-1">تومان</span>
+            </p>
 
-            {/* نوار انبار */}
-            <div className="w-full space-y-1">
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-fg-muted">📦 {vocab.inventoryName}</span>
-                <span className="font-fa font-bold" style={{ color: inventoryColor }}>
-                  {biz.inventory.quantity}/{effectiveCapacity} {vocab.productUnit}
+            {/* جزئیات کوچک */}
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-[8px] text-fg-faint bg-surface-card/60 px-1.5 py-0.5 rounded-full">
+                📦 هر سیکل {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fa-IR')}
+              </span>
+              {profitMarginPct > 0 && (
+                <span className="text-[8px] text-[#F59E0B] bg-[#F59E0B]/8 px-1.5 py-0.5 rounded-full">
+                  +{profitMarginPct}% حاشیه
                 </span>
-              </div>
-              <div className="h-2 rounded-full bg-progress-bg overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, inventoryPercent)}%`, backgroundColor: inventoryColor }}
-                />
-              </div>
-            </div>
-
-            {/* تولید + فروش */}
-            <div className="flex items-center gap-3 text-[9px]">
-              <span className="text-fg-muted">
-                ⚙️ <span className="text-[#6366F1] font-bold font-fa">
-                  {isSoftCollect ? `${Math.round(effectiveProduction * 0.5)}` : effectiveProduction}
-                </span> /سیکل
-              </span>
-              <span className="text-fg-faint">·</span>
-              <span className="text-fg-muted">
-                🛒 <span className="text-[#22C55E] font-bold font-fa">{effectiveSaleRate}</span> /دقیقه
-              </span>
+              )}
             </div>
           </div>
+        </div>
+
+        {/* انبار — ساده */}
+        <div className="mt-3 pt-3 border-t border-line-subtle/30">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[9px] text-fg-muted">📦 {vocab.inventoryName}</span>
+            <span className="text-[9px] font-fa font-bold" style={{ color: inventoryColor }}>
+              {Math.round(inventoryPercent)}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-progress-bg overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, inventoryPercent)}%`, backgroundColor: inventoryColor }}
+            />
+          </div>
+          {isSoftCollect && (
+            <p className="text-[8px] text-[#F59E0B] font-bold mt-1">⚠️ انبار پره — تولید کند شده</p>
+          )}
         </div>
       </div>
 
@@ -938,6 +947,26 @@ export default function BusinessDetailPage() {
                       style={{ width: `${upgradeProgress}%` }}
                     />
                   </div>
+                  {/* دکمه‌های تسریع */}
+                  <div className="flex gap-2 mt-1">
+                    {BOOST_ITEMS.filter((b) => b.category === 'upgrade_speed').map((item) => {
+                      const canAfford = balance >= item.price;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => useUpgradeSpeedUp(item.id, biz.id)}
+                          disabled={!canAfford}
+                          className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold transition-all active:scale-95 ${
+                            canAfford
+                              ? 'bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30'
+                              : 'bg-surface-card/30 text-fg-faint'
+                          }`}
+                        >
+                          {item.icon} {item.name} ({item.price.toLocaleString('fa-IR')})
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             }
@@ -945,18 +974,52 @@ export default function BusinessDetailPage() {
             // Normal state — show preview + upgrade button
             const productionDiff = nextEffectiveProduction - effectiveProduction;
             const productionPercent = effectiveProduction > 0 ? Math.round((productionDiff / effectiveProduction) * 100) : productionDiff > 0 ? 100 : 0;
+            const nextUnlockPreview = template ? getNextUnlock(biz, template) : null;
+            const unlockAtNext = nextUnlockPreview && nextUnlockPreview.level === biz.level + 1;
+            const nextSaleRate = Math.round(biz.baseSaleRate * 1.1 * 10) / 10;
+            const saleRateDiff = Math.round((nextSaleRate - biz.baseSaleRate) * 10) / 10;
+
             return (
               <>
-                <div className="bg-nav/95 backdrop-blur-md rounded-[18px] px-3 py-2 border border-line-subtle">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-fg-secondary font-bold">LV {biz.level + 1}</span>
-                    <span className="text-[#22C55E] font-fa font-bold">تولید +{productionPercent}% (+{productionDiff} {vocab.productUnit})</span>
+                <div className="bg-nav/95 backdrop-blur-md rounded-[18px] px-3.5 py-3 border border-line-subtle space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-fg">پیش‌نمایش LV {biz.level + 1}</span>
+                    <span className="text-[9px] font-bold text-fg-faint">⏱ {nextDurationMins} دقیقه</span>
                   </div>
+
+                  {/* بهبودها */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="flex items-center gap-1.5 bg-[#22C55E]/8 rounded-lg px-2 py-1.5">
+                      <span className="text-sm">📦</span>
+                      <div>
+                        <p className="text-[9px] text-fg-muted">تولید</p>
+                        <p className="text-[10px] font-bold text-[#22C55E] font-fa">+{productionDiff} {vocab.productUnit}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-[#3B82F6]/8 rounded-lg px-2 py-1.5">
+                      <span className="text-sm">🛒</span>
+                      <div>
+                        <p className="text-[9px] text-fg-muted">فروش</p>
+                        <p className="text-[10px] font-bold text-[#3B82F6] font-fa">+{saleRateDiff}/دقیقه</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* آنلاک در سطح بعدی */}
+                  {unlockAtNext && (
+                    <div className="flex items-center gap-2 bg-[#F59E0B]/8 rounded-lg px-2 py-1.5 border border-[#F59E0B]/15">
+                      <span className="text-lg">{nextUnlockPreview.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] text-[#F59E0B] font-bold">🔓 آنلاک: {nextUnlockPreview.name}</p>
+                        <p className="text-[8px] text-fg-muted">{nextUnlockPreview.description}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <Button onClick={() => upgradeBusiness(biz.id)} disabled={balance < biz.upgradeCost} fullWidth variant="upgrade">
                   <span className="flex items-center justify-center gap-1.5">
                     <ArrowUpCircle size={16} />
-                    {vocab.upgrade} — {biz.upgradeCost.toLocaleString('fa-IR')} ({nextDurationMins} دقیقه)
+                    {vocab.upgrade} — {biz.upgradeCost.toLocaleString('fa-IR')} تومان
                   </span>
                 </Button>
               </>

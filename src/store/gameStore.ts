@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
@@ -35,6 +36,8 @@ import {
   ManagersState,
   HiredManager,
   ManagerTemplate,
+  BoostState,
+  ActiveBoost,
 } from '@/types';
 import {
   mockPlayer,
@@ -81,6 +84,8 @@ import {
   MANAGER_CONFIG,
   getManagerUpgradeCost,
   getManagerUpgradeDuration,
+  BOOST_ITEMS,
+  BOOST_CONFIG,
 } from '@/data/mock';
 
 // ==================== Level System ====================
@@ -472,6 +477,13 @@ interface GameState {
   activeTab: string;
   setActiveTab: (tab: string) => void;
 
+  // Boost System
+  boosts: BoostState;
+  buyProductionBoost: (templateId: string) => void;
+  useUpgradeSpeedUp: (templateId: string, businessId: string) => void;
+  getActiveProductionBoostMultiplier: () => number;
+  expireBoosts: () => void;
+
   addXp: (amount: number) => void;
 
   onboardingComplete: boolean;
@@ -647,7 +659,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         const elapsed = (now - biz.lastCycleAt) / 1000;
         const nb = biz.neighborhoodId ? getNeighborhood(biz.neighborhoodId) : undefined;
         const trafficMult = nb ? nb.customerTraffic : 1.0;
-        const effectiveCycleDuration = Math.max(10, Math.round(biz.cycleDuration / (trafficMult * energyCycleMult * mgrBoosts.productionSpeedMultiplier)));
+        const boostMult = get().getActiveProductionBoostMultiplier();
+        const effectiveCycleDuration = Math.max(10, Math.round(biz.cycleDuration / (trafficMult * energyCycleMult * mgrBoosts.productionSpeedMultiplier * boostMult)));
         const completedCycles = Math.floor(elapsed / effectiveCycleDuration);
 
         // --- Production (only on cycle completion) ---
@@ -714,7 +727,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
             state.businesses.filter((b) => b.type === 'supermarket').length >= 2 ? 0.15 : 0;
           // Ecosystem (natural demand) revenue bonus
           const totalRevMult = productRevMult + chainBonus + ecosystem.revenueBonus;
-          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult * mgrBoosts.revenueMultiplier);
+          const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult * mgrBoosts.revenueMultiplier * boostMult);
           // Subtract expenses proportional to elapsed time
           const totalExpenses = calcTotalExpenses(biz);
           const expensePerSec = totalExpenses / biz.cycleDuration;
@@ -2711,6 +2724,124 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 
+  // ==================== Boost System ====================
+
+  boosts: {
+    activeBoosts: [],
+    purchaseCount: {},
+    lastResetDate: null,
+  },
+
+  buyProductionBoost: (templateId) => {
+    const { player, boosts } = get();
+    const template = BOOST_ITEMS.find((t) => t.id === templateId);
+    if (!template || template.category !== 'production') return;
+    if (template.unlockLevel && player.level < template.unlockLevel) return;
+    if (player.balance < template.price) return;
+
+    // سقف روزانه
+    const today = new Date().toISOString().slice(0, 10);
+    const todayCount = boosts.lastResetDate === today
+      ? Object.values(boosts.purchaseCount).reduce((s, c) => s + c, 0)
+      : 0;
+    if (todayCount >= BOOST_CONFIG.dailyPurchaseLimit) return;
+
+    // فقط ۱ بوستر تولید فعال
+    const now = Date.now();
+    const hasActive = boosts.activeBoosts.some((b) => b.expiresAt > now);
+    if (hasActive) return;
+
+    const newBoost: ActiveBoost = {
+      id: `boost-${now}`,
+      templateId: template.id,
+      name: template.name,
+      icon: template.icon,
+      multiplier: template.productionMultiplier ?? 1,
+      startedAt: now,
+      expiresAt: now + (template.durationMs ?? 0),
+    };
+
+    const newCount = { ...boosts.purchaseCount };
+    newCount[templateId] = (newCount[templateId] ?? 0) + 1;
+
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance - template.price },
+      boosts: {
+        ...state.boosts,
+        activeBoosts: [...state.boosts.activeBoosts, newBoost],
+        purchaseCount: newCount,
+        lastResetDate: today,
+      },
+    }));
+  },
+
+  useUpgradeSpeedUp: (templateId, businessId) => {
+    const { player, businesses, boosts } = get();
+    const template = BOOST_ITEMS.find((t) => t.id === templateId);
+    if (!template || template.category !== 'upgrade_speed') return;
+    if (template.unlockLevel && player.level < template.unlockLevel) return;
+    if (player.balance < template.price) return;
+
+    const biz = businesses.find((b) => b.id === businessId);
+    if (!biz || !biz.upgradeStartedAt || !biz.upgradeEndsAt) return;
+
+    // سقف روزانه
+    const today = new Date().toISOString().slice(0, 10);
+    const todayCount = boosts.lastResetDate === today
+      ? Object.values(boosts.purchaseCount).reduce((s, c) => s + c, 0)
+      : 0;
+    if (todayCount >= BOOST_CONFIG.dailyPurchaseLimit) return;
+
+    const now = Date.now();
+    let newEndsAt = biz.upgradeEndsAt;
+    if (template.instantComplete) {
+      newEndsAt = now;
+    } else if (template.upgradeTimeReduction) {
+      const remaining = Math.max(0, biz.upgradeEndsAt - now);
+      newEndsAt = now + Math.round(remaining * (1 - template.upgradeTimeReduction));
+    }
+
+    const newCount = { ...boosts.purchaseCount };
+    newCount[templateId] = (newCount[templateId] ?? 0) + 1;
+
+    set((state) => ({
+      player: { ...state.player, balance: state.player.balance - template.price },
+      businesses: state.businesses.map((b) =>
+        b.id === businessId ? { ...b, upgradeEndsAt: newEndsAt } : b
+      ),
+      boosts: {
+        ...state.boosts,
+        purchaseCount: newCount,
+        lastResetDate: today,
+      },
+    }));
+  },
+
+  getActiveProductionBoostMultiplier: () => {
+    const now = Date.now();
+    const active = get().boosts.activeBoosts.find((b) => b.expiresAt > now);
+    return active ? active.multiplier : 1;
+  },
+
+  expireBoosts: () => {
+    const { boosts } = get();
+    const now = Date.now();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const stillActive = boosts.activeBoosts.filter((b) => b.expiresAt > now);
+    const needsReset = boosts.lastResetDate !== null && boosts.lastResetDate !== today;
+
+    if (stillActive.length !== boosts.activeBoosts.length || needsReset) {
+      set((state) => ({
+        boosts: {
+          activeBoosts: stillActive,
+          purchaseCount: needsReset ? {} : state.boosts.purchaseCount,
+          lastResetDate: needsReset ? today : state.boosts.lastResetDate,
+        },
+      }));
+    }
+  },
+
   addXp: (amount) => {
     if (amount <= 0) return;
     const { player } = get();
@@ -2756,9 +2887,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       lastCycleAt: Date.now(),
       inventory: { productId: template.productId, quantity: 0, maxCapacity: template.baseInventoryCapacity },
       expenses: template.baseExpenses,
-      upgradeCost: 5_000,
+      upgradeCost: Math.round(template.startCost * 1.5),
       employees: [],
-      products: [],
+      products: template.availableProducts.map((p) => ({ ...p })),
       officeLevel: 1,
       maxEmployees: startOffice?.maxEmployees ?? template.maxEmployees,
       maxProducts: startOffice?.maxProducts ?? template.maxProducts,
@@ -2777,7 +2908,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         username,
         avatar,
         level: 1,
-        balance: 50_000 - template.startCost,
+        balance: 80_000 - template.startCost,
         reputation: 0,
         stats: { happiness: 85, hunger: 15, energy: 90, intelligence: 65, experience: 0 },
       },
@@ -2790,7 +2921,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
   },
 }), {
   name: 'jabolgha-save',
-  version: 9,
+  version: 10,
   migrate: (persisted: unknown, version: number) => {
     const state = persisted as Record<string, unknown>;
     if (version < 2 && state.missions) {
@@ -2927,6 +3058,11 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     if (version < 9) {
       state.onboardingComplete = true;
     }
+    if (version < 10) {
+      if (!state.boosts) {
+        state.boosts = { activeBoosts: [], purchaseCount: {}, lastResetDate: null };
+      }
+    }
     return state;
   },
   partialize: (state) => ({
@@ -2947,5 +3083,30 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     supermarketStates: state.supermarketStates,
     managers: state.managers,
     onboardingComplete: state.onboardingComplete,
+    boosts: state.boosts,
   }),
 }));
+
+// ==================== Hydration Helper ====================
+// Zustand persist loads async — components باید منتظر بمونن تا load تمام بشه
+
+let _hydrated = false;
+
+export const useHydration = () => {
+  const [hydrated, setHydrated] = useState(_hydrated);
+
+  useEffect(() => {
+    const unsub = useGameStore.persist.onFinishHydration(() => {
+      _hydrated = true;
+      setHydrated(true);
+    });
+    // اگه قبلاً hydrate شده
+    if (useGameStore.persist.hasHydrated()) {
+      _hydrated = true;
+      setHydrated(true);
+    }
+    return unsub;
+  }, []);
+
+  return hydrated;
+};

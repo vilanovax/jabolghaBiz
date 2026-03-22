@@ -761,6 +761,40 @@ export interface ManagersState {
   maxSlots: number;                // 1 or 2
 }
 
+// ==================== BOOST SYSTEM ====================
+
+export type BoostCategory = 'production' | 'upgrade_speed';
+
+export interface BoostItemTemplate {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  category: BoostCategory;
+  price: number;
+  productionMultiplier?: number;   // مثلاً 1.5 = +50%
+  durationMs?: number;             // مدت بوستر تولید
+  upgradeTimeReduction?: number;   // کسر از زمان باقی‌مانده (0.5 = نصف)
+  instantComplete?: boolean;       // تکمیل فوری ارتقا
+  unlockLevel?: number;            // حداقل لول بازیکن
+}
+
+export interface ActiveBoost {
+  id: string;
+  templateId: string;
+  name: string;
+  icon: string;
+  multiplier: number;
+  startedAt: number;
+  expiresAt: number;
+}
+
+export interface BoostState {
+  activeBoosts: ActiveBoost[];
+  purchaseCount: Record<string, number>;
+  lastResetDate: string | null;
+}
+
 // ==================== NAVIGATION ====================
 
 export interface NavItem {

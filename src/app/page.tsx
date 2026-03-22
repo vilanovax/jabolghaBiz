@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue, xpForLevel, getUnlocksForLevel } from '@/store/gameStore';
 import {
   Briefcase, Users, ShoppingCart, Wallet,
@@ -9,6 +9,7 @@ import {
 import Link from 'next/link';
 import RushHourBanner from '@/components/hooks/RushHourBanner';
 import EventBanner from '@/components/hooks/EventBanner';
+import ActiveBoostBanner from '@/components/boosts/ActiveBoostBanner';
 import { useActiveMissionContext } from '@/components/missions/MissionsWidget';
 import { useGameStore as useStore } from '@/store/gameStore';
 
@@ -349,6 +350,9 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* ===================== Active Boost ===================== */}
+      <ActiveBoostBanner />
+
       {/* ===================== Rush Hour ===================== */}
       <RushHourBanner />
 
@@ -414,12 +418,17 @@ export default function HomePage() {
                       <p className="text-[8px] font-bold text-[#EF4444] mt-0.5">📉 ضررده</p>
                     )}
 
-                    {/* Net profit */}
-                    <div className="flex items-center gap-0.5 mt-1.5">
-                      <span className={`text-[10px] font-black font-fa ${net >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                        {net >= 0 ? '+' : ''}{net.toLocaleString('fa-IR')}
-                      </span>
-                      <span className="text-[8px] text-fg-faint">/سیکل</span>
+                    {/* Cycle countdown + profit */}
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex items-center gap-0.5">
+                        <span className={`text-[10px] font-black font-fa ${net >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                          {net >= 0 ? '+' : ''}{net.toLocaleString('fa-IR')}
+                        </span>
+                        <span className="text-[8px] text-fg-faint">/سیکل</span>
+                      </div>
+                      {!isUpgrading && (
+                        <CycleCountdown lastCycleAt={biz.lastCycleAt} cycleDuration={biz.cycleDuration} />
+                      )}
                     </div>
 
                     {/* Inventory bar */}
@@ -552,5 +561,30 @@ function NextUnlockCard({ level, xp }: { level: number; xp: number }) {
         <span className="text-[8px] text-fg-faint font-fa font-bold shrink-0">{xp}/{required} XP</span>
       </div>
     </div>
+  );
+}
+
+// ==================== Cycle Countdown ====================
+function CycleCountdown({ lastCycleAt, cycleDuration }: { lastCycleAt: number; cycleDuration: number }) {
+  const [remaining, setRemaining] = useState(0);
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = (Date.now() - lastCycleAt) / 1000;
+      const rem = Math.max(0, cycleDuration - (elapsed % cycleDuration));
+      setRemaining(Math.ceil(rem));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lastCycleAt, cycleDuration]);
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+
+  return (
+    <span className="text-[9px] font-bold font-fa text-[#818cf8]">
+      {mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`}
+    </span>
   );
 }

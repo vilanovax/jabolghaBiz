@@ -23,6 +23,7 @@ export function useGameTick() {
   const processInstallments = useGameStore((s) => s.processInstallments);
   const accrueDepositInterest = useGameStore((s) => s.accrueDepositInterest);
   const tickRivals = useGameStore((s) => s.tickRivals);
+  const expireBoosts = useGameStore((s) => s.expireBoosts);
   const lastMarketUpdate = useRef(Date.now());
   const lastEventCheck = useRef(Date.now());
   const lastDecayCheck = useRef(Date.now());
@@ -34,6 +35,7 @@ export function useGameTick() {
   useEffect(() => {
     const interval = setInterval(() => {
       tickBusinesses();
+      expireBoosts();
 
       const now = Date.now();
 
@@ -83,5 +85,5 @@ export function useGameTick() {
     }, TICK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders, processInstallments, accrueDepositInterest, tickRivals]);
+  }, [tickBusinesses, updateMarketPrices, triggerRandomEvent, expireEvents, decayStats, generateOrders, expireOrders, processInstallments, accrueDepositInterest, tickRivals, expireBoosts]);
 }

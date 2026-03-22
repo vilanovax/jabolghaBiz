@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import TopBar from './TopBar';
 import BottomNav from './BottomNav';
 import { useGameTick } from '@/hooks/useGameTick';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore, useHydration } from '@/store/gameStore';
 import { X, CheckCircle2, Sparkles, Gift } from 'lucide-react';
 import DailyBonusModal from '@/components/hooks/DailyBonusModal';
 import EventModal from '@/components/hooks/EventModal';
@@ -24,11 +24,9 @@ export default function GameShell({ children }: { children: ReactNode }) {
   const missions = useGameStore((s) => s.missions);
   const claimMissionReward = useGameStore((s) => s.claimMissionReward);
   const refreshMissions = useGameStore((s) => s.refreshMissions);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useHydration();
   const [showMissions, setShowMissions] = useState(false);
   const [showDailyBonus, setShowDailyBonus] = useState(false);
-
-  useEffect(() => setHydrated(true), []);
 
   // نمایش خودکار daily bonus هنگام ورود
   useEffect(() => {

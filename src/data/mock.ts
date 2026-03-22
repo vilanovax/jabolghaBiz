@@ -23,6 +23,7 @@ import {
   AIRival,
   SpecialtyMilestone,
   ManagerTemplate,
+  BoostItemTemplate,
 } from '@/types';
 
 // ==================== PLAYER ====================
@@ -50,7 +51,7 @@ export const mockPlayer: PlayerProfile = {
 const appStartupEmployees: EmployeeTemplate[] = [
   {
     id: 'emp-as-1', name: 'برنامه‌نویس', role: 'production', roleName: 'برنامه‌نویس', icon: '👨‍💻',
-    salary: 1_500, hireCost: 12_000,
+    salary: 1_500, hireCost: 7_000,
     description: '+۱ واحد تولید ماژول در هر سیکل',
     unlockLevel: 1, tier: 'worker', maxUpgradeLevel: 3,
     productionBoost: 1,
@@ -95,7 +96,7 @@ const appStartupEmployees: EmployeeTemplate[] = [
 const farmingEmployees: EmployeeTemplate[] = [
   {
     id: 'emp-fm-1', name: 'کشاورز', role: 'production', roleName: 'کشاورز', icon: '🧑‍🌾',
-    salary: 1_000, hireCost: 8_000,
+    salary: 1_000, hireCost: 5_000,
     description: '+۱ تن محصول در هر سیکل',
     unlockLevel: 1, tier: 'worker', maxUpgradeLevel: 3,
     productionBoost: 1,
@@ -706,8 +707,8 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'app_startup', defaultName: 'داده‌پردازان', icon: '📱',
     description: 'شرکت برنامه‌نویسی. با یک برنامه‌نویس ساده و تجهیزات سخت‌افزاری شروع کنید.',
-    startCost: 40_000, baseProductionRate: 3, baseSaleRate: 1.5, baseInventoryCapacity: 15,
-    productId: 'prod-8', cycleDuration: 160, baseExpenses: 900,
+    startCost: 30_000, baseProductionRate: 4, baseSaleRate: 2.5, baseInventoryCapacity: 20,
+    productId: 'prod-8', cycleDuration: 80, baseExpenses: 600,
     maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'لپتاپ و میز کار',
     availableEmployees: appStartupEmployees, availableProducts: appStartupProducts,
@@ -715,8 +716,8 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'farming', defaultName: 'مزرعه سبز', icon: '🌾',
     description: 'کشت محصول و پرورش دام. پایه زنجیره تأمین.',
-    startCost: 30_000, baseProductionRate: 5, baseSaleRate: 2, baseInventoryCapacity: 30,
-    productId: 'prod-1', cycleDuration: 120, baseExpenses: 800,
+    startCost: 20_000, baseProductionRate: 5, baseSaleRate: 3, baseInventoryCapacity: 30,
+    productId: 'prod-1', cycleDuration: 60, baseExpenses: 500,
     maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'زمین کشاورزی و ابزار دستی',
     availableEmployees: farmingEmployees, availableProducts: farmingProducts,
@@ -724,8 +725,8 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'restaurant', defaultName: 'رستوران لذیذ', icon: '🍽️',
     description: 'تبدیل مواد اولیه به غذا. حاشیه سود بالا با مدیریت خوب.',
-    startCost: 80_000, baseProductionRate: 4, baseSaleRate: 3, baseInventoryCapacity: 20,
-    productId: 'prod-7', cycleDuration: 150, baseExpenses: 2_000,
+    startCost: 80_000, baseProductionRate: 5, baseSaleRate: 4, baseInventoryCapacity: 25,
+    productId: 'prod-7', cycleDuration: 80, baseExpenses: 1_500,
     maxEmployees: 6, maxProducts: 2, maxLevel: 20,
     initialEquipment: 'آشپزخانه صنعتی و سالن غذاخوری',
     availableEmployees: restaurantEmployees, availableProducts: restaurantProducts,
@@ -742,8 +743,8 @@ export const businessTemplates: BusinessTemplate[] = [
   {
     type: 'supermarket', defaultName: 'هایپرمارکت', icon: '🏪',
     description: 'فروش مستقیم محصولات. حجم بالا، درآمد پایدار.',
-    startCost: 75_000, baseProductionRate: 5, baseSaleRate: 3, baseInventoryCapacity: 45,
-    productId: 'prod-3', cycleDuration: 100, baseExpenses: 1_800,
+    startCost: 75_000, baseProductionRate: 6, baseSaleRate: 4, baseInventoryCapacity: 45,
+    productId: 'prod-3', cycleDuration: 60, baseExpenses: 1_800,
     maxEmployees: 6, maxProducts: 5, maxLevel: 20,
     initialEquipment: 'قفسه‌ها و صندوق فروش',
     availableEmployees: supermarketEmployees, availableProducts: supermarketProducts,
@@ -1771,6 +1772,50 @@ export const SUPERMARKET_CONFIG = {
 // ==================== MANAGERS ====================
 
 // ---------- ثابت‌های مدیران ----------
+
+// ==================== BOOST ITEMS ====================
+
+export const BOOST_ITEMS: BoostItemTemplate[] = [
+  // بوسترهای تولید
+  {
+    id: 'boost-prod-small', name: 'شتاب‌دهنده کوچک', icon: '⚡',
+    description: 'تولید و فروش همه شرکت‌ها ×۱.۵ به مدت ۵ دقیقه',
+    category: 'production', price: 5_000,
+    productionMultiplier: 1.5, durationMs: 5 * 60 * 1000, unlockLevel: 1,
+  },
+  {
+    id: 'boost-prod-medium', name: 'شتاب‌دهنده قوی', icon: '🚀',
+    description: 'تولید و فروش همه شرکت‌ها ×۲ به مدت ۵ دقیقه',
+    category: 'production', price: 15_000,
+    productionMultiplier: 2.0, durationMs: 5 * 60 * 1000, unlockLevel: 3,
+  },
+  {
+    id: 'boost-prod-large', name: 'شتاب‌دهنده نهایی', icon: '💥',
+    description: 'تولید و فروش همه شرکت‌ها ×۳ به مدت ۳ دقیقه',
+    category: 'production', price: 40_000,
+    productionMultiplier: 3.0, durationMs: 3 * 60 * 1000, unlockLevel: 5,
+  },
+  // تسریع ارتقا
+  {
+    id: 'boost-upgrade-half', name: 'تسریع ارتقا', icon: '⏩',
+    description: 'نصف زمان باقی‌مانده ارتقا را حذف می‌کند',
+    category: 'upgrade_speed', price: 8_000,
+    upgradeTimeReduction: 0.5, unlockLevel: 1,
+  },
+  {
+    id: 'boost-upgrade-instant', name: 'تکمیل فوری', icon: '⚡',
+    description: 'ارتقا را فوری تکمیل می‌کند',
+    category: 'upgrade_speed', price: 25_000,
+    instantComplete: true, unlockLevel: 2,
+  },
+];
+
+export const BOOST_CONFIG = {
+  maxActiveProductionBoosts: 1,
+  dailyPurchaseLimit: 5,
+};
+
+// ==================== MANAGER CONFIG ====================
 
 export const MANAGER_CONFIG = {
   upgradeCostMultiplier: 1.5,       // هزینه ارتقا = hireCost × 1.5^level
