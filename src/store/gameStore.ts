@@ -88,6 +88,13 @@ import {
   BOOST_CONFIG,
 } from '@/data/mock';
 
+// ==================== Round Helper ====================
+/** رند کردن اعداد برای نمایش گیمی — مضرب ۵۰ */
+export function roundNice(n: number): number {
+  if (Math.abs(n) < 100) return Math.round(n / 10) * 10;
+  return Math.round(n / 50) * 50;
+}
+
 // ==================== Level System ====================
 
 /** XP مورد نیاز برای رسیدن به لول بعدی */
@@ -277,13 +284,13 @@ export interface NextUnlock {
 
 /**
  * پیدا کردن آنلاک بعدی شرکت بر اساس سطح فعلی
- * بررسی نیروها، محصولات، دفتر و سطح enterprise
+ * بررسی کارمندها، محصولات، دفتر و سطح enterprise
  */
 export function getNextUnlock(biz: Business, template: BusinessTemplate): NextUnlock | null {
   const currentLevel = biz.level;
   const candidates: NextUnlock[] = [];
 
-  // نیروهای قابل آنلاک (استخدام نشده + سطح بالاتر از فعلی)
+  // کارمندهای قابل آنلاک (استخدام نشده + سطح بالاتر از فعلی)
   for (const emp of template.availableEmployees) {
     const alreadyHired = biz.employees.some((e) => e.templateId === emp.id);
     if (!alreadyHired && emp.unlockLevel > currentLevel) {
@@ -320,7 +327,7 @@ export function getNextUnlock(biz: Business, template: BusinessTemplate): NextUn
         level: nextTier.requiredBusinessLevel,
         name: nextTier.name,
         icon: nextTier.icon,
-        description: `ظرفیت ${nextTier.maxEmployees} نیرو، ${nextTier.maxProducts} محصول`,
+        description: `ظرفیت ${nextTier.maxEmployees} کارمند، ${nextTier.maxProducts} محصول`,
       });
     }
   }
@@ -646,7 +653,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         get().completeBusinessUpgrade(biz.id);
         get().addFloatingReward({ amount: 0, label: `✨ ${biz.name}`, subtitle: `ارتقا به LV ${biz.level + 1} تکمیل شد!` });
       }
-      // ارتقای نیروها
+      // ارتقای کارمندها
       for (const emp of biz.employees) {
         if (emp.upgradeStartedAt && emp.upgradeEndsAt && now >= emp.upgradeEndsAt) {
           get().completeEmployeeUpgrade(biz.id, emp.id);
@@ -683,6 +690,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       const newMaxSlots = state.player.level >= MANAGER_CONFIG.slot2UnlockLevel ? 2 : 1;
 
       const updatedBiz = state.businesses.map((biz) => {
+        // سوپرمارکت درآمدش از tickSupermarket میاد — نه از اینجا
+        if (biz.type === 'supermarket') return biz;
+
         const elapsed = (now - biz.lastCycleAt) / 1000;
         const nb = biz.neighborhoodId ? getNeighborhood(biz.neighborhoodId) : undefined;
         const trafficMult = nb ? nb.customerTraffic : 1.0;
@@ -749,11 +759,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           const productRevMult = 1 + biz.products
             .filter((p) => p.unlocked && p.revenueMultiplier)
             .reduce((sum, p) => sum + (p.revenueMultiplier ?? 0), 0);
-          // Chain store bonus: owning 2+ supermarkets at Tier 5 (Lv18+) gives +15% to all
-          const chainBonus = biz.type === 'supermarket' && biz.level >= 18 &&
-            state.businesses.filter((b) => b.type === 'supermarket').length >= 2 ? 0.15 : 0;
           // Ecosystem (natural demand) revenue bonus
-          const totalRevMult = productRevMult + chainBonus + ecosystem.revenueBonus;
+          const totalRevMult = productRevMult + ecosystem.revenueBonus;
           const income = Math.round(actualSold * unitPrice * statRevenueMult * eventMult.revenueMultiplier * rushMultiplier * totalRevMult * mgrBoosts.revenueMultiplier * boostMult);
           // هزینه‌ها فقط به اندازه سیکل‌های تکمیل‌شده (نه کل elapsed)
           const totalExpenses = calcTotalExpenses(biz);
@@ -904,7 +911,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
       player: { ...state.player, balance: state.player.balance - template.hireCost },
     }));
 
-    get().addXp(4); // XP: استخدام نیرو
+    get().addXp(4); // XP: استخدام کارمند
     get().progressMission('hire_employee', 1);
     const totalEmp = get().businesses.reduce((s, b) => s + b.employees.length, 0);
     get().progressMission('total_employees', totalEmp);
@@ -1187,8 +1194,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           Math.round(prod.basePrice * 0.5),
           Math.min(Math.round(prod.basePrice * 1.8), targetPrice)
         );
-        // حرکت نرم قیمت (30% به سمت هدف)
-        const newPrice = Math.round(prod.currentPrice + (clampedTarget - prod.currentPrice) * 0.3);
+        // حرکت نرم قیمت (30% به سمت هدف) — رند به مضرب ۵۰
+        const rawPrice = prod.currentPrice + (clampedTarget - prod.currentPrice) * 0.3;
+        const newPrice = Math.round(rawPrice / 50) * 50 || 50;
 
         // بازگشت تدریجی عرضه/تقاضا به مقدار پایه (بازار جذب می‌کند)
         let supplyChange = Math.round((prod.baseSupply - prod.supply) * 0.15);

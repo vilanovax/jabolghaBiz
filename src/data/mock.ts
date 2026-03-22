@@ -46,7 +46,7 @@ export const mockPlayer: PlayerProfile = {
 };
 
 // ==================== EMPLOYEE TEMPLATES ====================
-// هر شرکت ۷ نیرو — درخت رشد با unlockLevel و tier
+// هر شرکت ۷ کارمند — درخت رشد با unlockLevel و tier
 
 const appStartupEmployees: EmployeeTemplate[] = [
   {
@@ -387,7 +387,7 @@ export interface BusinessVocabulary {
   production: string;        // "تولید" → "سرو غذا" / "توسعه نرم‌افزار"
   autoSale: string;          // "فروش خودکار" → "فروش خودکار غذا" / "فروش خودکار ماژول"
   upgrade: string;           // "ارتقا" → "توسعه رستوران" / "رشد استارتاپ"
-  workers: string;           // "نیرو" → "تیم" / "پرسنل"
+  workers: string;           // "کارمند" → "تیم" / "پرسنل"
   levelUpBenefit: string;    // "سود بیشتر" → "کیفیت بالاتر" / "پروژه‌های بزرگتر"
   productUnit: string;       // "پرس غذا" / "ماژول" / "تن محصول"
   inventoryName: string;     // "یخچال" / "سرور" / "انبار"
@@ -399,7 +399,7 @@ export interface BusinessVocabulary {
 export const BUSINESS_VOCABULARY: Record<BusinessType, BusinessVocabulary> = {
   app_startup: {
     revenue: 'درآمد پروژه',
-    expenses: 'هزینه سرور و نیرو',
+    expenses: 'هزینه سرور و کارمند',
     cycle: 'اسپرینت',
     production: 'توسعه نرم‌افزار',
     autoSale: 'فروش خودکار ماژول',
@@ -791,14 +791,14 @@ export const mockBusinesses: Business[] = [
 // ==================== PRODUCTS ====================
 
 export const mockProducts: Product[] = [
-  { id: 'prod-1', name: 'گندم', category: 'raw_material', icon: '🌾', basePrice: 420, currentPrice: 440, supply: 500, demand: 450, baseSupply: 500, baseDemand: 450, priceHistory: [420, 410, 430, 440, 425, 445, 440] },
-  { id: 'prod-2', name: 'آرد', category: 'processed', icon: '🫘', basePrice: 800, currentPrice: 820, supply: 300, demand: 350, baseSupply: 300, baseDemand: 350, priceHistory: [800, 790, 810, 820, 800, 830, 820] },
-  { id: 'prod-3', name: 'نان', category: 'finished_good', icon: '🍞', basePrice: 600, currentPrice: 620, supply: 200, demand: 280, baseSupply: 200, baseDemand: 280, priceHistory: [600, 590, 610, 620, 605, 625, 620] },
-  { id: 'prod-4', name: 'گوجه', category: 'raw_material', icon: '🍅', basePrice: 100, currentPrice: 90, supply: 600, demand: 400, baseSupply: 600, baseDemand: 400, priceHistory: [100, 110, 95, 85, 90, 95, 90] },
-  { id: 'prod-5', name: 'شیر', category: 'raw_material', icon: '🥛', basePrice: 180, currentPrice: 200, supply: 250, demand: 320, baseSupply: 250, baseDemand: 320, priceHistory: [180, 185, 175, 190, 200, 195, 200] },
-  { id: 'prod-6', name: 'پنیر', category: 'processed', icon: '🧀', basePrice: 400, currentPrice: 420, supply: 150, demand: 200, baseSupply: 150, baseDemand: 200, priceHistory: [400, 390, 410, 415, 420, 410, 420] },
-  { id: 'prod-7', name: 'پیتزا', category: 'food', icon: '🍕', basePrice: 450, currentPrice: 465, supply: 100, demand: 180, baseSupply: 100, baseDemand: 180, priceHistory: [450, 440, 455, 460, 465, 455, 465] },
-  { id: 'prod-8', name: 'اپلیکیشن موبایل', category: 'tech', icon: '📱', basePrice: 450, currentPrice: 470, supply: 50, demand: 120, baseSupply: 50, baseDemand: 120, priceHistory: [450, 440, 460, 465, 470, 460, 470] },
+  { id: 'prod-1', name: 'گندم', category: 'raw_material', icon: '🌾', basePrice: 400, currentPrice: 450, supply: 500, demand: 450, baseSupply: 500, baseDemand: 450, priceHistory: [400, 400, 450, 450, 400, 450, 450] },
+  { id: 'prod-2', name: 'آرد', category: 'processed', icon: '🫘', basePrice: 800, currentPrice: 850, supply: 300, demand: 350, baseSupply: 300, baseDemand: 350, priceHistory: [800, 800, 850, 850, 800, 850, 850] },
+  { id: 'prod-3', name: 'نان', category: 'finished_good', icon: '🍞', basePrice: 600, currentPrice: 650, supply: 200, demand: 280, baseSupply: 200, baseDemand: 280, priceHistory: [600, 600, 650, 650, 600, 650, 650] },
+  { id: 'prod-4', name: 'گوجه', category: 'raw_material', icon: '🍅', basePrice: 100, currentPrice: 100, supply: 600, demand: 400, baseSupply: 600, baseDemand: 400, priceHistory: [100, 100, 100, 100, 100, 100, 100] },
+  { id: 'prod-5', name: 'شیر', category: 'raw_material', icon: '🥛', basePrice: 200, currentPrice: 200, supply: 250, demand: 320, baseSupply: 250, baseDemand: 320, priceHistory: [200, 200, 200, 200, 200, 200, 200] },
+  { id: 'prod-6', name: 'پنیر', category: 'processed', icon: '🧀', basePrice: 400, currentPrice: 400, supply: 150, demand: 200, baseSupply: 150, baseDemand: 200, priceHistory: [400, 400, 400, 400, 400, 400, 400] },
+  { id: 'prod-7', name: 'پیتزا', category: 'food', icon: '🍕', basePrice: 450, currentPrice: 500, supply: 100, demand: 180, baseSupply: 100, baseDemand: 180, priceHistory: [450, 450, 500, 500, 450, 500, 500] },
+  { id: 'prod-8', name: 'اپلیکیشن موبایل', category: 'tech', icon: '📱', basePrice: 500, currentPrice: 500, supply: 50, demand: 120, baseSupply: 50, baseDemand: 120, priceHistory: [500, 500, 500, 500, 500, 500, 500] },
 ];
 
 // ==================== MARKET LISTINGS ====================
@@ -973,7 +973,7 @@ export const mockNews: NewsArticle[] = [
     category: 'market', icon: '🧀', timestamp: now - HOUR * 10,
   },
   {
-    id: 'news-8', title: 'جشنواره بهاره: تخفیف ۲۰٪ استخدام', summary: 'به مناسبت بهار، تمام هزینه‌های استخدام نیرو تا پایان هفته ۲۰٪ تخفیف دارد!',
+    id: 'news-8', title: 'جشنواره بهاره: تخفیف ۲۰٪ استخدام', summary: 'به مناسبت بهار، تمام هزینه‌های استخدام کارمند تا پایان هفته ۲۰٪ تخفیف دارد!',
     category: 'event', icon: '🎉', timestamp: now - HOUR * 12,
   },
   {
@@ -1017,7 +1017,7 @@ export const EVENT_CONFIG = {
 
 // ==================== EMPLOYEE UPGRADE ====================
 
-// مدت زمان ارتقای نیرو (بر حسب میلی‌ثانیه)
+// مدت زمان ارتقای کارمند (بر حسب میلی‌ثانیه)
 // L1→L2: 8 دقیقه, L2→L3: 16min — سقف ۴۵ دقیقه
 export function getEmployeeUpgradeDuration(currentLevel: number): number {
   return Math.min(currentLevel * 8, 45) * 60 * 1000;
@@ -1032,38 +1032,38 @@ export function getBusinessUpgradeDuration(currentLevel: number): number {
 // ==================== MISSIONS ====================
 
 export const DAILY_MISSIONS: MissionTemplate[] = [
-  { id: 'dm-collect-3', title: 'جمع‌آوری درآمد', description: '۳ بار درآمد شرکت‌ها رو جمع کن', icon: '💰', type: 'daily', condition: 'collect_revenue', target: 3, reward: 5_000 },
-  { id: 'dm-collect-5', title: 'جمع‌آوری حرفه‌ای', description: '۵ بار درآمد جمع کن', icon: '💵', type: 'daily', condition: 'collect_revenue', target: 5, reward: 10_000 },
-  { id: 'dm-earn-20k', title: 'درآمدزایی', description: '۲۰,۰۰۰ تومان کسب کن', icon: '📈', type: 'daily', condition: 'earn_total', target: 20_000, reward: 8_000 },
-  { id: 'dm-earn-50k', title: 'سودآوری', description: '۵۰,۰۰۰ تومان کسب کن', icon: '🤑', type: 'daily', condition: 'earn_total', target: 50_000, reward: 15_000 },
-  { id: 'dm-daily-bonus', title: 'حضور روزانه', description: 'بونوس روزانه رو دریافت کن', icon: '🎁', type: 'daily', condition: 'claim_daily_bonus', target: 1, reward: 3_000 },
-  { id: 'dm-upgrade-1', title: 'ارتقاگر', description: 'یک شرکت رو ارتقا بده', icon: '⬆️', type: 'daily', condition: 'upgrade_business', target: 1, reward: 7_000 },
-  { id: 'dm-event-1', title: 'واکنش سریع', description: 'به یک رویداد پاسخ بده', icon: '⚡', type: 'daily', condition: 'respond_to_event', target: 1, reward: 6_000 },
+  { id: 'dm-collect-3', title: '۳ بار پول درآر!', description: '۳ بار از شرکتات پول بگیر', icon: '💰', type: 'daily', condition: 'collect_revenue', target: 3, reward: 5_000 },
+  { id: 'dm-collect-5', title: '۵ بار پول درآر!', description: '۵ بار از شرکتات پول بگیر', icon: '💵', type: 'daily', condition: 'collect_revenue', target: 5, reward: 10_000 },
+  { id: 'dm-earn-20k', title: '۲۰ هزار بساز', description: '۲۰,۰۰۰ تومان درآمد داشته باش', icon: '📈', type: 'daily', condition: 'earn_total', target: 20_000, reward: 8_000 },
+  { id: 'dm-earn-50k', title: '۵۰ هزار بساز', description: '۵۰,۰۰۰ تومان درآمد داشته باش', icon: '🤑', type: 'daily', condition: 'earn_total', target: 50_000, reward: 15_000 },
+  { id: 'dm-daily-bonus', title: 'سلام روزانه!', description: 'بونوس روزانه‌ت رو بگیر', icon: '🎁', type: 'daily', condition: 'claim_daily_bonus', target: 1, reward: 3_000 },
+  { id: 'dm-upgrade-1', title: 'یه پله بالاتر!', description: 'یه شرکت رو ارتقا بده', icon: '⬆️', type: 'daily', condition: 'upgrade_business', target: 1, reward: 7_000 },
+  { id: 'dm-event-1', title: 'گوش به زنگ!', description: 'به یه رویداد جواب بده', icon: '⚡', type: 'daily', condition: 'respond_to_event', target: 1, reward: 6_000 },
 ];
 
 export const WEEKLY_MISSIONS: MissionTemplate[] = [
-  { id: 'wm-collect-20', title: 'جمع‌آوری هفتگی', description: '۲۰ بار درآمد جمع کن', icon: '💎', type: 'weekly', condition: 'collect_revenue', target: 20, reward: 30_000 },
-  { id: 'wm-earn-200k', title: 'کارآفرین هفته', description: '۲۰۰,۰۰۰ تومان کسب کن', icon: '🏆', type: 'weekly', condition: 'earn_total', target: 200_000, reward: 50_000 },
-  { id: 'wm-hire-2', title: 'تیم‌ساز', description: '۲ نیرو استخدام کن', icon: '👥', type: 'weekly', condition: 'hire_employee', target: 2, reward: 25_000 },
-  { id: 'wm-upgrade-3', title: 'رشد مداوم', description: '۳ بار شرکت رو ارتقا بده', icon: '📊', type: 'weekly', condition: 'upgrade_business', target: 3, reward: 35_000 },
-  { id: 'wm-product-1', title: 'محصول جدید', description: 'یک محصول آنلاک کن', icon: '🔓', type: 'weekly', condition: 'unlock_product', target: 1, reward: 20_000 },
+  { id: 'wm-collect-20', title: '۲۰ بار پول درآر!', description: '۲۰ بار از شرکتات پول بگیر', icon: '💎', type: 'weekly', condition: 'collect_revenue', target: 20, reward: 30_000 },
+  { id: 'wm-earn-200k', title: 'ستاره هفته', description: '۲۰۰ هزار تومان درآمد داشته باش', icon: '🏆', type: 'weekly', condition: 'earn_total', target: 200_000, reward: 50_000 },
+  { id: 'wm-hire-2', title: '۲ کارمند بگیر!', description: '۲ تا کارمندی جدید استخدام کن', icon: '👥', type: 'weekly', condition: 'hire_employee', target: 2, reward: 25_000 },
+  { id: 'wm-upgrade-3', title: '۳ بار ارتقا بده!', description: '۳ بار شرکتت رو ارتقا بده', icon: '📊', type: 'weekly', condition: 'upgrade_business', target: 3, reward: 35_000 },
+  { id: 'wm-product-1', title: 'محصول تازه!', description: 'یه محصول جدید آنلاک کن', icon: '🔓', type: 'weekly', condition: 'unlock_product', target: 1, reward: 20_000 },
 ];
 
 export const ONE_TIME_MISSIONS: MissionTemplate[] = [
-  // ── ماموریت‌های شروع (آموزشی) ──
-  { id: 'otm-first-biz', title: 'اولین قدم', description: 'اولین شرکتت رو بساز', icon: '🎯', type: 'one_time', condition: 'create_business', target: 1, reward: 10_000, xpReward: 10 },
-  { id: 'otm-first-collect', title: 'اولین درآمد', description: 'یک بار درآمد جمع کن', icon: '💸', type: 'one_time', condition: 'collect_revenue', target: 1, reward: 5_000, xpReward: 5 },
-  { id: 'otm-hire-first', title: 'اولین استخدام', description: 'اولین نیرو رو استخدام کن', icon: '🤝', type: 'one_time', condition: 'hire_employee', target: 1, reward: 8_000, xpReward: 5 },
-  { id: 'otm-first-sell', title: 'اولین فروش', description: 'یک واحد محصول بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 1, reward: 5_000, xpReward: 5 },
-  { id: 'otm-life-energy', title: 'استراحت لازمه!', description: 'انرژیت رو بالای ۹۵ نگه دار', icon: '⚡', type: 'one_time', condition: 'reach_stat_energy', target: 95, reward: 5_000, xpReward: 5 },
-  // ── ماموریت‌های رشد ──
-  { id: 'otm-upgrade-5', title: 'رشد پایدار', description: 'یک شرکت رو به سطح ۵ برسون', icon: '📈', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, xpReward: 15 },
-  { id: 'otm-upgrade-10', title: 'شرکت قدرتمند', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '💪', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 60_000, xpReward: 30 },
-  { id: 'otm-3-biz', title: 'امپراتوری کوچک', description: '۳ شرکت همزمان داشته باش', icon: '🏢', type: 'one_time', condition: 'own_businesses', target: 3, reward: 50_000, xpReward: 25 },
-  { id: 'otm-office-2', title: 'دفتر بزرگتر', description: 'دفتر یک شرکت رو ارتقا بده', icon: '🏗️', type: 'one_time', condition: 'upgrade_office', target: 1, reward: 15_000, xpReward: 10 },
-  { id: 'otm-100k', title: 'صد هزاری', description: 'به ۱۰۰,۰۰۰ تومان موجودی برس', icon: '💰', type: 'one_time', condition: 'reach_balance', target: 100_000, reward: 20_000, xpReward: 10 },
-  { id: 'otm-500k', title: 'نیم میلیونر', description: 'به ۵۰۰,۰۰۰ تومان موجودی برس', icon: '💵', type: 'one_time', condition: 'reach_balance', target: 500_000, reward: 50_000, xpReward: 20 },
-  { id: 'otm-1m', title: 'میلیونر', description: 'به ۱,۰۰۰,۰۰۰ تومان موجودی برس', icon: '🤑', type: 'one_time', condition: 'reach_balance', target: 1_000_000, reward: 100_000, xpReward: 50 },
+  // ── شروع بازی ──
+  { id: 'otm-first-biz', title: 'شروع ماجرا!', description: 'اولین شرکتت رو بساز', icon: '🎯', type: 'one_time', condition: 'create_business', target: 1, reward: 10_000, xpReward: 10 },
+  { id: 'otm-first-collect', title: 'اولین پول!', description: 'یه بار از شرکتت پول بگیر', icon: '💸', type: 'one_time', condition: 'collect_revenue', target: 1, reward: 5_000, xpReward: 5 },
+  { id: 'otm-hire-first', title: 'اولین کارمند!', description: 'یه نفر رو استخدام کن', icon: '🤝', type: 'one_time', condition: 'hire_employee', target: 1, reward: 8_000, xpReward: 5 },
+  { id: 'otm-first-sell', title: 'اولین فروش!', description: 'یه محصول بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 1, reward: 5_000, xpReward: 5 },
+  { id: 'otm-life-energy', title: 'پر انرژی!', description: 'انرژیت رو بالای ۹۵ ببر', icon: '⚡', type: 'one_time', condition: 'reach_stat_energy', target: 95, reward: 5_000, xpReward: 5 },
+  // ── رشد ──
+  { id: 'otm-upgrade-5', title: 'سطح ۵ رسیدی!', description: 'یه شرکت رو به سطح ۵ برسون', icon: '📈', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, xpReward: 15 },
+  { id: 'otm-upgrade-10', title: 'سطح ۱۰ رسیدی!', description: 'یه شرکت رو به سطح ۱۰ برسون', icon: '💪', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 60_000, xpReward: 30 },
+  { id: 'otm-3-biz', title: '۳ تا شرکت!', description: '۳ شرکت همزمان داشته باش', icon: '🏢', type: 'one_time', condition: 'own_businesses', target: 3, reward: 50_000, xpReward: 25 },
+  { id: 'otm-office-2', title: 'دفتر جدید!', description: 'دفتر شرکتت رو بزرگ‌تر کن', icon: '🏗️', type: 'one_time', condition: 'upgrade_office', target: 1, reward: 15_000, xpReward: 10 },
+  { id: 'otm-100k', title: '۱۰۰ هزاری شدی!', description: 'موجودیت رو به ۱۰۰ هزار برسون', icon: '💰', type: 'one_time', condition: 'reach_balance', target: 100_000, reward: 20_000, xpReward: 10 },
+  { id: 'otm-500k', title: 'نیم میلیونی!', description: 'موجودیت رو به ۵۰۰ هزار برسون', icon: '💵', type: 'one_time', condition: 'reach_balance', target: 500_000, reward: 50_000, xpReward: 20 },
+  { id: 'otm-1m', title: 'میلیونر شدی!', description: 'موجودیت رو به ۱ میلیون برسون', icon: '🤑', type: 'one_time', condition: 'reach_balance', target: 1_000_000, reward: 100_000, xpReward: 50 },
 ];
 
 // ==================== SPECIALTY MILESTONES ====================
@@ -1162,42 +1162,43 @@ export const ACHIEVEMENTS_TEMPLATES: Achievement[] = [
   { id: 'ach-5-biz', title: 'امپراتور', description: '۵ شرکت همزمان داشته باش', icon: '👑', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'own_businesses', target: 5, progress: 0, unlockedAt: null, badge: '🥇', reward: { money: 100_000 } },
 
   // ===== سطح (milestone) =====
-  { id: 'ach-level-5', title: 'تازه‌کار حرفه‌ای', description: 'یک شرکت رو به سطح ۵ برسون', icon: '⭐', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'reach_business_level', target: 5, progress: 0, unlockedAt: null, badge: '⭐', reward: { money: 10_000 } },
-  { id: 'ach-level-10', title: 'باتجربه', description: 'یک شرکت رو به سطح ۱۰ برسون', icon: '🌟', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'reach_business_level', target: 10, progress: 0, unlockedAt: null, badge: '🌟', reward: { money: 50_000 } },
-  { id: 'ach-level-20', title: 'سازمانی', description: 'یک شرکت رو به سطح ۲۰ برسون', icon: '💫', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_business_level', target: 20, progress: 0, unlockedAt: null, badge: '💫', reward: { money: 200_000 } },
+  // ===== شرکت =====
+  { id: 'ach-level-5', title: 'سطح ۵ رسیدی!', description: 'یه شرکت رو به سطح ۵ برسون', icon: '⭐', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'reach_business_level', target: 5, progress: 0, unlockedAt: null, badge: '⭐', reward: { money: 10_000 } },
+  { id: 'ach-level-10', title: 'سطح ۱۰!', description: 'یه شرکت رو به سطح ۱۰ برسون', icon: '🌟', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'reach_business_level', target: 10, progress: 0, unlockedAt: null, badge: '🌟', reward: { money: 50_000 } },
+  { id: 'ach-level-20', title: 'سطح ۲۰ — افسانه!', description: 'یه شرکت رو به سطح ۲۰ برسون', icon: '💫', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_business_level', target: 20, progress: 0, unlockedAt: null, badge: '💫', reward: { money: 200_000 } },
 
-  // ===== ثروت (milestone) =====
-  { id: 'ach-100k', title: 'صدهزاری', description: 'موجودی ۱۰۰ هزار تومان', icon: '💰', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'reach_balance', target: 100_000, progress: 0, unlockedAt: null, badge: '💰', reward: { money: 10_000 } },
-  { id: 'ach-500k', title: 'نیم میلیونر', description: 'موجودی ۵۰۰ هزار تومان', icon: '💵', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'reach_balance', target: 500_000, progress: 0, unlockedAt: null, badge: '💵', reward: { money: 50_000 } },
-  { id: 'ach-1m', title: 'میلیونر', description: 'موجودی ۱ میلیون تومان', icon: '🤑', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'reach_balance', target: 1_000_000, progress: 0, unlockedAt: null, badge: '🤑', reward: { money: 100_000 } },
-  { id: 'ach-5m', title: 'مولتی‌میلیونر', description: 'موجودی ۵ میلیون تومان', icon: '💎', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_balance', target: 5_000_000, progress: 0, unlockedAt: null, badge: '💎', reward: { money: 500_000 } },
-  { id: 'ach-10m', title: 'ده‌میلیونر', description: 'موجودی ۱۰ میلیون تومان', icon: '👑', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_balance', target: 10_000_000, progress: 0, unlockedAt: null, badge: '💎', reward: { money: 1_000_000 } },
+  // ===== پول =====
+  { id: 'ach-100k', title: '۱۰۰ هزاری!', description: '۱۰۰ هزار تومان جمع کن', icon: '💰', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'reach_balance', target: 100_000, progress: 0, unlockedAt: null, badge: '💰', reward: { money: 10_000 } },
+  { id: 'ach-500k', title: 'نیم میلیونی!', description: '۵۰۰ هزار تومان جمع کن', icon: '💵', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'reach_balance', target: 500_000, progress: 0, unlockedAt: null, badge: '💵', reward: { money: 50_000 } },
+  { id: 'ach-1m', title: 'میلیونر!', description: '۱ میلیون تومان جمع کن', icon: '🤑', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'reach_balance', target: 1_000_000, progress: 0, unlockedAt: null, badge: '🤑', reward: { money: 100_000 } },
+  { id: 'ach-5m', title: '۵ میلیونی!', description: '۵ میلیون تومان جمع کن', icon: '💎', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_balance', target: 5_000_000, progress: 0, unlockedAt: null, badge: '💎', reward: { money: 500_000 } },
+  { id: 'ach-10m', title: '۱۰ میلیونی!', description: '۱۰ میلیون تومان جمع کن', icon: '👑', tier: 'diamond', rarity: 'legendary', category: 'milestone', condition: 'reach_balance', target: 10_000_000, progress: 0, unlockedAt: null, badge: '💎', reward: { money: 1_000_000 } },
 
-  // ===== نیرو (milestone) =====
-  { id: 'ach-hire-1', title: 'رئیس', description: 'اولین نیرو رو استخدام کن', icon: '🤝', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'hire_employee', target: 1, progress: 0, unlockedAt: null, badge: '🤝', reward: { money: 5_000 } },
-  { id: 'ach-hire-5', title: 'مدیر', description: '۵ نیروی کار داشته باش', icon: '👥', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'total_employees', target: 5, progress: 0, unlockedAt: null, badge: '👥', reward: { money: 25_000 } },
-  { id: 'ach-hire-15', title: 'رهبر', description: '۱۵ نیرو داشته باش', icon: '🏛️', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'total_employees', target: 15, progress: 0, unlockedAt: null, badge: '🏛️', reward: { money: 75_000 } },
+  // ===== تیم =====
+  { id: 'ach-hire-1', title: 'اولین کارمند!', description: 'یه نفر رو استخدام کن', icon: '🤝', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'hire_employee', target: 1, progress: 0, unlockedAt: null, badge: '🤝', reward: { money: 5_000 } },
+  { id: 'ach-hire-5', title: '۵ نفره شدی!', description: '۵ تا کارمند داشته باش', icon: '👥', tier: 'silver', rarity: 'rare', category: 'milestone', condition: 'total_employees', target: 5, progress: 0, unlockedAt: null, badge: '👥', reward: { money: 25_000 } },
+  { id: 'ach-hire-15', title: 'تیم ۱۵ نفره!', description: '۱۵ تا کارمند داشته باش', icon: '🏛️', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'total_employees', target: 15, progress: 0, unlockedAt: null, badge: '🏛️', reward: { money: 75_000 } },
 
-  // ===== دفتر (milestone) =====
-  { id: 'ach-office-2', title: 'دفتردار', description: 'دفتر رو ارتقا بده', icon: '🏠', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'upgrade_office', target: 1, progress: 0, unlockedAt: null, badge: '🏠', reward: { money: 10_000 } },
-  { id: 'ach-office-4', title: 'ساختمان‌ساز', description: 'به ساختمان تجاری برس', icon: '🏛️', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'upgrade_office', target: 3, progress: 0, unlockedAt: null, badge: '🏢', reward: { money: 80_000 } },
+  // ===== دفتر =====
+  { id: 'ach-office-2', title: 'دفتر جدید!', description: 'دفتر شرکتت رو ارتقا بده', icon: '🏠', tier: 'bronze', rarity: 'common', category: 'milestone', condition: 'upgrade_office', target: 1, progress: 0, unlockedAt: null, badge: '🏠', reward: { money: 10_000 } },
+  { id: 'ach-office-4', title: 'ساختمان تجاری!', description: 'دفتر رو ۳ بار ارتقا بده', icon: '🏛️', tier: 'gold', rarity: 'epic', category: 'milestone', condition: 'upgrade_office', target: 3, progress: 0, unlockedAt: null, badge: '🏢', reward: { money: 80_000 } },
 
-  // ===== مجموعه (collection) =====
-  { id: 'ach-all-types', title: 'تاجر جهانی', description: 'از هر نوع کسب‌وکار یکی داشته باش', icon: '🌍', tier: 'diamond', rarity: 'legendary', category: 'collection', condition: 'own_all_business_types', target: 6, progress: 0, unlockedAt: null, badge: '🌍', reward: { money: 300_000, statBoost: { experience: 15 } } },
+  // ===== مجموعه =====
+  { id: 'ach-all-types', title: 'همه رو داری!', description: 'از هر نوع شرکت یکی بساز', icon: '🌍', tier: 'diamond', rarity: 'legendary', category: 'collection', condition: 'own_all_business_types', target: 6, progress: 0, unlockedAt: null, badge: '🌍', reward: { money: 300_000, statBoost: { experience: 15 } } },
 
-  // ===== آمار (stat) =====
-  { id: 'ach-int-100', title: 'نابغه', description: 'هوش رو به ۱۰۰ برسون', icon: '🧠', tier: 'gold', rarity: 'epic', category: 'stat', condition: 'reach_stat_intelligence', target: 100, progress: 0, unlockedAt: null, badge: '🧠', reward: { money: 100_000, statBoost: { experience: 20 } } },
-  { id: 'ach-happy-100', title: 'شادمان', description: 'شادی رو به ۱۰۰ برسون', icon: '😄', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_stat_happiness', target: 100, progress: 0, unlockedAt: null, badge: '😄', reward: { money: 50_000 } },
-  { id: 'ach-energy-100', title: 'پرانرژی', description: 'انرژی رو به ۱۰۰ برسون', icon: '⚡', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_stat_energy', target: 100, progress: 0, unlockedAt: null, badge: '⚡', reward: { money: 50_000 } },
-  { id: 'ach-player-level-10', title: 'حرفه‌ای', description: 'به سطح ۱۰ بازیکن برس', icon: '🎯', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_player_level', target: 10, progress: 0, unlockedAt: null, badge: '🎯', reward: { money: 75_000 } },
-  { id: 'ach-player-level-20', title: 'افسانه‌ای', description: 'به سطح ۲۰ بازیکن برس', icon: '🏆', tier: 'diamond', rarity: 'legendary', category: 'stat', condition: 'reach_player_level', target: 20, progress: 0, unlockedAt: null, badge: '🏆', reward: { money: 200_000, statBoost: { experience: 25 } } },
+  // ===== شخصیت =====
+  { id: 'ach-int-100', title: 'نابغه!', description: 'هوشت رو به ۱۰۰ برسون', icon: '🧠', tier: 'gold', rarity: 'epic', category: 'stat', condition: 'reach_stat_intelligence', target: 100, progress: 0, unlockedAt: null, badge: '🧠', reward: { money: 100_000, statBoost: { experience: 20 } } },
+  { id: 'ach-happy-100', title: 'خوشحال ۱۰۰!', description: 'شادیت رو به ۱۰۰ برسون', icon: '😄', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_stat_happiness', target: 100, progress: 0, unlockedAt: null, badge: '😄', reward: { money: 50_000 } },
+  { id: 'ach-energy-100', title: 'پر انرژی!', description: 'انرژیت رو به ۱۰۰ برسون', icon: '⚡', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_stat_energy', target: 100, progress: 0, unlockedAt: null, badge: '⚡', reward: { money: 50_000 } },
+  { id: 'ach-player-level-10', title: 'لول ۱۰!', description: 'به سطح ۱۰ برس', icon: '🎯', tier: 'silver', rarity: 'rare', category: 'stat', condition: 'reach_player_level', target: 10, progress: 0, unlockedAt: null, badge: '🎯', reward: { money: 75_000 } },
+  { id: 'ach-player-level-20', title: 'لول ۲۰ — افسانه!', description: 'به سطح ۲۰ برس', icon: '🏆', tier: 'diamond', rarity: 'legendary', category: 'stat', condition: 'reach_player_level', target: 20, progress: 0, unlockedAt: null, badge: '🏆', reward: { money: 200_000, statBoost: { experience: 25 } } },
 
-  // ===== عملکرد (action) =====
-  { id: 'ach-upgrade-5', title: 'ارتقاچی', description: '۵ بار ارتقا انجام بده', icon: '🔧', tier: 'bronze', rarity: 'common', category: 'action', condition: 'total_upgrades', target: 5, progress: 0, unlockedAt: null, badge: '🔧', reward: { money: 20_000 } },
-  { id: 'ach-upgrade-20', title: 'معمار', description: '۲۰ بار ارتقا انجام بده', icon: '🏗️', tier: 'silver', rarity: 'rare', category: 'action', condition: 'total_upgrades', target: 20, progress: 0, unlockedAt: null, badge: '🏗️', reward: { money: 80_000 } },
-  { id: 'ach-upgrade-50', title: 'مهندس ارشد', description: '۵۰ بار ارتقا انجام بده', icon: '⚙️', tier: 'gold', rarity: 'epic', category: 'action', condition: 'total_upgrades', target: 50, progress: 0, unlockedAt: null, badge: '⚙️', reward: { money: 200_000 } },
-  { id: 'ach-mission-10', title: 'ماموریت‌باز', description: '۱۰ ماموریت تکمیل کن', icon: '📋', tier: 'bronze', rarity: 'common', category: 'action', condition: 'complete_missions', target: 10, progress: 0, unlockedAt: null, badge: '📋', reward: { money: 15_000 } },
-  { id: 'ach-mission-50', title: 'حرفه‌ای ماموریت', description: '۵۰ ماموریت تکمیل کن', icon: '🎖️', tier: 'gold', rarity: 'epic', category: 'action', condition: 'complete_missions', target: 50, progress: 0, unlockedAt: null, badge: '🎖️', reward: { money: 100_000 } },
+  // ===== فعالیت =====
+  { id: 'ach-upgrade-5', title: '۵ بار ارتقا!', description: '۵ بار ارتقا بزن', icon: '🔧', tier: 'bronze', rarity: 'common', category: 'action', condition: 'total_upgrades', target: 5, progress: 0, unlockedAt: null, badge: '🔧', reward: { money: 20_000 } },
+  { id: 'ach-upgrade-20', title: '۲۰ بار ارتقا!', description: '۲۰ بار ارتقا بزن', icon: '🏗️', tier: 'silver', rarity: 'rare', category: 'action', condition: 'total_upgrades', target: 20, progress: 0, unlockedAt: null, badge: '🏗️', reward: { money: 80_000 } },
+  { id: 'ach-upgrade-50', title: '۵۰ بار ارتقا!', description: '۵۰ بار ارتقا بزن', icon: '⚙️', tier: 'gold', rarity: 'epic', category: 'action', condition: 'total_upgrades', target: 50, progress: 0, unlockedAt: null, badge: '⚙️', reward: { money: 200_000 } },
+  { id: 'ach-mission-10', title: '۱۰ ماموریت!', description: '۱۰ تا ماموریت تموم کن', icon: '📋', tier: 'bronze', rarity: 'common', category: 'action', condition: 'complete_missions', target: 10, progress: 0, unlockedAt: null, badge: '📋', reward: { money: 15_000 } },
+  { id: 'ach-mission-50', title: '۵۰ ماموریت!', description: '۵۰ تا ماموریت تموم کن', icon: '🎖️', tier: 'gold', rarity: 'epic', category: 'action', condition: 'complete_missions', target: 50, progress: 0, unlockedAt: null, badge: '🎖️', reward: { money: 100_000 } },
 ];
 
 // ==================== FICTIONAL COMPANIES ====================
@@ -1626,24 +1627,24 @@ import {
 
 export const SHELF_PRODUCTS: ShelfProduct[] = [
   // --- Tier 1: مغازه محلی (ضروریات) ---
-  { id: 'sp-bread',   name: 'نان',         icon: '🍞', category: 'essential', buyPrice: 30,  sellPrice: 55,  salesSpeed: 12, unlockTier: 1, description: 'ارزون و پرفروش' },
-  { id: 'sp-milk',    name: 'شیر',         icon: '🥛', category: 'essential', buyPrice: 40,  sellPrice: 70,  salesSpeed: 10, unlockTier: 1, description: 'مصرف روزانه بالا' },
-  { id: 'sp-rice',    name: 'برنج',        icon: '🍚', category: 'essential', buyPrice: 80,  sellPrice: 130, salesSpeed: 6,  unlockTier: 1, description: 'سود متوسط، فروش ثابت' },
+  { id: 'sp-bread',   name: 'نان',         icon: '🍞', category: 'essential', buyPrice: 50,  sellPrice: 100,  salesSpeed: 12, unlockTier: 1, description: 'ارزون و پرفروش' },
+  { id: 'sp-milk',    name: 'شیر',         icon: '🥛', category: 'essential', buyPrice: 50,  sellPrice: 100,  salesSpeed: 10, unlockTier: 1, description: 'مصرف روزانه بالا' },
+  { id: 'sp-rice',    name: 'برنج',        icon: '🍚', category: 'essential', buyPrice: 100, sellPrice: 150, salesSpeed: 6,  unlockTier: 1, description: 'سود متوسط، فروش ثابت' },
 
   // --- Tier 2: مینی‌مارکت (تنوع بیشتر) ---
-  { id: 'sp-soda',    name: 'نوشابه',      icon: '🥤', category: 'essential', buyPrice: 25,  sellPrice: 50,  salesSpeed: 14, unlockTier: 2, description: 'ارزون و خیلی سریع' },
-  { id: 'sp-fruit',   name: 'میوه',        icon: '🍎', category: 'fresh',     buyPrice: 60,  sellPrice: 110, salesSpeed: 8,  unlockTier: 2, description: 'تازه و پرسود' },
-  { id: 'sp-egg',     name: 'تخم‌مرغ',     icon: '🥚', category: 'essential', buyPrice: 50,  sellPrice: 90,  salesSpeed: 9,  unlockTier: 2, description: 'فروش ثابت و مطمئن' },
+  { id: 'sp-soda',    name: 'نوشابه',      icon: '🥤', category: 'essential', buyPrice: 50,  sellPrice: 100,  salesSpeed: 14, unlockTier: 2, description: 'ارزون و خیلی سریع' },
+  { id: 'sp-fruit',   name: 'میوه',        icon: '🍎', category: 'fresh',     buyPrice: 50,  sellPrice: 100, salesSpeed: 8,  unlockTier: 2, description: 'تازه و پرسود' },
+  { id: 'sp-egg',     name: 'تخم‌مرغ',     icon: '🥚', category: 'essential', buyPrice: 50,  sellPrice: 100,  salesSpeed: 9,  unlockTier: 2, description: 'فروش ثابت و مطمئن' },
 
   // --- Tier 3: سوپرمارکت (سفارش ویژه + صندوق دوم) ---
   { id: 'sp-meat',    name: 'گوشت',        icon: '🥩', category: 'fresh',     buyPrice: 200, sellPrice: 350, salesSpeed: 4,  unlockTier: 3, description: 'گرون ولی سود بالا' },
-  { id: 'sp-cheese',  name: 'پنیر',        icon: '🧀', category: 'fresh',     buyPrice: 100, sellPrice: 180, salesSpeed: 5,  unlockTier: 3, description: 'حاشیه سود خوب' },
-  { id: 'sp-snack',   name: 'تنقلات',      icon: '🍿', category: 'luxury',    buyPrice: 35,  sellPrice: 75,  salesSpeed: 11, unlockTier: 3, description: 'سریع ولی سود کم' },
+  { id: 'sp-cheese',  name: 'پنیر',        icon: '🧀', category: 'fresh',     buyPrice: 100, sellPrice: 200, salesSpeed: 5,  unlockTier: 3, description: 'حاشیه سود خوب' },
+  { id: 'sp-snack',   name: 'تنقلات',      icon: '🍿', category: 'luxury',    buyPrice: 50,  sellPrice: 100,  salesSpeed: 11, unlockTier: 3, description: 'سریع ولی سود کم' },
 
   // --- Tier 4: هایپرمارکت (فروش همزمان + مشتری بیشتر) ---
-  { id: 'sp-deterg',  name: 'شوینده',      icon: '🧴', category: 'household', buyPrice: 120, sellPrice: 220, salesSpeed: 3,  unlockTier: 4, description: 'کند ولی سود عالی' },
+  { id: 'sp-deterg',  name: 'شوینده',      icon: '🧴', category: 'household', buyPrice: 100, sellPrice: 200, salesSpeed: 3,  unlockTier: 4, description: 'کند ولی سود عالی' },
   { id: 'sp-cosmetic',name: 'لوازم آرایشی',icon: '💄', category: 'luxury',    buyPrice: 150, sellPrice: 300, salesSpeed: 2,  unlockTier: 4, description: 'گرون‌ترین و کندترین' },
-  { id: 'sp-baby',    name: 'لوازم بچه',   icon: '🍼', category: 'household', buyPrice: 180, sellPrice: 320, salesSpeed: 3,  unlockTier: 4, description: 'سود بالا، فروش کند' },
+  { id: 'sp-baby',    name: 'لوازم بچه',   icon: '🍼', category: 'household', buyPrice: 200, sellPrice: 350, salesSpeed: 3,  unlockTier: 4, description: 'سود بالا، فروش کند' },
 
   // --- Tier 5: شبکه فروشگاهی (شعبه + passive) ---
   { id: 'sp-elec',    name: 'لوازم الکترونیکی', icon: '📱', category: 'luxury', buyPrice: 500, sellPrice: 900, salesSpeed: 1, unlockTier: 5, description: 'گرون‌ترین، بیشترین سود' },

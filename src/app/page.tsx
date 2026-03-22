@@ -1,15 +1,16 @@
 'use client';
 
 import { useMemo, useEffect, useState } from 'react';
-import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue, xpForLevel, getUnlocksForLevel } from '@/store/gameStore';
+import { useGameStore, calcEffectiveRevenue, calcTotalExpenses, calcEmpireValue, xpForLevel, getUnlocksForLevel, roundNice } from '@/store/gameStore';
 import {
   Briefcase, Users, ShoppingCart, Wallet,
-  TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft, Lock,
+  ArrowUpRight, ArrowDownRight, ChevronLeft, Lock, X,
 } from 'lucide-react';
 import Link from 'next/link';
 import RushHourBanner from '@/components/hooks/RushHourBanner';
 import EventBanner from '@/components/hooks/EventBanner';
 import ActiveBoostBanner from '@/components/boosts/ActiveBoostBanner';
+import { getOfficeTier } from '@/data/mock';
 import { useActiveMissionContext } from '@/components/missions/MissionsWidget';
 import { useGameStore as useStore } from '@/store/gameStore';
 
@@ -21,6 +22,8 @@ export default function HomePage() {
   const businesses = useGameStore((s) => s.businesses);
   const products = useGameStore((s) => s.products);
   const missions = useGameStore((s) => s.missions);
+  const banking = useGameStore((s) => s.banking);
+  const [showFinancial, setShowFinancial] = useState(false);
   const claimMissionReward = useGameStore((s) => s.claimMissionReward);
   const completeBusinessUpgrade = useGameStore((s) => s.completeBusinessUpgrade);
 
@@ -122,7 +125,7 @@ export default function HomePage() {
     <div className="space-y-4 py-3 pb-24">
 
       {/* ===================== Balance Hero — Credit Card ===================== */}
-      <div className="relative w-full" style={{ perspective: '1200px' }}>
+      <div className="relative w-full active:scale-[0.98] transition-transform cursor-pointer" style={{ perspective: '1200px' }} onClick={() => setShowFinancial(true)}>
         <div
           className="relative w-full rounded-[22px] overflow-hidden"
           style={{
@@ -314,7 +317,7 @@ export default function HomePage() {
       <div className="grid grid-cols-4 gap-2">
         {[
           { icon: <Briefcase size={14} className="text-[#818cf8]" />, value: `${businesses.length}`, label: 'شرکت', bg: 'bg-[#6366F1]/8' },
-          { icon: <Users size={14} className="text-[#60A5FA]" />, value: `${totalEmployees}`, label: 'نیرو', bg: 'bg-[#3B82F6]/8' },
+          { icon: <Users size={14} className="text-[#60A5FA]" />, value: `${totalEmployees}`, label: 'کارمند', bg: 'bg-[#3B82F6]/8' },
           { icon: <ShoppingCart size={14} className="text-[#34d399]" />, value: `${totalInventory}`, label: 'انبار', bg: 'bg-[#22C55E]/8' },
           { icon: <Wallet size={14} className="text-[#F59E0B]" />, value: `${totalRevenueMoney.toLocaleString('fa-IR')}`, label: 'درآمد/سیکل', bg: 'bg-[#F59E0B]/8' },
         ].map((s, i) => (
@@ -460,60 +463,165 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ===================== Market Trends ===================== */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-bold text-xs text-fg flex items-center gap-1.5">
-            <TrendingUp size={13} className="text-[#22C55E]" />
-            بازار
-          </h2>
-          <Link href="/market" className="text-[10px] text-accent-primary flex items-center gap-0.5">
-            ورود به بازار <ChevronLeft size={12} />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          {topProducts.map((prod) => {
-            const currentPrice = prod.currentPrice ?? prod.basePrice ?? 0;
-            const basePrice = prod.basePrice ?? 0;
-            const changePct = basePrice > 0 ? ((currentPrice - basePrice) / basePrice) * 100 : 0;
-            const isUp = changePct >= 0;
-            const isSignificant = Math.abs(changePct) >= 15;
-            return (
-              <Link key={prod.id} href="/market" className="block active:scale-[0.98] transition-transform">
-                <div className={`flex items-center gap-2 rounded-[12px] px-2.5 py-2 border ${
-                  isSignificant
-                    ? isUp ? 'border-[#22C55E]/25 bg-[#22C55E]/5' : 'border-[#EF4444]/25 bg-[#EF4444]/5'
-                    : 'border-line-subtle bg-surface-card/30'
-                }`}>
-                  <span className="text-lg">{prod.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold truncate">{prod.name}</p>
-                    <div className="flex items-center gap-1">
-                      <span className="text-accent-money font-fa text-[10px] font-bold">
-                        {currentPrice.toLocaleString('fa-IR')}
-                      </span>
-                      <span className={`text-[9px] font-bold ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                        {isUp ? '+' : ''}{changePct.toFixed(0)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="shrink-0">
-                    {isUp
-                      ? <ArrowUpRight size={12} className="text-[#22C55E]" />
-                      : <ArrowDownRight size={12} className="text-[#EF4444]" />
-                    }
-                    {isSignificant && (
-                      <p className={`text-[7px] font-bold text-center ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                        {isUp ? 'فروش' : 'فرصت'}
-                      </p>
-                    )}
+      {/* ===================== وضعیت شخصیت ===================== */}
+      <CharacterStatus stats={player.stats} />
+
+      {/* ===================== باتم‌شیت بیلان مالی ===================== */}
+      {showFinancial && (() => {
+        // محاسبات مالی
+        const totalSalaries = businesses.reduce((s, b) => s + b.employees.reduce((es, e) => es + e.salary, 0), 0);
+        const totalRent = businesses.reduce((s, b) => {
+          const tier = getOfficeTier(b.officeLevel ?? 1);
+          return s + tier.rent;
+        }, 0);
+        const totalBaseExpenses = businesses.reduce((s, b) => s + b.expenses, 0);
+        const totalInvValue = businesses.reduce((s, b) => {
+          const p = products.find((pr) => pr.id === b.inventory.productId);
+          return s + b.inventory.quantity * (p?.currentPrice ?? 0);
+        }, 0);
+        const activeLoanPayments = banking.loans.reduce((s, l) => s + (l.installmentAmount ?? 0), 0);
+        const activeDepositIncome = banking.deposits.reduce((s, d) => s + Math.round(d.amount * d.interestRate / 12), 0);
+        const netFlow = totalRevenueMoney - totalExpenses - activeLoanPayments + activeDepositIncome;
+
+        return (
+          <>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setShowFinancial(false)} />
+            <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+              <div className="max-w-lg mx-auto bg-surface-elevated rounded-t-3xl border-t border-x border-line overflow-hidden">
+                {/* Handle */}
+                <div className="flex flex-col items-center pt-3 pb-2 px-4 border-b border-line/50">
+                  <div className="w-10 h-1 rounded-full bg-fg-faint/30 mb-3" />
+                  <div className="flex items-center justify-between w-full">
+                    <h2 className="text-sm font-black flex items-center gap-1.5">📊 بیلان مالی</h2>
+                    <button onClick={() => setShowFinancial(false)} className="p-1.5 rounded-full hover:bg-surface-card text-fg-muted">
+                      <X size={16} />
+                    </button>
                   </div>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+
+                <div className="px-4 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+
+                  {/* موجودی */}
+                  <div className="text-center">
+                    <p className="text-[10px] text-fg-muted">موجودی فعلی</p>
+                    <p className="text-[28px] font-black font-fa text-accent-money">{player.balance.toLocaleString('fa-IR')}</p>
+                    <p className="text-[9px] text-fg-faint">تومان</p>
+                  </div>
+
+                  {/* درآمدها */}
+                  <div className="rounded-[14px] border border-[#22C55E]/20 bg-[#22C55E]/5 p-3 space-y-2">
+                    <p className="text-[10px] font-black text-[#22C55E] flex items-center gap-1">📥 درآمدها (هر سیکل)</p>
+                    {businesses.map((b) => {
+                      const p = products.find((pr) => pr.id === b.inventory.productId);
+                      const price = p?.currentPrice ?? 0;
+                      const units = Math.min(calcEffectiveRevenue(b), b.baseSaleRate * (b.cycleDuration / 60));
+                      const rev = Math.round(units * price);
+                      return (
+                        <div key={b.id} className="flex items-center justify-between text-[10px]">
+                          <span className="text-fg-muted">{b.icon} {b.name}</span>
+                          <span className="font-bold font-fa text-[#22C55E]">+{rev.toLocaleString('fa-IR')}</span>
+                        </div>
+                      );
+                    })}
+                    {activeDepositIncome > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-fg-muted">🏦 سود سپرده</span>
+                        <span className="font-bold font-fa text-[#22C55E]">+{activeDepositIncome.toLocaleString('fa-IR')}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-[#22C55E]/15">
+                      <span className="font-bold text-[#22C55E]">مجموع درآمد</span>
+                      <span className="font-black font-fa text-[#22C55E]">+{(totalRevenueMoney + activeDepositIncome).toLocaleString('fa-IR')}</span>
+                    </div>
+                  </div>
+
+                  {/* هزینه‌ها */}
+                  <div className="rounded-[14px] border border-[#EF4444]/20 bg-[#EF4444]/5 p-3 space-y-2">
+                    <p className="text-[10px] font-black text-[#EF4444] flex items-center gap-1">📤 هزینه‌ها (هر سیکل)</p>
+                    {totalBaseExpenses > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-fg-muted">⚙️ هزینه عملیات</span>
+                        <span className="font-bold font-fa text-[#EF4444]">-{totalBaseExpenses.toLocaleString('fa-IR')}</span>
+                      </div>
+                    )}
+                    {totalRent > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-fg-muted">🏢 اجاره دفاتر</span>
+                        <span className="font-bold font-fa text-[#EF4444]">-{totalRent.toLocaleString('fa-IR')}</span>
+                      </div>
+                    )}
+                    {totalSalaries > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-fg-muted">👥 حقوق کارمندها</span>
+                        <span className="font-bold font-fa text-[#EF4444]">-{totalSalaries.toLocaleString('fa-IR')}</span>
+                      </div>
+                    )}
+                    {activeLoanPayments > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-fg-muted">🏦 قسط وام</span>
+                        <span className="font-bold font-fa text-[#EF4444]">-{activeLoanPayments.toLocaleString('fa-IR')}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-[#EF4444]/15">
+                      <span className="font-bold text-[#EF4444]">مجموع هزینه</span>
+                      <span className="font-black font-fa text-[#EF4444]">-{(totalExpenses + activeLoanPayments).toLocaleString('fa-IR')}</span>
+                    </div>
+                  </div>
+
+                  {/* سود خالص */}
+                  <div className={`rounded-[14px] border p-3 text-center ${netFlow >= 0 ? 'border-[#22C55E]/30 bg-[#22C55E]/8' : 'border-[#EF4444]/30 bg-[#EF4444]/8'}`}>
+                    <p className="text-[10px] text-fg-muted mb-1">💰 سود خالص هر سیکل</p>
+                    <p className={`text-[24px] font-black font-fa ${netFlow >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                      {netFlow >= 0 ? '+' : ''}{netFlow.toLocaleString('fa-IR')}
+                    </p>
+                    <p className="text-[9px] text-fg-faint mt-0.5">تومان</p>
+                  </div>
+
+                  {/* دارایی‌ها */}
+                  <div className="rounded-[14px] border border-line-subtle p-3 space-y-2">
+                    <p className="text-[10px] font-black text-fg-secondary flex items-center gap-1">🏛️ دارایی‌ها</p>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-fg-muted">💵 موجودی نقد</span>
+                      <span className="font-bold font-fa">{player.balance.toLocaleString('fa-IR')}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-fg-muted">📦 ارزش انبارها</span>
+                      <span className="font-bold font-fa">{totalInvValue.toLocaleString('fa-IR')}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-fg-muted">🏢 ارزش امپراتوری</span>
+                      <span className="font-bold font-fa">{empireValue.toLocaleString('fa-IR')}</span>
+                    </div>
+                    {banking.deposits.length > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-fg-muted">🏦 سپرده‌ها</span>
+                        <span className="font-bold font-fa">{banking.deposits.reduce((s, d) => s + d.amount, 0).toLocaleString('fa-IR')}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-line-subtle/30">
+                      <span className="font-bold">مجموع دارایی</span>
+                      <span className="font-black font-fa text-[#F59E0B]">{(empireValue + totalInvValue).toLocaleString('fa-IR')} ت</span>
+                    </div>
+                  </div>
+
+                  {/* بدهی */}
+                  {banking.loans.length > 0 && (
+                    <div className="rounded-[14px] border border-[#F59E0B]/20 bg-[#F59E0B]/5 p-3 space-y-2">
+                      <p className="text-[10px] font-black text-[#F59E0B] flex items-center gap-1">⚠️ بدهی‌ها</p>
+                      {banking.loans.map((loan, i) => (
+                        <div key={i} className="flex items-center justify-between text-[10px]">
+                          <span className="text-fg-muted">🏦 وام {(i + 1)}</span>
+                          <span className="font-bold font-fa text-[#F59E0B]">{((loan.installmentCount - loan.paidInstallments) * loan.installmentAmount).toLocaleString('fa-IR')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -597,5 +705,77 @@ function CycleCountdown({ lastCycleAt, cycleDuration }: { lastCycleAt: number; c
     <span className="text-[9px] font-bold font-fa text-[#818cf8]">
       {mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`}
     </span>
+  );
+}
+
+// ==================== Character Status ====================
+import type { PlayerStats } from '@/types';
+import { Heart } from 'lucide-react';
+
+const STATUS_ITEMS = [
+  {
+    key: 'energy' as const, label: 'انرژی', icon: '⚡', color: '#3B82F6',
+    isWarn: (v: number) => v < 20, warnText: 'تولید -۱۵٪',
+    isBoost: (v: number) => v > 80, boostText: 'تولید +۱۰٪',
+    barPct: (v: number) => v,
+  },
+  {
+    key: 'happiness' as const, label: 'شادی', icon: '😊', color: '#EC4899',
+    isWarn: (v: number) => v < 30, warnText: 'درآمد -۱۰٪',
+    isBoost: (v: number) => v > 70, boostText: 'درآمد +۱۰٪',
+    barPct: (v: number) => v,
+  },
+  {
+    key: 'hunger' as const, label: 'گرسنگی', icon: '🍔', color: '#F59E0B',
+    isWarn: (v: number) => v > 80, warnText: 'درآمد -۵٪',
+    isBoost: () => false, boostText: '',
+    barPct: (v: number) => 100 - v,
+  },
+];
+
+function CharacterStatus({ stats }: { stats: PlayerStats }) {
+  const hasAnyIssue = stats.energy < 20 || stats.happiness < 30 || stats.hunger > 80;
+
+  return (
+    <Link href="/life" className="block active:scale-[0.99] transition-transform">
+      <div className={`rounded-[16px] border p-3 ${
+        hasAnyIssue ? 'border-[#EF4444]/20 bg-[#EF4444]/3' : 'border-line-subtle bg-surface-card/30'
+      }`}>
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-1.5">
+            <Heart size={13} className={hasAnyIssue ? 'text-[#EF4444]' : 'text-[#EC4899]'} />
+            <span className="text-[10px] font-bold text-fg-secondary">وضعیت شخصیت</span>
+          </div>
+          <span className="text-[9px] text-fg-faint flex items-center gap-0.5">
+            مدیریت <ChevronLeft size={10} />
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {STATUS_ITEMS.map((s) => {
+            const value = stats[s.key];
+            const barPct = s.barPct(value);
+            const warn = s.isWarn(value);
+            const boost = s.isBoost(value);
+            const barColor = warn ? '#EF4444' : boost ? '#22C55E' : s.color;
+
+            return (
+              <div key={s.key} className="text-center">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-sm">{s.icon}</span>
+                  <span className={`text-[14px] font-black font-fa ${warn ? 'text-[#EF4444]' : boost ? 'text-[#22C55E]' : ''}`} style={!warn && !boost ? { color: s.color } : {}}>
+                    {value}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-progress-bg overflow-hidden mt-1">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${barPct}%`, backgroundColor: barColor }} />
+                </div>
+                {warn && <p className="text-[7px] text-[#EF4444] font-bold mt-0.5">{s.warnText}</p>}
+                {boost && <p className="text-[7px] text-[#22C55E] font-bold mt-0.5">{s.boostText}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Link>
   );
 }

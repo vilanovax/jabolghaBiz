@@ -64,7 +64,7 @@ export interface City {
 // نقش‌های کارمندان
 export type EmployeeRole = 'production' | 'sales' | 'warehouse';
 
-// تایر نیرو — سطح‌بندی
+// تایر کارمند — سطح‌بندی
 export type EmployeeTier = 'worker' | 'senior' | 'expert' | 'legendary';
 
 export interface EmployeeTemplate {
@@ -78,8 +78,8 @@ export interface EmployeeTemplate {
   description: string;
   // سیستم درخت رشد
   unlockLevel: number;    // سطح شرکت برای آنلاک
-  tier: EmployeeTier;     // تایر نیرو
-  maxUpgradeLevel: number; // حداکثر سطح نیرو (1 یا 3)
+  tier: EmployeeTier;     // تایر کارمند
+  maxUpgradeLevel: number; // حداکثر سطح کارمند (1 یا 3)
   // بوست‌های تخصصی
   productionBoost?: number;       // واحد اضافه تولید در هر سیکل (نقش تولید)
   salesBoost?: number;            // واحد اضافه فروش در دقیقه (نقش فروش)
@@ -103,7 +103,7 @@ export interface HiredEmployee {
   salesBoost: number;
   capacityBoost: number;
   // سیستم ارتقا
-  employeeLevel: number;  // سطح فعلی نیرو (1-3)
+  employeeLevel: number;  // سطح فعلی کارمند (1-3)
   maxUpgradeLevel: number;
   baseHireCost: number;   // هزینه اولیه — برای محاسبه هزینه ارتقا
   // ارتقا زمان‌دار
@@ -179,7 +179,7 @@ export interface Business {
   expenses: number;
   upgradeCost: number;
 
-  // نیروها و محصولات
+  // کارمندها و محصولات
   employees: HiredEmployee[];
   products: BusinessProduct[];
 
@@ -533,7 +533,7 @@ export type MissionType = 'daily' | 'weekly' | 'one_time';
 export type MissionCondition =
   | 'collect_revenue'        // جمع‌آوری درآمد N بار
   | 'earn_total'             // کسب N تومان (مجموع)
-  | 'hire_employee'          // استخدام N نیرو
+  | 'hire_employee'          // استخدام N کارمند
   | 'upgrade_business'       // ارتقای شرکت N بار
   | 'create_business'        // ساخت N شرکت
   | 'upgrade_office'         // ارتقای دفتر N بار
@@ -541,7 +541,7 @@ export type MissionCondition =
   | 'reach_business_level'   // رسیدن به سطح N شرکت
   | 'reach_balance'          // رسیدن به N تومان موجودی
   | 'own_businesses'         // داشتن N شرکت همزمان
-  | 'total_employees'        // داشتن N نیرو مجموعا
+  | 'total_employees'        // داشتن N کارمند مجموعا
   | 'respond_to_event'       // پاسخ به N رویداد
   | 'claim_daily_bonus'      // دریافت N بونوس روزانه
   | 'own_all_business_types' // داشتن همه انواع کسب‌وکار
