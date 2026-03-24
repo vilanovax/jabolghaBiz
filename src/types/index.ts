@@ -646,6 +646,8 @@ export interface ShelfSlot {
   productId: string | null; // کالای چیده‌شده (null = خالی)
   quantity: number;         // موجودی فعلی
   maxCapacity: number;      // ظرفیت قفسه
+  incomingQty: number;      // تعداد در حال تحویل
+  incomingAt: number | null; // زمان تحویل (timestamp)
 }
 
 // صندوق فروشگاه

@@ -11,6 +11,36 @@ interface Props {
   business: Business;
 }
 
+// تایمر تحویل کالا به قفسه
+function ShelfDeliveryTimer({ endsAt, qty }: { endsAt: number; qty: number }) {
+  const [secs, setSecs] = useState(0);
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    const total = 15; // 15 seconds delivery
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+      setSecs(left);
+      setPct(Math.min(100, ((total - left) / total) * 100));
+    };
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, [endsAt]);
+
+  return (
+    <div className="w-full rounded-xl bg-[#F59E0B]/10 border border-[#F59E0B]/20 py-2 px-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[9px] font-bold text-[#F59E0B]">🚚 در حال تحویل ({qty} عدد)</span>
+        <span className="text-[10px] font-black font-fa text-[#F59E0B]">{secs}ث</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-progress-bg overflow-hidden">
+        <div className="h-full rounded-full bg-[#F59E0B] transition-all duration-500" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 // ===== رنگ‌بندی کتگوری محصول =====
 const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   essential: { label: 'ضروری', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
@@ -91,21 +121,25 @@ function ShelfCard({
           )}
         </div>
 
-        {/* دکمه پر کردن */}
+        {/* دکمه پر کردن / تایمر تحویل */}
         <div className="px-3 pb-3">
-          <button
-            onClick={() => onStock(shelf.id, product.id, shelf.maxCapacity - shelf.quantity)}
-            disabled={!canAffordFill || shelf.quantity >= shelf.maxCapacity}
-            className={`w-full py-2 rounded-xl text-[10px] font-bold transition-all active:scale-[0.97] ${
-              canAffordFill && shelf.quantity < shelf.maxCapacity
-                ? 'bg-[#4F46E5] text-white'
-                : 'bg-surface-card text-fg-faint'
-            }`}
-          >
-            {shelf.quantity >= shelf.maxCapacity
-              ? '✅ پره'
-              : `📦 پر کن (${fillCost.toLocaleString('fa-IR')} ت)`}
-          </button>
+          {shelf.incomingAt && shelf.incomingAt > Date.now() ? (
+            <ShelfDeliveryTimer endsAt={shelf.incomingAt} qty={shelf.incomingQty} />
+          ) : (
+            <button
+              onClick={() => onStock(shelf.id, product.id, shelf.maxCapacity - shelf.quantity)}
+              disabled={!canAffordFill || shelf.quantity >= shelf.maxCapacity}
+              className={`w-full py-2 rounded-xl text-[10px] font-bold transition-all active:scale-[0.97] ${
+                canAffordFill && shelf.quantity < shelf.maxCapacity
+                  ? 'bg-[#4F46E5] text-white'
+                  : 'bg-surface-card text-fg-faint'
+              }`}
+            >
+              {shelf.quantity >= shelf.maxCapacity
+                ? '✅ پره'
+                : `🚚 سفارش کالا (${fillCost.toLocaleString('fa-IR')} ت)`}
+            </button>
+          )}
         </div>
 
         {/* آمار پایین */}

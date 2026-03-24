@@ -2381,6 +2381,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         productId: null,
         quantity: 0,
         maxCapacity: 30,
+        incomingQty: 0,
+        incomingAt: null,
       });
     }
     while (initial.checkouts.length < tier.checkoutLanes) {
@@ -2415,12 +2417,18 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     // اگه قفسه محصول دیگه‌ای داره باید اول خالی بشه
     if (shelf.productId && shelf.productId !== productId) return;
 
+    // اگه سفارش فعال داره صبر کن
+    if (shelf.incomingAt && shelf.incomingAt > Date.now()) return;
+
     const spaceLeft = shelf.maxCapacity - shelf.quantity;
     const actualQty = Math.min(quantity, spaceLeft);
     if (actualQty <= 0) return;
 
     const cost = Math.round(actualQty * product.buyPrice * SUPERMARKET_CONFIG.shelfRestockCost);
     if (player.balance < cost) return;
+
+    // سفارش ثبت — تحویل بعد از ۱۵ ثانیه
+    const deliveryTime = 15_000;
 
     set((state) => ({
       supermarketStates: {
@@ -2429,7 +2437,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           ...smState,
           shelves: smState.shelves.map((s) =>
             s.id === shelfId
-              ? { ...s, productId, quantity: s.quantity + actualQty }
+              ? { ...s, productId, incomingQty: actualQty, incomingAt: Date.now() + deliveryTime }
               : s
           ),
         },
@@ -2483,6 +2491,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
           productId: null,
           quantity: 0,
           maxCapacity: 30,
+          incomingQty: 0,
+          incomingAt: null,
         });
       }
       // اضافه کردن صندوق‌های جدید
@@ -2494,6 +2504,15 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         });
       }
     }
+
+    // --- تحویل سفارش‌های قفسه ---
+    updatedShelves = updatedShelves.map((s) => {
+      if (s.incomingAt && s.incomingAt <= now && s.incomingQty > 0) {
+        const newQty = Math.min(s.maxCapacity, s.quantity + s.incomingQty);
+        return { ...s, quantity: newQty, incomingQty: 0, incomingAt: null };
+      }
+      return s;
+    });
 
     // --- بوست‌های فعال ---
     const activeBoosts = smState.boosts.filter((b) => b.expiresAt > now);
@@ -2577,7 +2596,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     // --- تولید سفارش جدید ---
     const activeOrderCount = updatedOrders.filter((o) => !o.completed && !o.failed).length;
     if (tier.tier >= 3 && activeOrderCount < SUPERMARKET_CONFIG.maxActiveOrders) {
-      const stockedIds = updatedShelves.filter((s) => s.productId).map((s) => s.productId!);
+      const stockedIds = [...new Set(updatedShelves.filter((s) => s.productId).map((s) => s.productId!))];
       const newOrder = generateSupermarketOrder(tier.tier, stockedIds);
       if (newOrder) {
         updatedOrders = [...updatedOrders, newOrder];

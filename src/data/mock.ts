@@ -1032,38 +1032,38 @@ export function getBusinessUpgradeDuration(currentLevel: number): number {
 // ==================== MISSIONS ====================
 
 export const DAILY_MISSIONS: MissionTemplate[] = [
-  { id: 'dm-collect-3', title: '۳ بار پول درآر!', description: '۳ بار از شرکتات پول بگیر', icon: '💰', type: 'daily', condition: 'collect_revenue', target: 3, reward: 5_000 },
-  { id: 'dm-collect-5', title: '۵ بار پول درآر!', description: '۵ بار از شرکتات پول بگیر', icon: '💵', type: 'daily', condition: 'collect_revenue', target: 5, reward: 10_000 },
-  { id: 'dm-earn-20k', title: '۲۰ هزار بساز', description: '۲۰,۰۰۰ تومان درآمد داشته باش', icon: '📈', type: 'daily', condition: 'earn_total', target: 20_000, reward: 8_000 },
-  { id: 'dm-earn-50k', title: '۵۰ هزار بساز', description: '۵۰,۰۰۰ تومان درآمد داشته باش', icon: '🤑', type: 'daily', condition: 'earn_total', target: 50_000, reward: 15_000 },
-  { id: 'dm-daily-bonus', title: 'سلام روزانه!', description: 'بونوس روزانه‌ت رو بگیر', icon: '🎁', type: 'daily', condition: 'claim_daily_bonus', target: 1, reward: 3_000 },
-  { id: 'dm-upgrade-1', title: 'یه پله بالاتر!', description: 'یه شرکت رو ارتقا بده', icon: '⬆️', type: 'daily', condition: 'upgrade_business', target: 1, reward: 7_000 },
-  { id: 'dm-event-1', title: 'گوش به زنگ!', description: 'به یه رویداد جواب بده', icon: '⚡', type: 'daily', condition: 'respond_to_event', target: 1, reward: 6_000 },
+  { id: 'dm-collect-3', title: '', description: '۳ بار درآمد شرکتات رو جمع کن', icon: '💰', type: 'daily', condition: 'collect_revenue', target: 3, reward: 5_000 },
+  { id: 'dm-collect-5', title: '', description: '۵ بار درآمد جمع کن', icon: '💵', type: 'daily', condition: 'collect_revenue', target: 5, reward: 10_000 },
+  { id: 'dm-earn-20k', title: '', description: '۲۰ هزار تومان درآمد داشته باش', icon: '📈', type: 'daily', condition: 'earn_total', target: 20_000, reward: 8_000 },
+  { id: 'dm-earn-50k', title: '', description: '۵۰ هزار تومان در بیار', icon: '🤑', type: 'daily', condition: 'earn_total', target: 50_000, reward: 15_000 },
+  { id: 'dm-daily-bonus', title: '', description: 'بونوس روزانه‌ت رو بگیر', icon: '🎁', type: 'daily', condition: 'claim_daily_bonus', target: 1, reward: 3_000 },
+  { id: 'dm-upgrade-1', title: '', description: 'یه شرکت رو ارتقا بده', icon: '⬆️', type: 'daily', condition: 'upgrade_business', target: 1, reward: 7_000 },
+  { id: 'dm-event-1', title: '', description: 'به یه رویداد پاسخ بده', icon: '⚡', type: 'daily', condition: 'respond_to_event', target: 1, reward: 6_000 },
 ];
 
 export const WEEKLY_MISSIONS: MissionTemplate[] = [
-  { id: 'wm-collect-20', title: '۲۰ بار پول درآر!', description: '۲۰ بار از شرکتات پول بگیر', icon: '💎', type: 'weekly', condition: 'collect_revenue', target: 20, reward: 30_000 },
-  { id: 'wm-earn-200k', title: 'ستاره هفته', description: '۲۰۰ هزار تومان درآمد داشته باش', icon: '🏆', type: 'weekly', condition: 'earn_total', target: 200_000, reward: 50_000 },
-  { id: 'wm-hire-2', title: '۲ کارمند بگیر!', description: '۲ تا کارمندی جدید استخدام کن', icon: '👥', type: 'weekly', condition: 'hire_employee', target: 2, reward: 25_000 },
-  { id: 'wm-upgrade-3', title: '۳ بار ارتقا بده!', description: '۳ بار شرکتت رو ارتقا بده', icon: '📊', type: 'weekly', condition: 'upgrade_business', target: 3, reward: 35_000 },
-  { id: 'wm-product-1', title: 'محصول تازه!', description: 'یه محصول جدید آنلاک کن', icon: '🔓', type: 'weekly', condition: 'unlock_product', target: 1, reward: 20_000 },
+  { id: 'wm-collect-20', title: '', description: '۲۰ بار درآمد جمع کن', icon: '💎', type: 'weekly', condition: 'collect_revenue', target: 20, reward: 30_000 },
+  { id: 'wm-earn-200k', title: '', description: '۲۰۰ هزار تومان درآمد داشته باش', icon: '🏆', type: 'weekly', condition: 'earn_total', target: 200_000, reward: 50_000 },
+  { id: 'wm-hire-2', title: '', description: '۲ تا کارمند جدید استخدام کن', icon: '👥', type: 'weekly', condition: 'hire_employee', target: 2, reward: 25_000 },
+  { id: 'wm-upgrade-3', title: '', description: '۳ بار شرکتت رو ارتقا بده', icon: '📊', type: 'weekly', condition: 'upgrade_business', target: 3, reward: 35_000 },
+  { id: 'wm-product-1', title: '', description: 'یه محصول جدید آنلاک کن', icon: '🔓', type: 'weekly', condition: 'unlock_product', target: 1, reward: 20_000 },
 ];
 
 export const ONE_TIME_MISSIONS: MissionTemplate[] = [
   // ── شروع بازی ──
-  { id: 'otm-first-biz', title: 'شروع ماجرا!', description: 'اولین شرکتت رو بساز', icon: '🎯', type: 'one_time', condition: 'create_business', target: 1, reward: 10_000, xpReward: 10 },
-  { id: 'otm-first-collect', title: 'اولین پول!', description: 'یه بار از شرکتت پول بگیر', icon: '💸', type: 'one_time', condition: 'collect_revenue', target: 1, reward: 5_000, xpReward: 5 },
-  { id: 'otm-hire-first', title: 'اولین کارمند!', description: 'یه نفر رو استخدام کن', icon: '🤝', type: 'one_time', condition: 'hire_employee', target: 1, reward: 8_000, xpReward: 5 },
-  { id: 'otm-first-sell', title: 'اولین فروش!', description: 'یه محصول بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 1, reward: 5_000, xpReward: 5 },
-  { id: 'otm-life-energy', title: 'پر انرژی!', description: 'انرژیت رو بالای ۹۵ ببر', icon: '⚡', type: 'one_time', condition: 'reach_stat_energy', target: 95, reward: 5_000, xpReward: 5 },
+  { id: 'otm-first-biz', title: '', description: 'اولین شرکتت رو بساز', icon: '🎯', type: 'one_time', condition: 'create_business', target: 1, reward: 10_000, xpReward: 10 },
+  { id: 'otm-first-collect', title: '', description: 'یه بار درآمد شرکتت رو جمع کن', icon: '💸', type: 'one_time', condition: 'collect_revenue', target: 1, reward: 5_000, xpReward: 5 },
+  { id: 'otm-hire-first', title: '', description: 'یه نفر رو استخدام کن', icon: '🤝', type: 'one_time', condition: 'hire_employee', target: 1, reward: 8_000, xpReward: 5 },
+  { id: 'otm-first-sell', title: '', description: 'یه محصول بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 1, reward: 5_000, xpReward: 5 },
+  { id: 'otm-life-energy', title: '', description: 'انرژیت رو بالای ۹۵ ببر', icon: '⚡', type: 'one_time', condition: 'reach_stat_energy', target: 95, reward: 5_000, xpReward: 5 },
   // ── رشد ──
-  { id: 'otm-upgrade-5', title: 'سطح ۵ رسیدی!', description: 'یه شرکت رو به سطح ۵ برسون', icon: '📈', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, xpReward: 15 },
-  { id: 'otm-upgrade-10', title: 'سطح ۱۰ رسیدی!', description: 'یه شرکت رو به سطح ۱۰ برسون', icon: '💪', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 60_000, xpReward: 30 },
-  { id: 'otm-3-biz', title: '۳ تا شرکت!', description: '۳ شرکت همزمان داشته باش', icon: '🏢', type: 'one_time', condition: 'own_businesses', target: 3, reward: 50_000, xpReward: 25 },
-  { id: 'otm-office-2', title: 'دفتر جدید!', description: 'دفتر شرکتت رو بزرگ‌تر کن', icon: '🏗️', type: 'one_time', condition: 'upgrade_office', target: 1, reward: 15_000, xpReward: 10 },
-  { id: 'otm-100k', title: '۱۰۰ هزاری شدی!', description: 'موجودیت رو به ۱۰۰ هزار برسون', icon: '💰', type: 'one_time', condition: 'reach_balance', target: 100_000, reward: 20_000, xpReward: 10 },
-  { id: 'otm-500k', title: 'نیم میلیونی!', description: 'موجودیت رو به ۵۰۰ هزار برسون', icon: '💵', type: 'one_time', condition: 'reach_balance', target: 500_000, reward: 50_000, xpReward: 20 },
-  { id: 'otm-1m', title: 'میلیونر شدی!', description: 'موجودیت رو به ۱ میلیون برسون', icon: '🤑', type: 'one_time', condition: 'reach_balance', target: 1_000_000, reward: 100_000, xpReward: 50 },
+  { id: 'otm-upgrade-5', title: '', description: 'یه شرکت رو به سطح ۵ برسون', icon: '📈', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, xpReward: 15 },
+  { id: 'otm-upgrade-10', title: '', description: 'یه شرکت رو به سطح ۱۰ برسون', icon: '💪', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 60_000, xpReward: 30 },
+  { id: 'otm-3-biz', title: '', description: '۳ شرکت همزمان داشته باش', icon: '🏢', type: 'one_time', condition: 'own_businesses', target: 3, reward: 50_000, xpReward: 25 },
+  { id: 'otm-office-2', title: '', description: 'دفتر شرکتت رو بزرگ‌تر کن', icon: '🏗️', type: 'one_time', condition: 'upgrade_office', target: 1, reward: 15_000, xpReward: 10 },
+  { id: 'otm-100k', title: '', description: 'موجودیت رو به ۱۰۰ هزار برسون', icon: '💰', type: 'one_time', condition: 'reach_balance', target: 100_000, reward: 20_000, xpReward: 10 },
+  { id: 'otm-500k', title: '', description: 'موجودیت رو به ۵۰۰ هزار برسون', icon: '💵', type: 'one_time', condition: 'reach_balance', target: 500_000, reward: 50_000, xpReward: 20 },
+  { id: 'otm-1m', title: '', description: 'موجودیت رو به ۱ میلیون برسون', icon: '🤑', type: 'one_time', condition: 'reach_balance', target: 1_000_000, reward: 100_000, xpReward: 50 },
 ];
 
 // ==================== SPECIALTY MILESTONES ====================
@@ -1117,40 +1117,40 @@ export const SPECIALTY_MILESTONES: Record<BusinessType, SpecialtyMilestone[]> = 
 
 export const SPECIALTY_MISSION_TEMPLATES: MissionTemplate[] = [
   // ---- FARMING ----
-  { id: 'sp-fm-1', title: 'اولین برداشت', description: '۵۰ واحد محصول کشاورزی تولید کن', icon: '🌾', type: 'one_time', condition: 'produce_units', target: 50, reward: 10_000, businessTypeFilter: 'farming' },
-  { id: 'sp-fm-2', title: 'کشاورز حرفه‌ای', description: 'مزرعه رو به سطح ۵ برسون', icon: '🚜', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, businessTypeFilter: 'farming' },
-  { id: 'sp-fm-3', title: 'فروشنده محصول', description: '۲۰۰ واحد محصول کشاورزی بفروش', icon: '🏪', type: 'one_time', condition: 'sell_units', target: 200, reward: 35_000, businessTypeFilter: 'farming' },
-  { id: 'sp-fm-4', title: 'مزرعه بزرگ', description: 'مزرعه رو به سطح ۱۰ برسون', icon: '🌻', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 70_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-1', title: '', description: '۵۰ واحد محصول کشاورزی تولید کن', icon: '🌾', type: 'one_time', condition: 'produce_units', target: 50, reward: 10_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-2', title: '', description: 'مزرعه رو به سطح ۵ برسون', icon: '🚜', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 25_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-3', title: '', description: '۲۰۰ واحد محصول کشاورزی بفروش', icon: '🏪', type: 'one_time', condition: 'sell_units', target: 200, reward: 35_000, businessTypeFilter: 'farming' },
+  { id: 'sp-fm-4', title: '', description: 'مزرعه رو به سطح ۱۰ برسون', icon: '🌻', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 70_000, businessTypeFilter: 'farming' },
   // ---- FACTORY ----
-  { id: 'sp-fc-1', title: 'خط تولید', description: '۱۰۰ واحد محصول کارخانه تولید کن', icon: '⚙️', type: 'one_time', condition: 'produce_units', target: 100, reward: 20_000, businessTypeFilter: 'factory' },
-  { id: 'sp-fc-2', title: 'کارخانه‌دار', description: 'کارخانه رو به سطح ۵ برسون', icon: '🏭', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 45_000, businessTypeFilter: 'factory' },
-  { id: 'sp-fc-3', title: 'فروش صنعتی', description: '۵۰۰ واحد کالای کارخانه بفروش', icon: '📦', type: 'one_time', condition: 'sell_units', target: 500, reward: 80_000, businessTypeFilter: 'factory' },
-  { id: 'sp-fc-4', title: 'غول صنعتی', description: 'کارخانه رو به سطح ۱۰ برسون', icon: '🔩', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 120_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-1', title: '', description: '۱۰۰ واحد محصول کارخانه تولید کن', icon: '⚙️', type: 'one_time', condition: 'produce_units', target: 100, reward: 20_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-2', title: '', description: 'کارخانه رو به سطح ۵ برسون', icon: '🏭', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 45_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-3', title: '', description: '۵۰۰ واحد کالای کارخانه بفروش', icon: '📦', type: 'one_time', condition: 'sell_units', target: 500, reward: 80_000, businessTypeFilter: 'factory' },
+  { id: 'sp-fc-4', title: '', description: 'کارخانه رو به سطح ۱۰ برسون', icon: '🔩', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 120_000, businessTypeFilter: 'factory' },
   // ---- SUPERMARKET ----
-  { id: 'sp-sm-1', title: 'فروش اول', description: '۵۰ واحد کالا در سوپرمارکت بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 50, reward: 15_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-2', title: 'مینی‌مارکت', description: 'سوپرمارکت رو به سطح ۵ برسون', icon: '🏪', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 40_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-3', title: 'گردش مالی بالا', description: '۵۰۰,۰۰۰ تومان از سوپرمارکت کسب کن', icon: '💰', type: 'one_time', condition: 'earn_total', target: 500_000, reward: 60_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-4', title: 'زنجیره فروشگاهی', description: '۲ سوپرمارکت همزمان داشته باش', icon: '🏬', type: 'one_time', condition: 'own_businesses', target: 2, reward: 80_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-5', title: 'هایپرمارکت', description: 'سوپرمارکت رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-6', title: 'فروش کلان', description: '۱,۰۰۰ واحد کالا در سوپرمارکت بفروش', icon: '📊', type: 'one_time', condition: 'sell_units', target: 1_000, reward: 120_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-7', title: 'سفارش‌های ویژه', description: '۵ سفارش ویژه در سوپرمارکت تکمیل کن', icon: '📦', type: 'one_time', condition: 'complete_special_order', target: 5, reward: 80_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-8', title: 'درآمد میلیونی', description: '۱,۰۰۰,۰۰۰ تومان از سوپرمارکت کسب کن', icon: '💎', type: 'one_time', condition: 'earn_total', target: 1_000_000, reward: 200_000, businessTypeFilter: 'supermarket' },
-  { id: 'sp-sm-9', title: 'شبکه فروشگاهی', description: 'سوپرمارکت رو به سطح ۱۵ برسون', icon: '🏆', type: 'one_time', condition: 'reach_business_level', target: 15, reward: 300_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-1', title: '', description: '۵۰ واحد کالا در سوپرمارکت بفروش', icon: '🛒', type: 'one_time', condition: 'sell_units', target: 50, reward: 15_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-2', title: '', description: 'سوپرمارکت رو به سطح ۵ برسون', icon: '🏪', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 40_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-3', title: '', description: '۵۰۰ هزار تومان از سوپرمارکت در بیار', icon: '💰', type: 'one_time', condition: 'earn_total', target: 500_000, reward: 60_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-4', title: '', description: '۲ سوپرمارکت همزمان داشته باش', icon: '🏬', type: 'one_time', condition: 'own_businesses', target: 2, reward: 80_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-5', title: '', description: 'سوپرمارکت رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-6', title: '', description: '۱,۰۰۰ واحد کالا در سوپرمارکت بفروش', icon: '📊', type: 'one_time', condition: 'sell_units', target: 1_000, reward: 120_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-7', title: '', description: '۵ سفارش ویژه تکمیل کن', icon: '📦', type: 'one_time', condition: 'complete_special_order', target: 5, reward: 80_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-8', title: '', description: '۱ میلیون تومان از سوپرمارکت در بیار', icon: '💎', type: 'one_time', condition: 'earn_total', target: 1_000_000, reward: 200_000, businessTypeFilter: 'supermarket' },
+  { id: 'sp-sm-9', title: '', description: 'سوپرمارکت رو به سطح ۱۵ برسون', icon: '🏆', type: 'one_time', condition: 'reach_business_level', target: 15, reward: 300_000, businessTypeFilter: 'supermarket' },
   // ---- RESTAURANT ----
-  { id: 'sp-rs-1', title: 'اولین سرویس', description: '۵۰ واحد غذا بفروش', icon: '🍽️', type: 'one_time', condition: 'sell_units', target: 50, reward: 12_000, businessTypeFilter: 'restaurant' },
-  { id: 'sp-rs-2', title: 'رستوران واقعی', description: 'رستوران رو به سطح ۵ برسون', icon: '⭐', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 35_000, businessTypeFilter: 'restaurant' },
-  { id: 'sp-rs-3', title: 'زنجیره رستوران', description: '۲ رستوران همزمان داشته باش', icon: '🌟', type: 'one_time', condition: 'own_businesses', target: 2, reward: 60_000, businessTypeFilter: 'restaurant' },
-  { id: 'sp-rs-4', title: 'امپراتوری غذایی', description: 'رستوران رو به سطح ۱۰ برسون', icon: '👑', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 100_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-1', title: '', description: '۵۰ واحد غذا بفروش', icon: '🍽️', type: 'one_time', condition: 'sell_units', target: 50, reward: 12_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-2', title: '', description: 'رستوران رو به سطح ۵ برسون', icon: '⭐', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 35_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-3', title: '', description: '۲ رستوران همزمان داشته باش', icon: '🌟', type: 'one_time', condition: 'own_businesses', target: 2, reward: 60_000, businessTypeFilter: 'restaurant' },
+  { id: 'sp-rs-4', title: '', description: 'رستوران رو به سطح ۱۰ برسون', icon: '👑', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 100_000, businessTypeFilter: 'restaurant' },
   // ---- APP_STARTUP ----
-  { id: 'sp-as-1', title: 'اولین ماژول', description: '۳۰ ماژول نرم‌افزاری تولید کن', icon: '💻', type: 'one_time', condition: 'produce_units', target: 30, reward: 20_000, businessTypeFilter: 'app_startup' },
-  { id: 'sp-as-2', title: 'استارتاپ جدی', description: 'استارتاپ رو به سطح ۵ برسون', icon: '🚀', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 50_000, businessTypeFilter: 'app_startup' },
-  { id: 'sp-as-3', title: 'فروش دیجیتال', description: '۱۵۰ واحد محصول دیجیتال بفروش', icon: '📲', type: 'one_time', condition: 'sell_units', target: 150, reward: 75_000, businessTypeFilter: 'app_startup' },
-  { id: 'sp-as-4', title: 'هلدینگ دیجیتال', description: 'استارتاپ رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-1', title: '', description: '۳۰ ماژول نرم‌افزاری تولید کن', icon: '💻', type: 'one_time', condition: 'produce_units', target: 30, reward: 20_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-2', title: '', description: 'استارتاپ رو به سطح ۵ برسون', icon: '🚀', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 50_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-3', title: '', description: '۱۵۰ واحد محصول دیجیتال بفروش', icon: '📲', type: 'one_time', condition: 'sell_units', target: 150, reward: 75_000, businessTypeFilter: 'app_startup' },
+  { id: 'sp-as-4', title: '', description: 'استارتاپ رو به سطح ۱۰ برسون', icon: '🌐', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 150_000, businessTypeFilter: 'app_startup' },
   // ---- TRANSPORT ----
-  { id: 'sp-tr-1', title: 'اولین سرویس', description: '۳۰ واحد بار حمل کن', icon: '🚐', type: 'one_time', condition: 'sell_units', target: 30, reward: 15_000, businessTypeFilter: 'transport' },
-  { id: 'sp-tr-2', title: 'شرکت حمل‌ونقل', description: 'شرکت حمل‌ونقل رو به سطح ۵ برسون', icon: '🚕', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 40_000, businessTypeFilter: 'transport' },
-  { id: 'sp-tr-3', title: 'ناوگان', description: '۲ شرکت حمل‌ونقل همزمان داشته باش', icon: '🚛', type: 'one_time', condition: 'own_businesses', target: 2, reward: 70_000, businessTypeFilter: 'transport' },
-  { id: 'sp-tr-4', title: 'لجستیک ملی', description: 'شرکت حمل‌ونقل رو به سطح ۱۰ برسون', icon: '🗺️', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 120_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-1', title: '', description: '۳۰ واحد بار حمل کن', icon: '🚐', type: 'one_time', condition: 'sell_units', target: 30, reward: 15_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-2', title: '', description: 'حمل‌ونقل رو به سطح ۵ برسون', icon: '🚕', type: 'one_time', condition: 'reach_business_level', target: 5, reward: 40_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-3', title: '', description: '۲ شرکت حمل‌ونقل همزمان داشته باش', icon: '🚛', type: 'one_time', condition: 'own_businesses', target: 2, reward: 70_000, businessTypeFilter: 'transport' },
+  { id: 'sp-tr-4', title: '', description: 'حمل‌ونقل رو به سطح ۱۰ برسون', icon: '🗺️', type: 'one_time', condition: 'reach_business_level', target: 10, reward: 120_000, businessTypeFilter: 'transport' },
 ];
 
 // ==================== ACHIEVEMENTS ====================
@@ -1692,17 +1692,30 @@ const SM_ORDER_TITLES = [
   { title: 'سفارش رستوران', icon: '🍽️' },
 ];
 
-export function generateSupermarketOrder(tier: number, availableProducts: string[]): SupermarketOrder | null {
-  if (tier < 3 || availableProducts.length === 0) return null;
+export function generateSupermarketOrder(tier: number, _stockedProductIds: string[]): SupermarketOrder | null {
+  if (tier < 3) return null;
+
+  // همه کالاهای آنلاک‌شده این تایر
+  const allUnlocked = SHELF_PRODUCTS.filter((p) => p.unlockTier <= tier).map((p) => p.id);
+  if (allUnlocked.length === 0) return null;
 
   const template = SM_ORDER_TITLES[Math.floor(Math.random() * SM_ORDER_TITLES.length)];
-  // انتخاب 1-2 محصول تصادفی
+
+  // تعداد محصولات سفارش
   const numProducts = tier >= 4 ? 2 : 1;
-  const shuffled = [...availableProducts].sort(() => Math.random() - 0.5);
-  const selected = shuffled.slice(0, Math.min(numProducts, shuffled.length));
+
+  // انتخاب تصادفی از همه کالاهای آنلاک‌شده (نه فقط قفسه‌ای)
+  const shuffled = [...allUnlocked].sort(() => Math.random() - 0.5);
+  // مطمئن شو تکراری نداریم
+  const selected: string[] = [];
+  for (const pid of shuffled) {
+    if (!selected.includes(pid)) selected.push(pid);
+    if (selected.length >= numProducts) break;
+  }
+
+  if (selected.length === 0) return null;
 
   const requiredProducts = selected.map((pid) => {
-    const product = SHELF_PRODUCTS.find((p) => p.id === pid);
     const baseQty = tier >= 5 ? 40 : tier >= 4 ? 25 : 15;
     const qty = baseQty + Math.floor(Math.random() * 15);
     return { productId: pid, quantity: qty };
@@ -1730,8 +1743,8 @@ export function generateSupermarketOrder(tier: number, availableProducts: string
 export function createInitialSupermarketState(): SupermarketState {
   return {
     shelves: [
-      { id: 'shelf-1', productId: null, quantity: 0, maxCapacity: 30 },
-      { id: 'shelf-2', productId: null, quantity: 0, maxCapacity: 30 },
+      { id: 'shelf-1', productId: null, quantity: 0, maxCapacity: 30, incomingQty: 0, incomingAt: null },
+      { id: 'shelf-2', productId: null, quantity: 0, maxCapacity: 30, incomingQty: 0, incomingAt: null },
     ],
     checkouts: [
       { id: 1, speed: 8, unlocked: true },

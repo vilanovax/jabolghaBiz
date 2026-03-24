@@ -34,8 +34,7 @@ function FeaturedMission({ mission }: { mission: ActiveMission }) {
       <div className="flex items-center gap-3">
         <span className="text-2xl shrink-0">{mission.icon}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold">{mission.title}</p>
-          <p className="text-[9px] text-fg-muted mt-0.5 truncate">{mission.description}</p>
+          <p className="text-[12px] font-bold leading-tight">{mission.description}</p>
           <div className="flex items-center gap-2 mt-2">
             <div className="flex-1 h-1.5 rounded-full bg-progress-bg overflow-hidden">
               <div
@@ -81,7 +80,7 @@ function MiniMission({ mission }: { mission: ActiveMission }) {
     }`}>
       <span className="text-lg shrink-0">{mission.icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-bold truncate">{mission.title}</p>
+        <p className="text-[11px] font-bold truncate">{mission.description}</p>
         <div className="flex items-center gap-2 mt-1">
           <div className="flex-1 h-1 rounded-full bg-progress-bg overflow-hidden">
             <div

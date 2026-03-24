@@ -11,7 +11,7 @@ export default function MissionsPage() {
         <Link href="/" className="text-fg-muted hover:text-fg">
           <ChevronRight size={20} />
         </Link>
-        <h1 className="font-black text-lg">ماموریت‌ها و دستاوردها</h1>
+        <h1 className="font-black text-lg">چالش‌ها</h1>
       </div>
       <MissionsPanel />
     </div>
